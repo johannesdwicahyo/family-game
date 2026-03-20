@@ -161,7 +161,7 @@ const SI = {
 };
 
 const MEDALS = ["🥇","🥈","🥉"];
-const PH = {SETUP:"setup",REVEAL:"reveal",PASS:"pass",DISCUSS:"discuss",VOTE:"vote",JOKER_BANNER:"jb",GUESS:"guess",RESULT:"result",LB:"lb"};
+const PH = {SETUP:"setup",REVEAL:"reveal",PASS:"pass",DISCUSS:"discuss",VOTE:"vote",ELIM_REVEAL:"elim_reveal",JOKER_BANNER:"jb",GUESS:"guess",RESULT:"result",LB:"lb"};
 
 // ─── FISHER-YATES SHUFFLE ───────────────────────────────────
 function shuffle(arr) {
@@ -227,13 +227,14 @@ function App() {
   const [pair, setPair] = useState(null);
   const [revIdx, setRevIdx] = useState(0);
   const [showWord, setShowWord] = useState(false);
-  const [elimIdx, setElimIdx] = useState(null);
-  const [jokerElimIdx, setJokerElimIdx] = useState(-1);
+  const [eliminated, setEliminated] = useState([]); // list of eliminated player indices
+  const [lastElimIdx, setLastElimIdx] = useState(null); // most recent elimination for reveal
   const [guessVal, setGuessVal] = useState("");
   const [winner, setWinner] = useState(null);
   const [roundScores, setRoundScores] = useState([]);
   const [lb, setLb] = useState({});
   const [roundNum, setRoundNum] = useState(0);
+  const [turnNum, setTurnNum] = useState(0);
   const [tab, setTab] = useState("roles");
   const [scoreTab, setScoreTab] = useState("round");
   const [expanded, setExpanded] = useState(null);
@@ -280,16 +281,33 @@ function App() {
       word: roles[idx]==="civilian"||roles[idx]==="joker" ? p.n : roles[idx]==="impostor" ? p.i : null,
     }));
     setPair(p); setPlayers(ps); setRevIdx(0); setShowWord(false);
-    setElimIdx(null); setJokerElimIdx(-1);
+    setEliminated([]); setLastElimIdx(null); setTurnNum(0);
     setGuessVal(""); setWinner(null); setRoundScores([]); setExpanded(null);
     setRoundNum(rn => rn + 1); setPhase(PH.PASS);
   };
 
-  const activePlayers = players.filter((_, i) => i !== jokerElimIdx);
+  // Active players = not eliminated
+  const activePlayers = players.filter((_, i) => !eliminated.includes(i));
 
-  const doFinish = (win, eIdx, jIdx) => {
+  // Check win condition after an elimination
+  const checkWinCondition = (elimList) => {
+    const alive = players.filter((_, i) => !elimList.includes(i));
+    const aliveImpostors = alive.filter(p => p.role === "impostor").length;
+    const aliveCivilians = alive.filter(p => p.role === "civilian" || p.role === "joker").length;
+    const aliveMrWhite = alive.filter(p => p.role === "mr_white").length;
+
+    // All impostors eliminated → warga win
+    if (aliveImpostors === 0) return "warga";
+    // Impostors >= remaining non-impostors → impostor wins
+    if (aliveImpostors >= (aliveCivilians + aliveMrWhite)) return "impostor";
+    return null; // game continues
+  };
+
+  const jokerElimIdx = eliminated.find(i => players[i]?.role === "joker") ?? -1;
+
+  const doFinish = (win) => {
     setWinner(win);
-    const scores = calcScores(players, eIdx, win, jIdx, sc);
+    const scores = calcScores(players, lastElimIdx, win, jokerElimIdx, sc);
     setRoundScores(scores);
     const newLb = {...lb};
     scores.forEach(s => { newLb[s.name] = (newLb[s.name] || 0) + s.pts; });
@@ -300,21 +318,60 @@ function App() {
   // Manual vote: pick who was eliminated by group discussion
   const manualEliminate = (origIdx) => {
     const role = players[origIdx]?.role;
-    setElimIdx(origIdx);
-    if (role === "joker") { setJokerElimIdx(origIdx); setPhase(PH.JOKER_BANNER); }
-    else if (role === "mr_white") { setPhase(PH.GUESS); }
-    else if (role === "impostor") { doFinish("warga", origIdx, jokerElimIdx); }
-    else { doFinish("impostor", origIdx, jokerElimIdx); }
+    const newElim = [...eliminated, origIdx];
+    setEliminated(newElim);
+    setLastElimIdx(origIdx);
+    setTurnNum(t => t + 1);
+
+    if (role === "joker") {
+      // Joker eliminated — show banner, then continue
+      setPhase(PH.JOKER_BANNER);
+    } else if (role === "mr_white") {
+      // Mr. White gets to guess
+      setPhase(PH.GUESS);
+    } else if (role === "impostor") {
+      // Check if all impostors are gone
+      const win = checkWinCondition(newElim);
+      if (win) {
+        setPhase(PH.ELIM_REVEAL);
+        // Will finish from reveal
+      } else {
+        setPhase(PH.ELIM_REVEAL);
+      }
+    } else {
+      // Civilian eliminated — check if impostor wins
+      setPhase(PH.ELIM_REVEAL);
+    }
+  };
+
+  // After showing elimination reveal, check win or continue
+  const afterElimReveal = () => {
+    const win = checkWinCondition(eliminated);
+    if (win) { doFinish(win); }
+    else { setPhase(PH.DISCUSS); }
   };
 
   const submitGuess = () => {
     const correct = guessVal.trim().toLowerCase() === pair?.n?.toLowerCase();
-    doFinish(correct ? "mr_white" : "warga", elimIdx, jokerElimIdx);
+    if (correct) {
+      doFinish("mr_white");
+    } else {
+      // Wrong guess — mr_white is eliminated, check win condition
+      const win = checkWinCondition(eliminated);
+      if (win) {
+        setPhase(PH.ELIM_REVEAL);
+      } else {
+        setPhase(PH.ELIM_REVEAL);
+      }
+    }
   };
 
   const continueAfterJoker = () => {
-    setElimIdx(null); setPhase(PH.DISCUSS);
+    const win = checkWinCondition(eliminated);
+    if (win) { doFinish(win); }
+    else { setPhase(PH.DISCUSS); }
   };
+
   const resetAll = () => { setLb({}); setRoundNum(0); setUsedPairs([]); setPhase(PH.SETUP); };
 
   const lbEntries = Object.entries(lb).sort((a,b) => b[1] - a[1]);
@@ -568,15 +625,31 @@ function App() {
           <div className="card fi" style={{textAlign:"center"}}>
             <div style={{fontSize:40,marginBottom:8}}>💬</div>
             <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:8}}>WAKTU DISKUSI!</div>
-            <div style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:16}}>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:12}}>
               Diskusikan kata kalian tanpa menyebutkannya secara langsung.<br/>
               Setelah selesai diskusi, tekan tombol voting.
             </div>
-            {jokerElimIdx >= 0 && (
-              <div style={{background:"#2a2200",border:"1px solid #ffcc0033",borderRadius:6,padding:"6px 12px",marginBottom:12,fontSize:11,color:"#ffcc00"}}>
-                Joker sudah keluar — lanjutkan tanpa mereka!
+            {/* Status bar */}
+            <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"10px 14px",marginBottom:16,fontSize:11,textAlign:"left"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{color:"#888"}}>Giliran voting ke-</span>
+                <span style={{color:"#ff3c3c",fontFamily:"'Bebas Neue',sans-serif",fontSize:16}}>{turnNum + 1}</span>
               </div>
-            )}
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                <span style={{color:"#888"}}>Pemain tersisa</span>
+                <span style={{color:"#f0ede8",fontFamily:"'Bebas Neue',sans-serif",fontSize:16}}>{activePlayers.length}</span>
+              </div>
+              {eliminated.length > 0 && (
+                <div style={{borderTop:"1px solid #2a2a3a",marginTop:6,paddingTop:6}}>
+                  <span style={{color:"#555",fontSize:10}}>Tereliminasi: </span>
+                  {eliminated.map(idx => (
+                    <span key={idx} style={{color:ri(players[idx]?.role).color,fontSize:10,marginRight:6}}>
+                      {ri(players[idx]?.role).emoji} {players[idx]?.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
             <button className="btn" onClick={() => setPhase(PH.VOTE)}>🗳️ MULAI VOTING</button>
           </div>
         )}
@@ -586,7 +659,7 @@ function App() {
           <div className="card fi">
             <div style={{textAlign:"center",marginBottom:16}}>
               <div style={{fontSize:36,marginBottom:8}}>🗳️</div>
-              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:4,color:"#ff3c3c",marginBottom:4}}>HASIL VOTING</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:4,color:"#ff3c3c",marginBottom:4}}>VOTING #{turnNum + 1}</div>
               <div className="SUB">pilih pemain yang tereliminasi</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -606,13 +679,45 @@ function App() {
           </div>
         )}
 
+        {/* ELIMINATION REVEAL — show who was eliminated and their role */}
+        {phase === PH.ELIM_REVEAL && lastElimIdx !== null && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            {(() => {
+              const ep = players[lastElimIdx];
+              const info = ri(ep?.role);
+              const win = checkWinCondition(eliminated);
+              return (
+                <div>
+                  <div style={{fontSize:48,marginBottom:8}}>{info.emoji}</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,marginBottom:4}}>{ep?.name}</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:3,color:info.color,marginBottom:12}}>adalah {info.label}!</div>
+                  {!win && (
+                    <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"10px 14px",marginBottom:16,fontSize:12,color:"#888",lineHeight:1.6}}>
+                      Game berlanjut! Masih ada impostor di antara kalian.<br/>
+                      <span style={{color:"#f0ede8"}}>{activePlayers.length} pemain tersisa.</span>
+                    </div>
+                  )}
+                  {win && (
+                    <div style={{background:win==="warga"?"#003a0a":"#3a0000",border:"1px solid "+(win==="warga"?"#3cff6e33":"#ff3c3c33"),borderRadius:6,padding:"10px 14px",marginBottom:16,fontSize:14,color:WC[win],lineHeight:1.6,fontFamily:"'Bebas Neue',sans-serif",letterSpacing:3}}>
+                      {WL[win]}
+                    </div>
+                  )}
+                  <button className="btn" onClick={afterElimReveal}>
+                    {win ? "LIHAT HASIL" : "LANJUT DISKUSI"}
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
         {/* JOKER BANNER */}
-        {phase === PH.JOKER_BANNER && jokerElimIdx >= 0 && (
+        {phase === PH.JOKER_BANNER && lastElimIdx !== null && (
           <div className="card fi" style={{textAlign:"center"}}>
             <Confetti color="#ffcc00"/>
             <div style={{fontSize:56,marginBottom:8}}>🃏</div>
             <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:40,letterSpacing:6,color:"#ffcc00",marginBottom:6}}>JOKER MENANG!</div>
-            <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ffcc00",marginBottom:8}}>{players[jokerElimIdx]?.name}</div>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ffcc00",marginBottom:8}}>{players[lastElimIdx]?.name}</div>
             <div style={{fontSize:12,color:"#888",marginBottom:8,lineHeight:1.7}}>Berhasil dieliminasi pertama dan meraih</div>
             <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:48,color:"#ffcc00",letterSpacing:4,marginBottom:16}}>+{sc.JOKER_ELIM} POIN</div>
             <div style={{background:"#2a2200",border:"1px solid #ffcc0033",borderRadius:6,padding:"10px 14px",marginBottom:20,fontSize:12,color:"#aaa",lineHeight:1.6}}>
@@ -623,12 +728,12 @@ function App() {
         )}
 
         {/* MR WHITE GUESS */}
-        {phase === PH.GUESS && elimIdx !== null && (
+        {phase === PH.GUESS && lastElimIdx !== null && (
           <div className="card fi" style={{textAlign:"center"}}>
             <div style={{fontSize:40,marginBottom:8}}>❓</div>
             <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#a0a0ff",marginBottom:6}}>MR. WHITE DIELIMINASI!</div>
             <div style={{fontSize:12,color:"#888",marginBottom:4,lineHeight:1.7}}>
-              <b style={{color:"#a0a0ff"}}>{players[elimIdx]?.name}</b> adalah Mr. White.<br/>Tebak kata warga untuk menang!
+              <b style={{color:"#a0a0ff"}}>{players[lastElimIdx]?.name}</b> adalah Mr. White.<br/>Tebak kata warga untuk menang!
             </div>
             <div style={{background:"#0a0a2a",border:"1px solid #a0a0ff44",borderRadius:6,padding:"6px 12px",margin:"12px 0",fontSize:11,color:"#a0a0ff"}}>
               Tebak benar = +{sc.MRW_GUESS} poin besar!
