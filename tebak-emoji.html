@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>TEBAK EMOJI - Permainan Tebak Emoji Keluarga</title>
+<meta name="description" content="Permainan tebak emoji keluarga seru! Tebak apa yang diwakili emoji-emoji ini."/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── PUZZLE DATABASE ────────────────────────────────────────
+const PUZZLES = [
+  // Film & Serial
+  {emoji:"🦁👑",answer:"Lion King",cat:"Film & Serial",diff:"mudah",hint:"Film animasi Disney tentang hewan di Afrika"},
+  {emoji:"❄️👸🏰",answer:"Frozen",cat:"Film & Serial",diff:"mudah",hint:"Film Disney tentang putri dengan kekuatan es"},
+  {emoji:"🕷️🦸‍♂️",answer:"Spider-Man",cat:"Film & Serial",diff:"mudah",hint:"Superhero yang bisa memanjat gedung"},
+  {emoji:"🧙‍♂️💍🌋",answer:"Lord of the Rings",cat:"Film & Serial",diff:"sedang",hint:"Petualangan epik untuk menghancurkan sebuah cincin"},
+  {emoji:"🦇🌃🦹",answer:"Batman",cat:"Film & Serial",diff:"mudah",hint:"Pahlawan super dari kota Gotham"},
+  {emoji:"🏴‍☠️🚢💀",answer:"Pirates of the Caribbean",cat:"Film & Serial",diff:"sedang",hint:"Film tentang bajak laut dengan Jack Sparrow"},
+  {emoji:"👻👻👻🔫",answer:"Ghostbusters",cat:"Film & Serial",diff:"sedang",hint:"Tim pemburu hantu dengan senjata khusus"},
+  {emoji:"🐠🔍",answer:"Finding Nemo",cat:"Film & Serial",diff:"mudah",hint:"Film animasi tentang ikan kecil yang hilang"},
+  {emoji:"🐀👨‍🍳🇫🇷",answer:"Ratatouille",cat:"Film & Serial",diff:"sedang",hint:"Tikus yang ingin jadi chef di Paris"},
+  {emoji:"🤖❤️🌱",answer:"Wall-E",cat:"Film & Serial",diff:"sulit",hint:"Robot pembersih sampah yang jatuh cinta"},
+  {emoji:"🧞‍♂️🏜️✨",answer:"Aladdin",cat:"Film & Serial",diff:"sedang",hint:"Pemuda miskin yang menemukan lampu ajaib"},
+  {emoji:"🐉🥋🇨🇳",answer:"Kung Fu Panda",cat:"Film & Serial",diff:"sedang",hint:"Hewan gemuk yang belajar seni bela diri"},
+  {emoji:"👦🎈🏠☁️",answer:"Up",cat:"Film & Serial",diff:"sedang",hint:"Kakek tua yang terbang dengan balon"},
+  {emoji:"🦕🏝️⚡",answer:"Jurassic Park",cat:"Film & Serial",diff:"sedang",hint:"Taman hiburan dengan hewan purba"},
+  {emoji:"🚗⚡🏁",answer:"Cars",cat:"Film & Serial",diff:"mudah",hint:"Film animasi tentang mobil balap"},
+  {emoji:"🧸🚀👨‍🚀",answer:"Toy Story",cat:"Film & Serial",diff:"mudah",hint:"Mainan yang hidup saat pemiliknya pergi"},
+  {emoji:"💀🎸🇲🇽",answer:"Coco",cat:"Film & Serial",diff:"sedang",hint:"Film Disney tentang Hari Orang Mati di Meksiko"},
+  {emoji:"🐼🥋",answer:"Kung Fu Panda",cat:"Film & Serial",diff:"mudah",hint:"Panda yang jadi ahli bela diri"},
+  {emoji:"👩‍🦰🐻🏠",answer:"Masha and the Bear",cat:"Film & Serial",diff:"mudah",hint:"Kartun anak tentang gadis kecil dan temannya"},
+  {emoji:"🦈🌊😱",answer:"Jaws",cat:"Film & Serial",diff:"sedang",hint:"Film horor klasik di laut"},
+  {emoji:"🧛‍♂️🩸💘",answer:"Twilight",cat:"Film & Serial",diff:"sulit",hint:"Kisah cinta antara manusia dan makhluk abadi"},
+  {emoji:"🤡🎈🕳️",answer:"IT",cat:"Film & Serial",diff:"sulit",hint:"Film horor tentang badut menakutkan"},
+  {emoji:"🦖🥚🌍",answer:"Jurassic World",cat:"Film & Serial",diff:"sedang",hint:"Sekuel modern taman dinosaurus"},
+  {emoji:"🏠👻👦",answer:"Home Alone",cat:"Film & Serial",diff:"sedang",hint:"Anak kecil ditinggal sendiri melawan pencuri"},
+  {emoji:"🥊🏆💪",answer:"Rocky",cat:"Film & Serial",diff:"sulit",hint:"Film tentang petinju legendaris"},
+
+  // Makanan & Minuman
+  {emoji:"🍜🔥",answer:"Mie Pedas",cat:"Makanan & Minuman",diff:"mudah",hint:"Makanan berkuah panjang yang bikin keringatan"},
+  {emoji:"🍚🍳",answer:"Nasi Goreng",cat:"Makanan & Minuman",diff:"mudah",hint:"Makanan Indonesia paling terkenal di dunia"},
+  {emoji:"🐔🔥🌶️",answer:"Ayam Geprek",cat:"Makanan & Minuman",diff:"mudah",hint:"Ayam yang dipukul lalu diberi sambal"},
+  {emoji:"🍡🥜",answer:"Sate",cat:"Makanan & Minuman",diff:"mudah",hint:"Daging tusuk yang dibakar dengan bumbu kacang"},
+  {emoji:"🥟🍲",answer:"Bakso",cat:"Makanan & Minuman",diff:"sedang",hint:"Bola daging dalam kuah hangat"},
+  {emoji:"🍕🧀",answer:"Pizza",cat:"Makanan & Minuman",diff:"mudah",hint:"Makanan Italia berbentuk lingkaran"},
+  {emoji:"🍣🇯🇵",answer:"Sushi",cat:"Makanan & Minuman",diff:"mudah",hint:"Nasi dengan ikan mentah dari Jepang"},
+  {emoji:"🥞🍫",answer:"Martabak Manis",cat:"Makanan & Minuman",diff:"sedang",hint:"Jajanan malam yang tebal dan manis"},
+  {emoji:"🍌🍫🧀",answer:"Pisang Coklat Keju",cat:"Makanan & Minuman",diff:"sedang",hint:"Buah dibalut dua topping favorit"},
+  {emoji:"☕🥛",answer:"Kopi Susu",cat:"Makanan & Minuman",diff:"mudah",hint:"Minuman favorit anak muda Indonesia"},
+  {emoji:"🧊🍵",answer:"Es Teh",cat:"Makanan & Minuman",diff:"mudah",hint:"Minuman paling umum di warung makan"},
+  {emoji:"🥥🍚🍗",answer:"Nasi Uduk",cat:"Makanan & Minuman",diff:"sulit",hint:"Nasi yang dimasak dengan santan, khas Betawi"},
+  {emoji:"🐄🍲🌿",answer:"Rendang",cat:"Makanan & Minuman",diff:"sedang",hint:"Masakan Padang yang pernah jadi makanan terenak dunia"},
+  {emoji:"🥜🥬🥕",answer:"Gado-gado",cat:"Makanan & Minuman",diff:"sedang",hint:"Sayuran rebus dengan bumbu kacang"},
+  {emoji:"🦐🔥🧄",answer:"Udang Goreng",cat:"Makanan & Minuman",diff:"sedang",hint:"Seafood yang dimasak dengan bumbu harum"},
+  {emoji:"🍝🇮🇹",answer:"Spaghetti",cat:"Makanan & Minuman",diff:"mudah",hint:"Pasta panjang dari Italia"},
+  {emoji:"🫖🧊🍋",answer:"Es Lemon Tea",cat:"Makanan & Minuman",diff:"sedang",hint:"Minuman segar rasa asam dan teh"},
+  {emoji:"🧋",answer:"Boba",cat:"Makanan & Minuman",diff:"mudah",hint:"Minuman kekinian dengan bulatan kenyal"},
+  {emoji:"🍦🥥",answer:"Es Kelapa Muda",cat:"Makanan & Minuman",diff:"sedang",hint:"Minuman tropis segar dari buah besar"},
+  {emoji:"🫔🥚",answer:"Martabak Telur",cat:"Makanan & Minuman",diff:"sulit",hint:"Jajanan gurih berisi telur dan daging"},
+
+  // Tempat Terkenal
+  {emoji:"🗼🇫🇷",answer:"Menara Eiffel",cat:"Tempat Terkenal",diff:"mudah",hint:"Bangunan ikonik di kota cinta"},
+  {emoji:"🗽🇺🇸",answer:"Patung Liberty",cat:"Tempat Terkenal",diff:"mudah",hint:"Hadiah dari Prancis untuk Amerika"},
+  {emoji:"🏯🗻🇯🇵",answer:"Gunung Fuji",cat:"Tempat Terkenal",diff:"sedang",hint:"Gunung tertinggi di negeri sakura"},
+  {emoji:"🐪🔺🇪🇬",answer:"Piramida Mesir",cat:"Tempat Terkenal",diff:"mudah",hint:"Bangunan kuno berbentuk segitiga di gurun"},
+  {emoji:"🕌🇮🇩🏛️",answer:"Monas",cat:"Tempat Terkenal",diff:"sedang",hint:"Monumen nasional di ibu kota Indonesia"},
+  {emoji:"🛕🇮🇩",answer:"Borobudur",cat:"Tempat Terkenal",diff:"sedang",hint:"Candi Buddha terbesar di dunia"},
+  {emoji:"🏖️🌺🇮🇩",answer:"Bali",cat:"Tempat Terkenal",diff:"mudah",hint:"Pulau wisata Indonesia yang terkenal di dunia"},
+  {emoji:"🦎🏝️🇮🇩",answer:"Pulau Komodo",cat:"Tempat Terkenal",diff:"sedang",hint:"Rumah kadal raksasa di NTT"},
+  {emoji:"🌊🐠🇮🇩",answer:"Raja Ampat",cat:"Tempat Terkenal",diff:"sulit",hint:"Surga bawah laut di Papua Barat"},
+  {emoji:"🌋🇮🇩☁️",answer:"Gunung Bromo",cat:"Tempat Terkenal",diff:"sedang",hint:"Gunung berapi aktif terkenal di Jawa Timur"},
+  {emoji:"🏰🇬🇧👸",answer:"Buckingham Palace",cat:"Tempat Terkenal",diff:"sulit",hint:"Kediaman resmi kerajaan Inggris"},
+  {emoji:"🎰🌃",answer:"Las Vegas",cat:"Tempat Terkenal",diff:"sedang",hint:"Kota hiburan dan kasino di Nevada"},
+  {emoji:"🗿🏝️",answer:"Easter Island",cat:"Tempat Terkenal",diff:"sulit",hint:"Pulau misterius dengan patung batu raksasa"},
+  {emoji:"🧱🐉🇨🇳",answer:"Tembok Besar China",cat:"Tempat Terkenal",diff:"mudah",hint:"Bangunan terpanjang yang bisa dilihat dari luar angkasa"},
+  {emoji:"🏟️🇮🇹⚔️",answer:"Colosseum",cat:"Tempat Terkenal",diff:"sedang",hint:"Arena gladiator kuno di Roma"},
+  {emoji:"🕌💎🇮🇳",answer:"Taj Mahal",cat:"Tempat Terkenal",diff:"sedang",hint:"Mahakarya arsitektur cinta di India"},
+  {emoji:"🌉🌫️",answer:"Golden Gate Bridge",cat:"Tempat Terkenal",diff:"sulit",hint:"Jembatan ikonik berwarna merah di San Francisco"},
+  {emoji:"🎡🇬🇧⏰",answer:"London Eye",cat:"Tempat Terkenal",diff:"sedang",hint:"Bianglala raksasa di tepi Sungai Thames"},
+  {emoji:"🦘🏖️🇦🇺",answer:"Australia",cat:"Tempat Terkenal",diff:"mudah",hint:"Benua yang juga negara, rumah kangguru"},
+  {emoji:"🐧❄️🌍",answer:"Antartika",cat:"Tempat Terkenal",diff:"sedang",hint:"Benua paling dingin di bumi"},
+
+  // Hewan
+  {emoji:"🐱",answer:"Kucing",cat:"Hewan",diff:"mudah",hint:"Hewan peliharaan yang suka tidur"},
+  {emoji:"🐕‍🦺👮",answer:"Anjing Polisi",cat:"Hewan",diff:"sedang",hint:"Hewan penolong aparat keamanan"},
+  {emoji:"🦅🇮🇩",answer:"Garuda",cat:"Hewan",diff:"sedang",hint:"Lambang negara Indonesia"},
+  {emoji:"🐊💚🇮🇩",answer:"Komodo",cat:"Hewan",diff:"sedang",hint:"Kadal raksasa asli Indonesia"},
+  {emoji:"🐬🌊",answer:"Lumba-lumba",cat:"Hewan",diff:"mudah",hint:"Mamalia laut yang sangat cerdas"},
+  {emoji:"🦈🦷",answer:"Hiu",cat:"Hewan",diff:"mudah",hint:"Predator laut dengan gigi tajam"},
+  {emoji:"🐘🦷",answer:"Gajah",cat:"Hewan",diff:"mudah",hint:"Hewan darat terbesar dengan belalai"},
+  {emoji:"🐼🎋",answer:"Panda",cat:"Hewan",diff:"mudah",hint:"Beruang hitam putih pemakan bambu"},
+  {emoji:"🦒🌳",answer:"Jerapah",cat:"Hewan",diff:"mudah",hint:"Hewan dengan leher paling panjang"},
+  {emoji:"🐧❄️",answer:"Penguin",cat:"Hewan",diff:"mudah",hint:"Burung yang tidak bisa terbang tapi jago berenang"},
+  {emoji:"🦉🌙",answer:"Burung Hantu",cat:"Hewan",diff:"sedang",hint:"Burung yang aktif di malam hari"},
+  {emoji:"🐢🐚",answer:"Kura-kura",cat:"Hewan",diff:"mudah",hint:"Hewan lambat dengan rumah di punggungnya"},
+  {emoji:"🦎🌈",answer:"Bunglon",cat:"Hewan",diff:"sedang",hint:"Reptil yang bisa berubah warna"},
+  {emoji:"🐙🌊",answer:"Gurita",cat:"Hewan",diff:"sedang",hint:"Hewan laut dengan delapan lengan"},
+  {emoji:"🦩💖",answer:"Flamingo",cat:"Hewan",diff:"sedang",hint:"Burung berwarna pink yang berdiri satu kaki"},
+  {emoji:"🐝🍯",answer:"Lebah",cat:"Hewan",diff:"mudah",hint:"Serangga penghasil cairan manis"},
+  {emoji:"🦇🌃",answer:"Kelelawar",cat:"Hewan",diff:"sedang",hint:"Mamalia yang bisa terbang di malam hari"},
+  {emoji:"🐺🌕",answer:"Serigala",cat:"Hewan",diff:"sedang",hint:"Hewan liar yang melolong saat bulan purnama"},
+  {emoji:"🦜🌴",answer:"Burung Kakaktua",cat:"Hewan",diff:"sedang",hint:"Burung tropis yang bisa meniru suara manusia"},
+  {emoji:"🐌🏠",answer:"Siput",cat:"Hewan",diff:"mudah",hint:"Hewan sangat lambat yang membawa rumahnya"},
+
+  // Profesi
+  {emoji:"👨‍⚕️💉",answer:"Dokter",cat:"Profesi",diff:"mudah",hint:"Orang yang menyembuhkan orang sakit"},
+  {emoji:"👨‍🍳🔥",answer:"Chef",cat:"Profesi",diff:"mudah",hint:"Ahli memasak profesional"},
+  {emoji:"🚀👨‍🚀",answer:"Astronot",cat:"Profesi",diff:"mudah",hint:"Penjelajah luar angkasa"},
+  {emoji:"🎨🖌️",answer:"Pelukis",cat:"Profesi",diff:"mudah",hint:"Seniman yang bekerja dengan kanvas"},
+  {emoji:"🎬🎥",answer:"Sutradara",cat:"Profesi",diff:"sedang",hint:"Orang di balik layar yang mengarahkan film"},
+  {emoji:"👨‍✈️✈️",answer:"Pilot",cat:"Profesi",diff:"mudah",hint:"Orang yang menerbangkan pesawat"},
+  {emoji:"🔬🧪",answer:"Ilmuwan",cat:"Profesi",diff:"sedang",hint:"Orang yang melakukan penelitian dan eksperimen"},
+  {emoji:"💻🐛",answer:"Programmer",cat:"Profesi",diff:"sedang",hint:"Orang yang menulis kode dan memperbaiki bug"},
+  {emoji:"📸📷",answer:"Fotografer",cat:"Profesi",diff:"mudah",hint:"Orang yang mengabadikan momen dengan kamera"},
+  {emoji:"🎤🎵",answer:"Penyanyi",cat:"Profesi",diff:"mudah",hint:"Orang yang menghibur lewat suara"},
+  {emoji:"⚖️👨‍⚖️",answer:"Hakim",cat:"Profesi",diff:"sedang",hint:"Orang yang memutuskan perkara di pengadilan"},
+  {emoji:"🚒🔥👨‍🚒",answer:"Pemadam Kebakaran",cat:"Profesi",diff:"mudah",hint:"Pahlawan yang melawan api"},
+  {emoji:"🕵️‍♂️🔍",answer:"Detektif",cat:"Profesi",diff:"sedang",hint:"Orang yang memecahkan misteri dan kasus"},
+  {emoji:"🧑‍🏫📚",answer:"Guru",cat:"Profesi",diff:"mudah",hint:"Pahlawan tanpa tanda jasa"},
+  {emoji:"🎩🐰✨",answer:"Pesulap",cat:"Profesi",diff:"sedang",hint:"Penghibur yang membuat hal mustahil terlihat nyata"},
+  {emoji:"💇‍♀️✂️",answer:"Tukang Cukur",cat:"Profesi",diff:"sedang",hint:"Orang yang merapikan penampilan rambut"},
+  {emoji:"🦷👨‍⚕️",answer:"Dokter Gigi",cat:"Profesi",diff:"sedang",hint:"Spesialis kesehatan mulut"},
+  {emoji:"📰✍️",answer:"Wartawan",cat:"Profesi",diff:"sedang",hint:"Orang yang mencari dan menulis berita"},
+
+  // Aktivitas
+  {emoji:"🏄‍♂️🌊",answer:"Surfing",cat:"Aktivitas",diff:"mudah",hint:"Olahraga menunggangi ombak"},
+  {emoji:"⛺🏔️",answer:"Camping",cat:"Aktivitas",diff:"mudah",hint:"Bermalam di alam terbuka dengan tenda"},
+  {emoji:"🎤🎶📺",answer:"Karaoke",cat:"Aktivitas",diff:"mudah",hint:"Nyanyi-nyanyi sambil lihat lirik di layar"},
+  {emoji:"🧘‍♀️🕉️",answer:"Yoga",cat:"Aktivitas",diff:"mudah",hint:"Olahraga meditasi dan kelenturan tubuh"},
+  {emoji:"🎣🐟",answer:"Memancing",cat:"Aktivitas",diff:"mudah",hint:"Hobi menunggu lama di tepi air"},
+  {emoji:"🚴‍♂️🏔️",answer:"Bersepeda",cat:"Aktivitas",diff:"mudah",hint:"Olahraga mengayuh roda dua"},
+  {emoji:"📖☕",answer:"Membaca",cat:"Aktivitas",diff:"mudah",hint:"Aktivitas tenang yang memperluas wawasan"},
+  {emoji:"🎮🕹️",answer:"Main Game",cat:"Aktivitas",diff:"mudah",hint:"Hiburan favorit anak-anak dan remaja"},
+  {emoji:"🧑‍🍳🍳",answer:"Masak",cat:"Aktivitas",diff:"mudah",hint:"Aktivitas mengolah bahan makanan"},
+  {emoji:"🏊‍♂️💦",answer:"Berenang",cat:"Aktivitas",diff:"mudah",hint:"Olahraga di air yang menyegarkan"},
+  {emoji:"🎯🏹",answer:"Panahan",cat:"Aktivitas",diff:"sedang",hint:"Olahraga menembak sasaran dengan busur"},
+  {emoji:"🧗‍♂️🏔️",answer:"Panjat Tebing",cat:"Aktivitas",diff:"sedang",hint:"Olahraga ekstrem naik dinding batu"},
+  {emoji:"💤😴🛏️",answer:"Tidur",cat:"Aktivitas",diff:"mudah",hint:"Aktivitas favorit semua orang saat lelah"},
+  {emoji:"🛍️💳",answer:"Belanja",cat:"Aktivitas",diff:"mudah",hint:"Aktivitas favorit di mall"},
+  {emoji:"📱🤳",answer:"Selfie",cat:"Aktivitas",diff:"mudah",hint:"Memotret diri sendiri dengan HP"},
+  {emoji:"🎨🖼️",answer:"Melukis",cat:"Aktivitas",diff:"mudah",hint:"Membuat karya seni di kanvas"},
+  {emoji:"✈️🧳",answer:"Traveling",cat:"Aktivitas",diff:"mudah",hint:"Bepergian ke tempat-tempat baru"},
+  {emoji:"🎂🎉",answer:"Ulang Tahun",cat:"Aktivitas",diff:"mudah",hint:"Perayaan tahunan yang semua orang suka"},
+
+  // Lagu & Musik
+  {emoji:"🌧️☔💔",answer:"Hujan",cat:"Lagu & Musik",diff:"sedang",hint:"Banyak lagu Indonesia bertema cuaca ini"},
+  {emoji:"🌈🎵✨",answer:"Pelangi-Pelangi",cat:"Lagu & Musik",diff:"mudah",hint:"Lagu anak tentang fenomena alam berwarna-warni"},
+  {emoji:"⭐🌙🎶",answer:"Bintang Kecil",cat:"Lagu & Musik",diff:"mudah",hint:"Lagu anak tentang cahaya di langit malam"},
+  {emoji:"🐊🐊🐊🏊",answer:"Anak Gembala",cat:"Lagu & Musik",diff:"sulit",hint:"Lagu anak yang bukan tentang buaya!"},
+  {emoji:"🚂💨",answer:"Naik Kereta Api",cat:"Lagu & Musik",diff:"mudah",hint:"Lagu anak tentang transportasi darat"},
+  {emoji:"🦋🌸",answer:"Kupu-kupu",cat:"Lagu & Musik",diff:"mudah",hint:"Lagu anak tentang serangga cantik"},
+  {emoji:"🎸🔥💀",answer:"Rock & Roll",cat:"Lagu & Musik",diff:"sedang",hint:"Genre musik keras dan penuh energi"},
+  {emoji:"🎹🌙",answer:"Moonlight Sonata",cat:"Lagu & Musik",diff:"sulit",hint:"Karya piano klasik Beethoven"},
+  {emoji:"💃🕺🎶",answer:"Dansa",cat:"Lagu & Musik",diff:"sedang",hint:"Aktivitas bergerak mengikuti irama musik"},
+  {emoji:"🏠❤️👨‍👩‍👧‍👦",answer:"Kasih Ibu",cat:"Lagu & Musik",diff:"sedang",hint:"Lagu tentang cinta orang tua di rumah"},
+  {emoji:"🌍✌️🎵",answer:"Imagine",cat:"Lagu & Musik",diff:"sulit",hint:"Lagu John Lennon tentang perdamaian dunia"},
+  {emoji:"🎄🎅🎁",answer:"Jingle Bells",cat:"Lagu & Musik",diff:"mudah",hint:"Lagu Natal paling terkenal"},
+  {emoji:"🌅🛳️❤️",answer:"My Heart Will Go On",cat:"Lagu & Musik",diff:"sulit",hint:"Lagu tema film kapal tenggelam"},
+  {emoji:"🦅🏔️🇮🇩",answer:"Garuda Pancasila",cat:"Lagu & Musik",diff:"sedang",hint:"Lagu nasional tentang lambang negara"},
+  {emoji:"🌺🏝️🌴",answer:"Bengawan Solo",cat:"Lagu & Musik",diff:"sulit",hint:"Lagu legendaris Jawa tentang sungai"},
+];
+
+const CATEGORIES = [
+  {id:"Film & Serial",label:"Film & Serial",emoji:"🎬"},
+  {id:"Makanan & Minuman",label:"Makanan & Minuman",emoji:"🍽️"},
+  {id:"Tempat Terkenal",label:"Tempat Terkenal",emoji:"🗺️"},
+  {id:"Hewan",label:"Hewan",emoji:"🐾"},
+  {id:"Profesi",label:"Profesi",emoji:"👔"},
+  {id:"Lagu & Musik",label:"Lagu & Musik",emoji:"🎵"},
+  {id:"Aktivitas",label:"Aktivitas",emoji:"🏃"},
+];
+
+const DIFF_MAP = {mudah:1, sedang:2, sulit:3};
+const DIFF_COLOR = {mudah:"#3cff6e", sedang:"#ffcc00", sulit:"#ff3c3c"};
+const DIFF_TIME = {mudah:15, sedang:20, sulit:30};
+const ROUND_OPTIONS = [10,15,20,25];
+const MEDALS = ["🥇","🥈","🥉"];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:30}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*1.5, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*12,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:160,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── CIRCULAR TIMER ─────────────────────────────────────────
+function CircularTimer({timeLeft, totalTime, size=70}) {
+  const r = (size-8)/2;
+  const c = 2*Math.PI*r;
+  const pct = totalTime > 0 ? timeLeft / totalTime : 1;
+  const offset = c * (1 - pct);
+  const col = pct > 0.5 ? "#3cff6e" : pct > 0.25 ? "#ffcc00" : "#ff3c3c";
+  return (
+    <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1a1a28" strokeWidth={4} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={col} strokeWidth={4}
+        strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round"
+        style={{transition:"stroke-dashoffset 0.5s linear, stroke 0.3s"}} />
+      <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
+        fill={col} fontSize={size*0.32} fontFamily="'Bebas Neue',sans-serif"
+        letterSpacing={2} style={{transform:"rotate(90deg)",transformOrigin:"center"}}>
+        {timeLeft}
+      </text>
+    </svg>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState("setup"); // setup, playing, reveal, result
+  const [players, setPlayers] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [numPlayers, setNumPlayers] = useState(4);
+  const [totalRounds, setTotalRounds] = useState(15);
+  const [categories, setCategories] = useState(CATEGORIES.map(c=>c.id));
+  const [difficulty, setDifficulty] = useState("campur");
+  const [useTimer, setUseTimer] = useState(true);
+  const [setupTab, setSetupTab] = useState("pemain");
+
+  // Game state
+  const [roundNum, setRoundNum] = useState(0);
+  const [puzzleQueue, setPuzzleQueue] = useState([]);
+  const [currentPuzzle, setCurrentPuzzle] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [totalTime, setTotalTime] = useState(0);
+  const [hintShown, setHintShown] = useState(false);
+  const [scores, setScores] = useState({});
+  const [roundResult, setRoundResult] = useState(null); // {winner, puzzle, timeTaken}
+  const [history, setHistory] = useState([]);
+  const [flashColor, setFlashColor] = useState(null);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(null);
+
+  // Update player names array when numPlayers changes
+  useEffect(() => {
+    setPlayers(prev => {
+      const n = [...prev];
+      while (n.length < numPlayers) n.push("Pemain " + (n.length + 1));
+      return n.slice(0, numPlayers);
+    });
+  }, [numPlayers]);
+
+  const toggleCategory = (catId) => {
+    if (catId === "all") {
+      setCategories(prev => prev.length === CATEGORIES.length ? [] : CATEGORIES.map(c=>c.id));
+      return;
+    }
+    setCategories(prev => {
+      if (prev.includes(catId)) return prev.filter(c=>c!==catId);
+      return [...prev, catId];
+    });
+  };
+
+  const activeCatCount = categories.length;
+
+  const buildQueue = () => {
+    let pool = PUZZLES.filter(p => categories.includes(p.cat));
+    if (difficulty !== "campur") pool = pool.filter(p => p.diff === difficulty);
+    const shuffled = shuffle(pool);
+    // If we need more than available, cycle
+    const q = [];
+    while (q.length < totalRounds) {
+      q.push(...shuffle(pool));
+    }
+    return q.slice(0, totalRounds);
+  };
+
+  const startGame = () => {
+    const q = buildQueue();
+    setPuzzleQueue(q);
+    setScores(Object.fromEntries(players.map(p=>[p,{total:0,correct:0,hard:0,times:[]}])));
+    setHistory([]);
+    setRoundNum(0);
+    startRound(q, 0);
+  };
+
+  const startRound = (q, rn) => {
+    const puzzle = q[rn];
+    setCurrentPuzzle(puzzle);
+    setRoundNum(rn + 1);
+    setHintShown(false);
+    setRoundResult(null);
+    setFlashColor(null);
+    const t = useTimer ? DIFF_TIME[puzzle.diff] : 0;
+    setTotalTime(t);
+    setTimeLeft(t);
+    startTimeRef.current = Date.now();
+    setPhase("playing");
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (phase !== "playing" || !useTimer || totalTime === 0) return;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          handleTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [phase, totalTime, roundNum]);
+
+  // Hint trigger
+  useEffect(() => {
+    if (phase !== "playing" || !useTimer || totalTime === 0) return;
+    if (timeLeft <= Math.floor(totalTime / 2) && !hintShown) {
+      setHintShown(true);
+    }
+  }, [timeLeft, phase, totalTime, hintShown]);
+
+  // No-timer mode: show hint after 10 seconds
+  useEffect(() => {
+    if (phase !== "playing" || useTimer) return;
+    const t = setTimeout(() => setHintShown(true), 10000);
+    return () => clearTimeout(t);
+  }, [phase, useTimer, roundNum]);
+
+  const handleTimeout = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setFlashColor("#ffcc00");
+    setRoundResult({winner:null, puzzle:currentPuzzle, timeTaken:null});
+    setHistory(prev => [...prev, {puzzle:currentPuzzle, winner:null, timeTaken:null}]);
+    setPhase("reveal");
+  };
+
+  const handleSkip = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setFlashColor("#ffcc00");
+    setRoundResult({winner:null, puzzle:currentPuzzle, timeTaken:null});
+    setHistory(prev => [...prev, {puzzle:currentPuzzle, winner:null, timeTaken:null}]);
+    setPhase("reveal");
+  };
+
+  const handlePlayerGuess = (playerName) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    const timeTaken = useTimer ? Math.round((Date.now() - startTimeRef.current) / 1000) : null;
+    const pts = DIFF_MAP[currentPuzzle.diff];
+    setFlashColor("#3cff6e");
+    setScores(prev => {
+      const s = {...prev};
+      const ps = {...s[playerName]};
+      ps.total += pts;
+      ps.correct += 1;
+      if (currentPuzzle.diff === "sulit") ps.hard += 1;
+      if (timeTaken !== null) ps.times.push(timeTaken);
+      s[playerName] = ps;
+      return s;
+    });
+    setRoundResult({winner:playerName, puzzle:currentPuzzle, timeTaken, pts});
+    setHistory(prev => [...prev, {puzzle:currentPuzzle, winner:playerName, timeTaken, pts}]);
+    setPhase("reveal");
+  };
+
+  const nextRound = () => {
+    setFlashColor(null);
+    if (roundNum >= totalRounds) {
+      setPhase("result");
+    } else {
+      startRound(puzzleQueue, roundNum);
+    }
+  };
+
+  const resetToSetup = () => {
+    setPhase("setup");
+    if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  // Result calculations
+  const sortedScores = useMemo(() => {
+    return Object.entries(scores)
+      .map(([name, s]) => ({name, ...s}))
+      .sort((a,b) => b.total - a.total || b.correct - a.correct);
+  }, [scores]);
+
+  const maxScore = sortedScores.length ? sortedScores[0].total : 1;
+
+  const brainEmoji = useMemo(() => {
+    if (!sortedScores.length) return null;
+    const top = [...sortedScores].sort((a,b)=>b.correct-a.correct)[0];
+    return top.correct > 0 ? top : null;
+  }, [sortedScores]);
+
+  const fastestPlayer = useMemo(() => {
+    if (!useTimer) return null;
+    let best = null;
+    sortedScores.forEach(s => {
+      if (s.times.length > 0) {
+        const avg = s.times.reduce((a,b)=>a+b,0)/s.times.length;
+        if (!best || avg < best.avg) best = {name:s.name, avg};
+      }
+    });
+    return best;
+  }, [sortedScores, useTimer]);
+
+  const hardMaster = useMemo(() => {
+    if (!sortedScores.length) return null;
+    const top = [...sortedScores].sort((a,b)=>b.hard-a.hard)[0];
+    return top.hard > 0 ? top : null;
+  }, [sortedScores]);
+
+  const diffStars = (diff) => {
+    const n = DIFF_MAP[diff];
+    const col = DIFF_COLOR[diff];
+    return Array(n).fill(null).map((_,i) => (
+      <span key={i} style={{color:col, fontSize:14}}>&#9733;</span>
+    ));
+  };
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,9vw,80px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(180px) rotate(360deg);opacity:0}}
+        @keyframes hintIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,60,60,0)}50%{box-shadow:0 0 20px 4px rgba(255,60,60,.3)}}
+        @keyframes flashGreen{0%{background:#3cff6e22}100%{background:transparent}}
+        @keyframes flashYellow{0%{background:#ffcc0022}100%{background:transparent}}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .cat-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#888;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace;font-size:12px;text-align:left;display:flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
+        .cat-btn.on{border-color:#ff3c3c;color:#f0ede8;background:#1f1020}
+        .cat-btn:active{transform:scale(.98)}
+        .player-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:14px 16px;border-radius:8px;cursor:pointer;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;text-align:center;-webkit-tap-highlight-color:transparent}
+        .player-btn:hover{border-color:#3cff6e;background:#0a2a0a}
+        .player-btn:active{transform:scale(.96);background:#0a3a0a}
+        .diff-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#888;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace;font-size:11px;flex:1;text-align:center;-webkit-tap-highlight-color:transparent}
+        .diff-btn.on{border-color:#ff3c3c;color:#f0ede8;background:#1f1020}
+        .diff-btn:active{transform:scale(.98)}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .emoji-display{font-size:clamp(48px,14vw,80px);text-align:center;line-height:1.3;padding:16px 0;letter-spacing:4px}
+        .cat-tag{display:inline-block;background:#1a1a28;border:1px solid #2a2a3a;border-radius:12px;padding:3px 12px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px}
+        .hint-text{animation:hintIn .5s ease-out;font-family:'Space Mono',monospace;font-size:12px;color:#ffcc00;text-align:center;padding:8px 12px;background:#2a220a;border:1px solid #ffcc0033;border-radius:6px;margin-top:12px;line-height:1.5}
+        .stat-card{background:#0e0e18;border:1px solid #2a2a3a;border-radius:6px;padding:12px;text-align:center}
+        .review-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #1a1a28}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">TEBAK EMOJI</div>
+          <div className="SUB" style={{marginTop:4}}>permainan tebak emoji keluarga</div>
+          {phase === "playing" && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {roundNum} / {totalRounds}</div>
+          )}
+        </div>
+
+        {/* ─── SETUP ─── */}
+        {phase === "setup" && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["pemain","Pemain"],["kategori","Kategori"],["aturan","Aturan"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (setupTab===k?" a":"")} onClick={() => setSetupTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {setupTab === "pemain" && (
+              <div>
+                <div className="SUB" style={{marginBottom:16}}>jumlah pemain</div>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20,justifyContent:"center"}}>
+                  <button className="cbt" onClick={()=>setNumPlayers(Math.max(2,numPlayers-1))} disabled={numPlayers<=2}>-</button>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#ff3c3c",minWidth:40,textAlign:"center"}}>{numPlayers}</span>
+                  <button className="cbt" onClick={()=>setNumPlayers(Math.min(8,numPlayers+1))} disabled={numPlayers>=8}>+</button>
+                </div>
+                <div className="SUB" style={{marginBottom:10}}>nama pemain</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {players.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...players]; u[i]=e.target.value; setPlayers(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {setupTab === "kategori" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>pilih kategori (min. 2)</div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  <button className={"cat-btn" + (categories.length === CATEGORIES.length ? " on":"")}
+                    onClick={()=>toggleCategory("all")}>
+                    <span style={{fontSize:16}}>🎲</span>
+                    <span>Campur Semua</span>
+                    {categories.length === CATEGORIES.length && <span style={{marginLeft:"auto",color:"#3cff6e"}}>&#10003;</span>}
+                  </button>
+                  {CATEGORIES.map(c => (
+                    <button key={c.id} className={"cat-btn" + (categories.includes(c.id) ? " on":"")}
+                      onClick={()=>toggleCategory(c.id)}>
+                      <span style={{fontSize:16}}>{c.emoji}</span>
+                      <span>{c.label}</span>
+                      {categories.includes(c.id) && <span style={{marginLeft:"auto",color:"#3cff6e"}}>&#10003;</span>}
+                    </button>
+                  ))}
+                </div>
+                <div style={{marginTop:16}}>
+                  <div className="SUB" style={{marginBottom:10}}>jumlah ronde</div>
+                  <div style={{display:"flex",gap:6}}>
+                    {ROUND_OPTIONS.map(r => (
+                      <button key={r} className={"diff-btn" + (totalRounds===r?" on":"")}
+                        onClick={()=>setTotalRounds(r)}>{r}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {setupTab === "aturan" && (
+              <div>
+                <div className="SUB" style={{marginBottom:10}}>tingkat kesulitan</div>
+                <div style={{display:"flex",gap:6,marginBottom:16}}>
+                  {[["campur","Campur"],["mudah","Mudah"],["sedang","Sedang"],["sulit","Sulit"]].map(([k,l]) => (
+                    <button key={k} className={"diff-btn" + (difficulty===k?" on":"")}
+                      onClick={()=>setDifficulty(k)}>{l}</button>
+                  ))}
+                </div>
+                <div className="SUB" style={{marginBottom:10}}>timer</div>
+                <div style={{display:"flex",gap:6,marginBottom:16}}>
+                  <button className={"diff-btn" + (useTimer?" on":"")} onClick={()=>setUseTimer(true)}>
+                    Pakai Timer
+                  </button>
+                  <button className={"diff-btn" + (!useTimer?" on":"")} onClick={()=>setUseTimer(false)}>
+                    Tanpa Timer
+                  </button>
+                </div>
+                {useTimer && (
+                  <div style={{background:"#0e0e18",border:"1px solid #2a2a3a",borderRadius:6,padding:10,fontSize:11,color:"#666",lineHeight:1.6}}>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                      <span><span style={{color:"#3cff6e"}}>&#9733;</span> Mudah</span><span style={{color:"#f0ede8"}}>15 detik</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                      <span><span style={{color:"#ffcc00"}}>&#9733;&#9733;</span> Sedang</span><span style={{color:"#f0ede8"}}>20 detik</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between"}}>
+                      <span><span style={{color:"#ff3c3c"}}>&#9733;&#9733;&#9733;</span> Sulit</span><span style={{color:"#f0ede8"}}>30 detik</span>
+                    </div>
+                  </div>
+                )}
+                <hr className="hr" />
+                <div className="SUB" style={{marginBottom:8}}>cara main</div>
+                <div style={{fontSize:11,color:"#666",lineHeight:1.7}}>
+                  1. Emoji muncul di layar<br/>
+                  2. Semua pemain berlomba menebak<br/>
+                  3. Juri (pemegang HP) tap nama yang benar duluan<br/>
+                  4. Poin: <span style={{color:"#3cff6e"}}>&#9733;</span>=1, <span style={{color:"#ffcc00"}}>&#9733;&#9733;</span>=2, <span style={{color:"#ff3c3c"}}>&#9733;&#9733;&#9733;</span>=3<br/>
+                  5. Hint muncul setelah setengah waktu<br/>
+                  6. Pemain terbanyak poin menang!
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" disabled={activeCatCount < 2} onClick={startGame}>
+                MULAI GAME
+              </button>
+              {activeCatCount < 2 && (
+                <div style={{color:"#ff3c3c",fontSize:11,marginTop:8,textAlign:"center"}}>Pilih minimal 2 kategori</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── PLAYING ─── */}
+        {phase === "playing" && currentPuzzle && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            {/* Category + Difficulty */}
+            <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
+              <span className="cat-tag">{currentPuzzle.cat}</span>
+              <span>{diffStars(currentPuzzle.diff)}</span>
+            </div>
+
+            {/* Timer */}
+            {useTimer && (
+              <div style={{display:"flex",justifyContent:"center",marginBottom:8}}>
+                <CircularTimer timeLeft={timeLeft} totalTime={totalTime} />
+              </div>
+            )}
+
+            {/* Emoji Display */}
+            <div className="emoji-display" style={{animation:"pulseGlow 2s ease-in-out infinite"}}>
+              {currentPuzzle.emoji}
+            </div>
+
+            {/* Hint */}
+            {hintShown && (
+              <div className="hint-text">
+                <span style={{fontSize:14,marginRight:6}}>💡</span>
+                {currentPuzzle.hint}
+              </div>
+            )}
+
+            {!hintShown && (
+              <div style={{fontSize:10,color:"#444",marginTop:8,letterSpacing:2}}>
+                {useTimer ? `HINT MUNCUL DALAM ${Math.max(0, timeLeft - Math.floor(totalTime/2))} DETIK` : "HINT SEGERA MUNCUL..."}
+              </div>
+            )}
+
+            <hr className="hr" />
+
+            {/* Player buttons */}
+            <div className="SUB" style={{marginBottom:10}}>siapa yang benar?</div>
+            <div style={{display:"grid",gridTemplateColumns:players.length <= 4 ? "1fr 1fr" : "1fr 1fr 1fr", gap:8}}>
+              {players.map((p,i) => (
+                <button key={i} className="player-btn" onClick={()=>handlePlayerGuess(p)}>
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            <div style={{marginTop:12}}>
+              <button className="ghost" onClick={handleSkip}>
+                TIDAK ADA YANG BENAR
+              </button>
+            </div>
+
+            {/* Show hint button if no timer */}
+            {!useTimer && !hintShown && (
+              <div style={{marginTop:8}}>
+                <button className="ghost" onClick={()=>setHintShown(true)} style={{fontSize:10,padding:6}}>
+                  TAMPILKAN HINT
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── REVEAL ─── */}
+        {phase === "reveal" && roundResult && (
+          <div className="card fi" style={{textAlign:"center",
+            animation: flashColor === "#3cff6e" ? "flashGreen .8s ease-out" : flashColor === "#ffcc00" ? "flashYellow .8s ease-out" : "none"
+          }}>
+            {roundResult.winner && <Confetti />}
+
+            {roundResult.winner ? (
+              <div>
+                <div style={{fontSize:48,marginBottom:8}}>🎉</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#3cff6e",marginBottom:4}}>
+                  BENAR!
+                </div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,letterSpacing:4,color:"#ff3c3c",marginBottom:12}}>
+                  {roundResult.winner}
+                </div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#ffcc00",letterSpacing:2}}>
+                  +{roundResult.pts} POIN
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{fontSize:48,marginBottom:8}}>😅</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ffcc00",marginBottom:4}}>
+                  WAKTU HABIS!
+                </div>
+                <div style={{fontSize:13,color:"#888",marginBottom:12}}>Tidak ada yang menebak dengan benar</div>
+              </div>
+            )}
+
+            <hr className="hr" />
+
+            {/* Show answer */}
+            <div style={{marginBottom:16}}>
+              <div className="emoji-display" style={{marginBottom:8}}>{roundResult.puzzle.emoji}</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:4,color:"#f0ede8"}}>
+                = {roundResult.puzzle.answer}
+              </div>
+              <div style={{display:"flex",justifyContent:"center",gap:8,marginTop:8}}>
+                <span className="cat-tag">{roundResult.puzzle.cat}</span>
+                <span>{diffStars(roundResult.puzzle.diff)}</span>
+              </div>
+            </div>
+
+            {/* Quick scoreboard */}
+            <div style={{background:"#0e0e18",borderRadius:6,padding:10,marginBottom:16,border:"1px solid #2a2a3a"}}>
+              <div className="SUB" style={{marginBottom:8}}>skor sementara</div>
+              {Object.entries(scores).sort((a,b)=>b[1].total-a[1].total).map(([name,s],i) => (
+                <div key={name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",
+                  borderBottom: i < Object.keys(scores).length - 1 ? "1px solid #1a1a28" : "none"}}>
+                  <span style={{fontSize:12,color:name===roundResult?.winner?"#3cff6e":"#888"}}>{name}</span>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#f0ede8",letterSpacing:2}}>{s.total}</span>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn" onClick={nextRound}>
+              {roundNum >= totalRounds ? "LIHAT HASIL" : "LANJUT"}
+            </button>
+          </div>
+        )}
+
+        {/* ─── RESULT ─── */}
+        {phase === "result" && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:48,marginBottom:4}}>🏆</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:4,color:"#ffcc00"}}>HASIL AKHIR</div>
+            </div>
+
+            {/* Leaderboard */}
+            <div style={{marginBottom:20}}>
+              {sortedScores.map((s,i) => (
+                <div key={s.name} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",
+                  borderBottom: i < sortedScores.length - 1 ? "1px solid #1a1a28" : "none"}}>
+                  <span style={{fontSize:24,width:32,textAlign:"center"}}>{i < 3 ? MEDALS[i] : (i+1)}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,
+                      color:i===0?"#ffcc00":"#f0ede8"}}>{s.name}</div>
+                    <div className="lbw">
+                      <div className="lbb" style={{width:(maxScore>0?s.total/maxScore*100:0)+"%",
+                        background:i===0?"#ffcc00":i===1?"#c0c0c0":i===2?"#cd7f32":"#ff3c3c"}} />
+                    </div>
+                  </div>
+                  <div className="pts" style={{color:i===0?"#ffcc00":"#f0ede8"}}>{s.total}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Fun stats */}
+            <div className="SUB" style={{marginBottom:10}}>penghargaan</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+              {brainEmoji && (
+                <div className="stat-card">
+                  <div style={{fontSize:24}}>🧠</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:"#888",marginBottom:2}}>OTAK EMOJI</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#3cff6e",letterSpacing:2}}>{brainEmoji.name}</div>
+                  <div style={{fontSize:10,color:"#666"}}>{brainEmoji.correct} tebakan benar</div>
+                </div>
+              )}
+              {fastestPlayer && (
+                <div className="stat-card">
+                  <div style={{fontSize:24}}>&#9889;</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:"#888",marginBottom:2}}>KILAT</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#ffcc00",letterSpacing:2}}>{fastestPlayer.name}</div>
+                  <div style={{fontSize:10,color:"#666"}}>rata-rata {fastestPlayer.avg.toFixed(1)} detik</div>
+                </div>
+              )}
+              {hardMaster && (
+                <div className="stat-card">
+                  <div style={{fontSize:24}}>💪</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:"#888",marginBottom:2}}>PENAKLUK SULIT</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#ff3c3c",letterSpacing:2}}>{hardMaster.name}</div>
+                  <div style={{fontSize:10,color:"#666"}}>{hardMaster.hard} soal sulit dijawab</div>
+                </div>
+              )}
+            </div>
+
+            {/* Review all puzzles */}
+            <div className="SUB" style={{marginBottom:10}}>review semua soal</div>
+            <div style={{maxHeight:300,overflowY:"auto",marginBottom:16,border:"1px solid #2a2a3a",borderRadius:6,padding:8,background:"#0e0e18"}}>
+              {history.map((h,i) => (
+                <div key={i} className="review-row">
+                  <span style={{fontSize:10,color:"#555",minWidth:20}}>{i+1}</span>
+                  <span style={{fontSize:20,minWidth:60}}>{h.puzzle.emoji}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,color:"#f0ede8",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{h.puzzle.answer}</div>
+                    <div style={{fontSize:10,color:h.winner?"#3cff6e":"#666"}}>{h.winner || "Tidak ada"}</div>
+                  </div>
+                  <span style={{fontSize:10,color:DIFF_COLOR[h.puzzle.diff]}}>{diffStars(h.puzzle.diff)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={()=>{
+                setPhase("setup");
+                if (timerRef.current) clearInterval(timerRef.current);
+              }}>MAIN LAGI</button>
+              <button className="ghost" onClick={resetToSetup}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

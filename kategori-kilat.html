@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>KATEGORI KILAT - Speed Categories Family Game</title>
+<meta name="description" content="Permainan kategori kilat keluarga! Siapa tercepat menjawab?"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── PROMPTS DATABASE (100+) ─────────────────────────────
+const PROMPTS = [
+  // Huruf Tertentu (~25)
+  {text:"Buah yang dimulai huruf M!",examples:["Mangga","Melon","Manggis","Markisa"],cat:"huruf"},
+  {text:"Hewan yang dimulai huruf K!",examples:["Kucing","Kelinci","Kuda","Komodo"],cat:"huruf"},
+  {text:"Nama kota yang dimulai huruf S!",examples:["Surabaya","Semarang","Solo","Samarinda"],cat:"huruf"},
+  {text:"Makanan yang dimulai huruf N!",examples:["Nasi Goreng","Nasi Uduk","Nugget"],cat:"huruf"},
+  {text:"Nama negara yang dimulai huruf I!",examples:["Indonesia","India","Inggris","Iran"],cat:"huruf"},
+  {text:"Profesi yang dimulai huruf P!",examples:["Pilot","Polisi","Programmer","Petani"],cat:"huruf"},
+  {text:"Benda di rumah yang dimulai huruf L!",examples:["Lemari","Lampu","Lantai"],cat:"huruf"},
+  {text:"Minuman yang dimulai huruf E!",examples:["Es Teh","Es Jeruk","Es Krim","Espresso"],cat:"huruf"},
+  {text:"Film yang dimulai huruf B!",examples:["Batman","Barbie","Black Panther"],cat:"huruf"},
+  {text:"Warna yang dimulai huruf H!",examples:["Hijau","Hitam"],cat:"huruf"},
+  {text:"Sayuran yang dimulai huruf B!",examples:["Bayam","Brokoli","Buncis"],cat:"huruf"},
+  {text:"Pakaian yang dimulai huruf C!",examples:["Celana","Cardigan"],cat:"huruf"},
+  {text:"Alat musik yang dimulai huruf G!",examples:["Gitar","Gamelan","Gendang"],cat:"huruf"},
+  {text:"Olahraga yang dimulai huruf S!",examples:["Sepak Bola","Senam","Surfing"],cat:"huruf"},
+  {text:"Nama yang dimulai huruf A!",examples:["Ahmad","Ani","Andi","Ayu"],cat:"huruf"},
+  {text:"Merek mobil yang dimulai huruf T!",examples:["Toyota","Tesla","Tata"],cat:"huruf"},
+  {text:"Lagu yang dimulai huruf C!",examples:["Cinta Luar Biasa","Cinta Sejati"],cat:"huruf"},
+  {text:"Sungai yang dimulai huruf M!",examples:["Musi","Mahakam","Mississippi"],cat:"huruf"},
+  {text:"Pulau yang dimulai huruf J!",examples:["Jawa","Jamaica"],cat:"huruf"},
+  {text:"Tokoh yang dimulai huruf R!",examples:["Raffi Ahmad","Raditya Dika"],cat:"huruf"},
+  {text:"Tumbuhan yang dimulai huruf P!",examples:["Padi","Palm","Pohon Jati"],cat:"huruf"},
+  {text:"Bumbu dapur yang dimulai huruf B!",examples:["Bawang Merah","Bawang Putih"],cat:"huruf"},
+  {text:"Penyakit yang dimulai huruf D!",examples:["Demam","Diabetes","Diare"],cat:"huruf"},
+  {text:"Mata pelajaran yang dimulai huruf M!",examples:["Matematika","Musik"],cat:"huruf"},
+  {text:"Aplikasi yang dimulai huruf W!",examples:["WhatsApp","Waze"],cat:"huruf"},
+
+  // Jumlah / Sifat (~25)
+  {text:"Hewan berkaki 4!",examples:["Kucing","Anjing","Sapi","Kuda"],cat:"sifat"},
+  {text:"Makanan yang berkuah!",examples:["Bakso","Soto","Rawon","Sup"],cat:"sifat"},
+  {text:"Benda yang berwarna merah!",examples:["Tomat","Apel","Cabai"],cat:"sifat"},
+  {text:"Sesuatu yang dingin!",examples:["Es","Salju","AC","Kulkas"],cat:"sifat"},
+  {text:"Sesuatu yang bisa terbang!",examples:["Burung","Pesawat","Kupu-kupu"],cat:"sifat"},
+  {text:"Hewan yang hidup di air!",examples:["Ikan","Lumba-lumba","Ubur-ubur"],cat:"sifat"},
+  {text:"Makanan yang pedas!",examples:["Sambal","Ayam Geprek","Seblak"],cat:"sifat"},
+  {text:"Benda yang bulat!",examples:["Bola","Telur","Bulan","Koin"],cat:"sifat"},
+  {text:"Sesuatu yang bisa dimakan mentah!",examples:["Buah","Sushi","Salad"],cat:"sifat"},
+  {text:"Benda yang terbuat dari kayu!",examples:["Meja","Kursi","Pintu"],cat:"sifat"},
+  {text:"Sesuatu yang berbunyi!",examples:["Bel","HP","Burung","Alarm"],cat:"sifat"},
+  {text:"Hewan yang berbahaya!",examples:["Ular","Buaya","Hiu","Singa"],cat:"sifat"},
+  {text:"Makanan yang manis!",examples:["Kue","Coklat","Es Krim"],cat:"sifat"},
+  {text:"Benda yang transparan!",examples:["Kaca","Air","Plastik"],cat:"sifat"},
+  {text:"Sesuatu yang bau!",examples:["Durian","Sampah","Pete"],cat:"sifat"},
+  {text:"Benda yang ada di tas sekolah!",examples:["Buku","Pensil","Penghapus"],cat:"sifat"},
+  {text:"Makanan yang digoreng!",examples:["Tempe Goreng","Ayam Goreng","Pisang Goreng"],cat:"sifat"},
+  {text:"Sesuatu yang panjang!",examples:["Ular","Kereta","Sungai","Jalan"],cat:"sifat"},
+  {text:"Hewan yang lucu!",examples:["Kucing","Kelinci","Panda"],cat:"sifat"},
+  {text:"Benda elektronik!",examples:["HP","Laptop","TV","Kulkas"],cat:"sifat"},
+  {text:"Sesuatu yang ada di dapur!",examples:["Kompor","Panci","Pisau"],cat:"sifat"},
+  {text:"Makanan yang dimakan saat lebaran!",examples:["Ketupat","Opor Ayam","Rendang"],cat:"sifat"},
+  {text:"Benda yang bisa pecah!",examples:["Gelas","Piring","Cermin"],cat:"sifat"},
+  {text:"Sesuatu yang sticky/lengket!",examples:["Lem","Permen Karet","Madu"],cat:"sifat"},
+  {text:"Hewan yang punya sayap tapi nggak bisa terbang!",examples:["Penguin","Ayam","Burung Unta"],cat:"sifat"},
+
+  // Pengetahuan (~25)
+  {text:"Ibukota negara di Asia!",examples:["Tokyo","Bangkok","Beijing","Delhi"],cat:"pengetahuan"},
+  {text:"Nama presiden Indonesia!",examples:["Soekarno","Soeharto","Habibie","Jokowi"],cat:"pengetahuan"},
+  {text:"Planet di tata surya!",examples:["Mars","Jupiter","Venus"],cat:"pengetahuan"},
+  {text:"Nama provinsi di Indonesia!",examples:["Jawa Barat","Bali","Aceh"],cat:"pengetahuan"},
+  {text:"Gunung di Indonesia!",examples:["Bromo","Semeru","Rinjani"],cat:"pengetahuan"},
+  {text:"Nama suku di Indonesia!",examples:["Jawa","Sunda","Batak","Bugis"],cat:"pengetahuan"},
+  {text:"Bahasa di dunia!",examples:["Mandarin","Inggris","Arab","Spanyol"],cat:"pengetahuan"},
+  {text:"Nama benua!",examples:["Asia","Eropa","Afrika","Amerika"],cat:"pengetahuan"},
+  {text:"Nama samudra!",examples:["Pasifik","Atlantik","Hindia"],cat:"pengetahuan"},
+  {text:"Pahlawan nasional Indonesia!",examples:["Kartini","Diponegoro","Sudirman"],cat:"pengetahuan"},
+  {text:"Merek HP terkenal!",examples:["Samsung","Apple","Xiaomi","Oppo"],cat:"pengetahuan"},
+  {text:"Film Disney!",examples:["Frozen","Moana","Aladdin","Lion King"],cat:"pengetahuan"},
+  {text:"Nama mata uang!",examples:["Rupiah","Dollar","Yen","Euro"],cat:"pengetahuan"},
+  {text:"Tarian tradisional Indonesia!",examples:["Saman","Pendet","Jaipong"],cat:"pengetahuan"},
+  {text:"Makanan khas daerah Indonesia!",examples:["Rendang","Gudeg","Pempek"],cat:"pengetahuan"},
+  {text:"Nama danau di dunia!",examples:["Toba","Victoria","Baikal"],cat:"pengetahuan"},
+  {text:"Hewan yang dilindungi di Indonesia!",examples:["Komodo","Orangutan","Harimau Sumatera"],cat:"pengetahuan"},
+  {text:"Nama stasiun kereta di Jakarta!",examples:["Gambir","Manggarai","Tanah Abang"],cat:"pengetahuan"},
+  {text:"Merek mie instan!",examples:["Indomie","Mie Sedaap","Sarimi"],cat:"pengetahuan"},
+  {text:"Klub sepak bola Indonesia!",examples:["Persija","Persib","Arema"],cat:"pengetahuan"},
+  {text:"Artis Indonesia!",examples:["Agnez Mo","Raisa","Dian Sastro"],cat:"pengetahuan"},
+  {text:"Alat transportasi umum di Jakarta!",examples:["TransJakarta","MRT","KRL","Angkot"],cat:"pengetahuan"},
+  {text:"Nama bandara di Indonesia!",examples:["Soekarno-Hatta","Ngurah Rai","Juanda"],cat:"pengetahuan"},
+  {text:"Media sosial!",examples:["Instagram","TikTok","Twitter","Facebook"],cat:"pengetahuan"},
+  {text:"Tokoh kartun!",examples:["SpongeBob","Doraemon","Naruto"],cat:"pengetahuan"},
+
+  // Pop Culture (~25)
+  {text:"Lagu anak-anak Indonesia!",examples:["Balonku","Pelangi-Pelangi","Bintang Kecil"],cat:"popculture"},
+  {text:"Judul film Marvel!",examples:["Avengers","Black Panther","Spider-Man"],cat:"popculture"},
+  {text:"Nama YouTuber Indonesia!",examples:["Atta Halilintar","Deddy Corbuzier","Raditya Dika"],cat:"popculture"},
+  {text:"Game yang terkenal!",examples:["Minecraft","PUBG","Mobile Legends"],cat:"popculture"},
+  {text:"Nama band Indonesia!",examples:["Sheila on 7","Dewa 19","Peterpan","Noah"],cat:"popculture"},
+  {text:"Serial TV/Netflix yang terkenal!",examples:["Squid Game","Stranger Things"],cat:"popculture"},
+  {text:"Nama karakter Harry Potter!",examples:["Harry","Hermione","Ron","Dumbledore"],cat:"popculture"},
+  {text:"Meme Indonesia yang terkenal!",examples:["Stonks","Sad Cat","Doge"],cat:"popculture"},
+  {text:"Aplikasi delivery makanan!",examples:["GoFood","GrabFood","ShopeeFood"],cat:"popculture"},
+  {text:"E-commerce di Indonesia!",examples:["Tokopedia","Shopee","Lazada"],cat:"popculture"},
+  {text:"Lagu yang viral di TikTok!",examples:["Ojo Dibandingke","Lemon Tree"],cat:"popculture"},
+  {text:"Superhero DC!",examples:["Batman","Superman","Wonder Woman"],cat:"popculture"},
+  {text:"Nama karakter Disney Princess!",examples:["Elsa","Moana","Rapunzel"],cat:"popculture"},
+  {text:"Snack/jajanan Indonesia!",examples:["Chitato","Taro","Beng-Beng"],cat:"popculture"},
+  {text:"Nama restoran cepat saji!",examples:["McDonald's","KFC","Burger King"],cat:"popculture"},
+  {text:"Komik/Manga terkenal!",examples:["Naruto","One Piece","Dragon Ball"],cat:"popculture"},
+  {text:"Nama karakter SpongeBob!",examples:["SpongeBob","Patrick","Squidward"],cat:"popculture"},
+  {text:"Film Studio Ghibli!",examples:["Spirited Away","Totoro","Howl's Moving Castle"],cat:"popculture"},
+  {text:"Brand fashion terkenal!",examples:["Nike","Adidas","Gucci","Zara"],cat:"popculture"},
+  {text:"Nama idol K-Pop!",examples:["BTS","BLACKPINK","Stray Kids"],cat:"popculture"},
+  {text:"Platform streaming!",examples:["Netflix","Disney+","Vidio","YouTube"],cat:"popculture"},
+  {text:"Nama Avengers!",examples:["Iron Man","Thor","Hulk","Captain America"],cat:"popculture"},
+  {text:"Nama Pokemon!",examples:["Pikachu","Charmander","Bulbasaur"],cat:"popculture"},
+  {text:"Lagu karaoke favorit!",examples:["Bohemian Rhapsody","Bento","Separuh Aku"],cat:"popculture"},
+  {text:"Acara TV Indonesia!",examples:["Indonesian Idol","MasterChef","The Voice"],cat:"popculture"},
+];
+
+// ─── SHUFFLE ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:30}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*12,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:160,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── PHASES ─────────────────────────────────────────────────
+const PH = {SETUP:"setup",COUNTDOWN:"countdown",PLAY:"play",ROUND_RESULT:"round_result",FINAL:"final"};
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [players, setPlayers] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [numRounds, setNumRounds] = useState(15);
+  const [timerSec, setTimerSec] = useState(15);
+  const [currentRound, setCurrentRound] = useState(0);
+  const [scores, setScores] = useState({});
+  const [roundHistory, setRoundHistory] = useState([]);
+  const [usedIndices, setUsedIndices] = useState([]);
+  const [currentPrompt, setCurrentPrompt] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [countdownNum, setCountdownNum] = useState(3);
+  const [roundWinner, setRoundWinner] = useState(null);
+  const [greenFlash, setGreenFlash] = useState(false);
+  const [rejected, setRejected] = useState(false);
+  const [tab, setTab] = useState("players");
+  const timerRef = useRef(null);
+  const roundStartRef = useRef(false);
+
+  // Streaks tracking
+  const [streaks, setStreaks] = useState({});
+  const [currentStreaks, setCurrentStreaks] = useState({});
+
+  const pickPrompt = useCallback(() => {
+    let available = PROMPTS.map((p,i) => i).filter(i => !usedIndices.includes(i));
+    if (available.length === 0) {
+      setUsedIndices([]);
+      available = PROMPTS.map((p,i) => i);
+    }
+    const idx = available[Math.floor(Math.random() * available.length)];
+    setUsedIndices(prev => [...prev, idx]);
+    return PROMPTS[idx];
+  }, [usedIndices]);
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (phase !== PH.PLAY || timeLeft <= 0) return;
+    timerRef.current = setTimeout(() => {
+      setTimeLeft(t => t - 1);
+    }, 1000);
+    return () => clearTimeout(timerRef.current);
+  }, [phase, timeLeft]);
+
+  // Time's up
+  useEffect(() => {
+    if (phase === PH.PLAY && timeLeft === 0 && roundStartRef.current) {
+      clearTimeout(timerRef.current);
+      setRoundWinner(null);
+      setPhase(PH.ROUND_RESULT);
+      setRoundHistory(prev => [...prev, {prompt: currentPrompt, winner: null, answer: null}]);
+    }
+  }, [timeLeft, phase]);
+
+  // 3-2-1 countdown
+  useEffect(() => {
+    if (phase !== PH.COUNTDOWN) return;
+    if (countdownNum <= 0) {
+      roundStartRef.current = true;
+      setPhase(PH.PLAY);
+      setTimeLeft(timerSec);
+      return;
+    }
+    const t = setTimeout(() => setCountdownNum(c => c - 1), 700);
+    return () => clearTimeout(t);
+  }, [phase, countdownNum, timerSec]);
+
+  const startGame = () => {
+    const s = {};
+    players.forEach(p => { s[p] = 0; });
+    setScores(s);
+    setRoundHistory([]);
+    setCurrentRound(0);
+    setStreaks({});
+    setCurrentStreaks({});
+    startNextRound(0, s, {}, {});
+  };
+
+  const startNextRound = (round, scoresObj, streaksObj, curStreaksObj) => {
+    const prompt = pickPrompt();
+    setCurrentPrompt(prompt);
+    setCurrentRound(round + 1);
+    setRoundWinner(null);
+    setGreenFlash(false);
+    setRejected(false);
+    setCountdownNum(3);
+    roundStartRef.current = false;
+    setPhase(PH.COUNTDOWN);
+  };
+
+  const awardPoint = (playerName) => {
+    clearTimeout(timerRef.current);
+    const pts = currentPrompt.cat === "pengetahuan" ? 2 : 1;
+    const newScores = {...scores, [playerName]: (scores[playerName] || 0) + pts};
+    setScores(newScores);
+    setRoundWinner(playerName);
+    setGreenFlash(true);
+    setTimeout(() => setGreenFlash(false), 400);
+
+    // Update streaks
+    const newCurStreaks = {...currentStreaks};
+    players.forEach(p => {
+      if (p === playerName) {
+        newCurStreaks[p] = (newCurStreaks[p] || 0) + 1;
+      } else {
+        newCurStreaks[p] = 0;
+      }
+    });
+    setCurrentStreaks(newCurStreaks);
+    const newStreaks = {...streaks};
+    players.forEach(p => {
+      newStreaks[p] = Math.max(newStreaks[p] || 0, newCurStreaks[p] || 0);
+    });
+    setStreaks(newStreaks);
+
+    setRoundHistory(prev => [...prev, {prompt: currentPrompt, winner: playerName, pts}]);
+    setPhase(PH.ROUND_RESULT);
+  };
+
+  const rejectAnswer = () => {
+    setRejected(true);
+    setRoundWinner(null);
+    // Resume - don't change phase, just let timer continue
+  };
+
+  const nextRound = () => {
+    if (currentRound >= numRounds) {
+      setPhase(PH.FINAL);
+    } else {
+      startNextRound(currentRound, scores, streaks, currentStreaks);
+    }
+  };
+
+  const resetGame = () => {
+    setPhase(PH.SETUP);
+    setScores({});
+    setRoundHistory([]);
+    setUsedIndices([]);
+    setCurrentRound(0);
+    setStreaks({});
+    setCurrentStreaks({});
+  };
+
+  // Sorted leaderboard
+  const sortedPlayers = useMemo(() => {
+    return [...players].sort((a,b) => (scores[b]||0) - (scores[a]||0));
+  }, [players, scores]);
+
+  const maxScore = useMemo(() => Math.max(...Object.values(scores), 1), [scores]);
+
+  // Stats
+  const stats = useMemo(() => {
+    const wins = {};
+    const knowledgeWins = {};
+    players.forEach(p => { wins[p] = 0; knowledgeWins[p] = 0; });
+    roundHistory.forEach(r => {
+      if (r.winner) {
+        wins[r.winner] = (wins[r.winner] || 0) + 1;
+        if (r.prompt.cat === "pengetahuan") {
+          knowledgeWins[r.winner] = (knowledgeWins[r.winner] || 0) + 1;
+        }
+      }
+    });
+    const mostWins = Object.entries(wins).sort((a,b) => b[1]-a[1]);
+    const mostKnowledge = Object.entries(knowledgeWins).sort((a,b) => b[1]-a[1]);
+    const longestStreak = Object.entries(streaks).sort((a,b) => b[1]-a[1]);
+
+    return {
+      siKilat: mostWins[0]?.[1] > 0 ? mostWins[0] : null,
+      ensiklopedia: mostKnowledge[0]?.[1] > 0 ? mostKnowledge[0] : null,
+      streak: longestStreak[0]?.[1] > 1 ? longestStreak[0] : null,
+    };
+  }, [roundHistory, streaks, players]);
+
+  const MEDALS = ["\u{1F947}","\u{1F948}","\u{1F949}"];
+
+  const timerPct = timerSec > 0 ? (timeLeft / timerSec) * 100 : 0;
+  const timerUrgent = timeLeft <= 5;
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,72px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(160px) rotate(360deg);opacity:0}}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .prompt-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,9vw,64px);letter-spacing:3px;color:#f0ede8;text-align:center;line-height:1.1;padding:20px 0}
+        .countdown-num{font-family:'Bebas Neue',sans-serif;font-size:clamp(100px,30vw,200px);color:#ff3c3c;text-shadow:0 0 60px #ff3c3c88;animation:countPulse .7s ease-out;text-align:center;line-height:1}
+        @keyframes countPulse{0%{transform:scale(1.5);opacity:0}50%{opacity:1}100%{transform:scale(1);opacity:1}}
+        .timer-bar{height:8px;border-radius:4px;transition:width 1s linear;background:#ff3c3c}
+        .timer-bar.urgent{background:#ff3c3c;animation:timerPulse .5s ease-in-out infinite}
+        @keyframes timerPulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .timer-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,12vw,80px);letter-spacing:4px;text-align:center;line-height:1}
+        .timer-text.urgent{color:#ff3c3c;animation:timerPulse .5s ease-in-out infinite}
+        .player-judge-btn{background:#1a1a28;border:2px solid #2a2a3a;padding:14px 16px;border-radius:8px;cursor:pointer;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#f0ede8;text-align:center;-webkit-tap-highlight-color:transparent;width:100%}
+        .player-judge-btn:hover{border-color:#3cff6e;background:#0a2a0a;transform:translateY(-1px)}
+        .player-judge-btn:active{transform:scale(.97)}
+        .reject-btn{background:transparent;border:2px solid #ff3c3c44;padding:14px 16px;border-radius:8px;cursor:pointer;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:#ff3c3c;text-align:center;-webkit-tap-highlight-color:transparent;width:100%}
+        .reject-btn:hover{border-color:#ff3c3c;background:#2a000055}
+        .green-flash{animation:gflash .4s ease-out}
+        @keyframes gflash{0%{background:#3cff6e22}100%{background:transparent}}
+        .example-box{background:#0e0e18;border:1px solid #2a2a3a;border-radius:6px;padding:10px 14px;margin-top:12px}
+        .opt-btn{background:#1a1a28;border:1px solid #2a2a3a;padding:8px 16px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace;font-size:13px;color:#888;-webkit-tap-highlight-color:transparent}
+        .opt-btn.sel{border-color:#ff3c3c;color:#f0ede8;background:#1f1f2e}
+        .opt-btn:hover{border-color:#ff3c3c;color:#f0ede8}
+        .srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;transition:background .15s}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .cat-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">KATEGORI KILAT</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:4}}>
+            <div className="SUB">speed categories</div>
+          </div>
+          {currentRound > 0 && phase !== PH.FINAL && phase !== PH.SETUP && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {currentRound} / {numRounds}</div>
+          )}
+        </div>
+
+        {/* SETUP */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["players","Pemain"],["settings","Aturan"],["cara","Cara Main"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "players" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>nama pemain ({players.length} orang)</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {players.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...players]; u[i]=e.target.value; setPlayers(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                      {players.length > 2 && (
+                        <button style={{background:"transparent",border:"1px solid #2a2a3a",color:"#555",width:36,height:36,borderRadius:6,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all .15s"}}
+                          onClick={() => setPlayers(players.filter((_,j)=>j!==i))}>x</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {players.length < 8 && (
+                  <button className="ghost" style={{marginTop:10}} onClick={() => setPlayers([...players, "Pemain "+(players.length+1)])}>
+                    + TAMBAH PEMAIN
+                  </button>
+                )}
+              </div>
+            )}
+
+            {tab === "settings" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>jumlah ronde</div>
+                <div style={{display:"flex",gap:8,marginBottom:20}}>
+                  {[10,15,20,25].map(n => (
+                    <button key={n} className={"opt-btn"+(numRounds===n?" sel":"")} onClick={() => setNumRounds(n)}>{n}</button>
+                  ))}
+                </div>
+                <div className="SUB" style={{marginBottom:14}}>timer per ronde (detik)</div>
+                <div style={{display:"flex",gap:8}}>
+                  {[10,15,20].map(n => (
+                    <button key={n} className={"opt-btn"+(timerSec===n?" sel":"")} onClick={() => setTimerSec(n)}>{n}s</button>
+                  ))}
+                </div>
+                <div style={{marginTop:20,fontSize:11,color:"#555",lineHeight:1.6}}>
+                  Kategori pengetahuan bernilai <span style={{color:"#ffcc00",fontWeight:"bold"}}>2 poin</span>, lainnya <span style={{color:"#3cff6e",fontWeight:"bold"}}>1 poin</span>.
+                </div>
+              </div>
+            )}
+
+            {tab === "cara" && (
+              <div style={{fontSize:12,color:"#888",lineHeight:1.8}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:3,color:"#ff3c3c",marginBottom:10}}>CARA MAIN</div>
+                <div style={{marginBottom:8}}>1. Kategori muncul di layar <span style={{color:"#ffcc00"}}>(contoh: "Buah huruf M!")</span></div>
+                <div style={{marginBottom:8}}>2. Semua pemain <b style={{color:"#f0ede8"}}>teriak jawaban</b> secepat mungkin!</div>
+                <div style={{marginBottom:8}}>3. Yang pegang HP jadi <b style={{color:"#ff3c3c"}}>JURI</b> - tap nama pemain yang jawab duluan & benar</div>
+                <div style={{marginBottom:8}}>4. Juri bisa tekan <b style={{color:"#ff3c3c"}}>TIDAK VALID</b> kalau jawaban salah</div>
+                <div style={{marginBottom:8}}>5. Kalau waktu habis, tidak ada yang dapat poin</div>
+                <div style={{marginTop:12,padding:"8px 12px",background:"#1a1a28",borderRadius:6,color:"#ffcc00",fontSize:11}}>
+                  Tip: Bergantian jadi juri tiap beberapa ronde!
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" disabled={players.length < 2 || players.some(p => !p.trim())} onClick={startGame}>
+                MULAI GAME
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* COUNTDOWN */}
+        {phase === PH.COUNTDOWN && (
+          <div className="card fi" style={{textAlign:"center",padding:"40px 20px"}}>
+            {countdownNum > 0 ? (
+              <div className="countdown-num" key={countdownNum}>{countdownNum}</div>
+            ) : (
+              <div className="prompt-text" style={{color:"#ffcc00",animation:"countPulse .5s ease-out"}}>GO!</div>
+            )}
+          </div>
+        )}
+
+        {/* PLAY */}
+        {phase === PH.PLAY && currentPrompt && (
+          <div className={`card fi${greenFlash?" green-flash":""}`} style={{textAlign:"center"}}>
+            {/* Category badge */}
+            <div style={{marginBottom:8}}>
+              <span className="cat-badge" style={{
+                background: currentPrompt.cat === "pengetahuan" ? "#2a2200" : "#0a1a2a",
+                color: currentPrompt.cat === "pengetahuan" ? "#ffcc00" : "#66aaff",
+                border: `1px solid ${currentPrompt.cat === "pengetahuan" ? "#ffcc0033" : "#66aaff33"}`,
+              }}>
+                {currentPrompt.cat === "pengetahuan" ? "2x poin" : currentPrompt.cat}
+              </span>
+            </div>
+
+            {/* Prompt */}
+            <div className="prompt-text">{currentPrompt.text}</div>
+
+            {/* Timer */}
+            <div style={{margin:"12px 0"}}>
+              <div className={`timer-text${timerUrgent?" urgent":""}`} style={{color: timerUrgent ? "#ff3c3c" : "#f0ede8"}}>
+                {timeLeft}
+              </div>
+              <div style={{background:"#1a1a28",borderRadius:4,height:8,overflow:"hidden",margin:"8px 0"}}>
+                <div className={`timer-bar${timerUrgent?" urgent":""}`}
+                  style={{width: timerPct + "%", background: timerUrgent ? "#ff3c3c" : "#3cff6e"}} />
+              </div>
+            </div>
+
+            <hr className="hr" />
+
+            {/* Judge: player buttons */}
+            <div className="SUB" style={{marginTop:12,marginBottom:10}}>siapa yang jawab duluan?</div>
+            <div style={{display:"grid",gridTemplateColumns:players.length<=4?"1fr 1fr":"1fr 1fr 1fr",gap:8}}>
+              {players.map((p,i) => (
+                <button key={i} className="player-judge-btn" onClick={() => awardPoint(p)}>{p}</button>
+              ))}
+            </div>
+
+            {/* Reject button */}
+            <button className="reject-btn" style={{marginTop:10}} onClick={rejectAnswer}>
+              TIDAK VALID
+            </button>
+            {rejected && (
+              <div style={{color:"#ff3c3c",fontSize:11,marginTop:6,animation:"fi .3s ease-out"}}>Jawaban ditolak! Lanjut...</div>
+            )}
+          </div>
+        )}
+
+        {/* ROUND RESULT */}
+        {phase === PH.ROUND_RESULT && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            {roundWinner ? (
+              <div>
+                <Confetti color="#3cff6e" />
+                <div style={{fontSize:48,marginBottom:8}}>&#x2705;</div>
+                <div className="SUB" style={{marginBottom:6}}>pemenang ronde {currentRound}</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(36,9,64)+"px",letterSpacing:5,color:"#3cff6e",lineHeight:1.1}}>
+                  {roundWinner}
+                </div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:"#ffcc00",letterSpacing:3,marginTop:4}}>
+                  +{currentPrompt?.cat === "pengetahuan" ? 2 : 1} POIN
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{fontSize:48,marginBottom:8}}>&#x23F0;</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(36,9,64)+"px",letterSpacing:4,color:"#ff3c3c",lineHeight:1.1}}>
+                  WAKTU HABIS!
+                </div>
+              </div>
+            )}
+
+            {/* Show prompt and examples */}
+            <div className="example-box">
+              <div style={{fontSize:12,color:"#888",marginBottom:6}}>{currentPrompt?.text}</div>
+              <div style={{fontSize:11,color:"#555"}}>
+                Contoh: <span style={{color:"#f0ede8"}}>{currentPrompt?.examples.join(", ")}</span>
+              </div>
+            </div>
+
+            {/* Mini scoreboard */}
+            <div style={{marginTop:16,textAlign:"left"}}>
+              <div className="SUB" style={{marginBottom:8}}>skor sementara</div>
+              {sortedPlayers.map((p,i) => (
+                <div key={p} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 0"}}>
+                  <span style={{fontSize:12,minWidth:20,color:"#555"}}>{i+1}.</span>
+                  <span style={{flex:1,fontSize:13,color:p===roundWinner?"#3cff6e":"#f0ede8"}}>{p}</span>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:p===roundWinner?"#3cff6e":"#888"}}>{scores[p]||0}</span>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn" style={{marginTop:16}} onClick={nextRound}>
+              {currentRound >= numRounds ? "LIHAT HASIL" : "LANJUT"}
+            </button>
+          </div>
+        )}
+
+        {/* FINAL RESULTS */}
+        {phase === PH.FINAL && (
+          <div className="card fi" style={{textAlign:"center",position:"relative"}}>
+            <Confetti />
+            <div style={{fontSize:48,marginBottom:8}}>&#x1F3C6;</div>
+            <div className="SUB" style={{marginBottom:6}}>pemenang</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(40,10,72)+"px",letterSpacing:5,color:"#ffcc00",lineHeight:1.1,marginBottom:4}}>
+              {sortedPlayers[0]}
+            </div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"#3cff6e",letterSpacing:3,marginBottom:20}}>
+              {scores[sortedPlayers[0]]||0} POIN
+            </div>
+
+            <hr className="hr" />
+
+            {/* Leaderboard */}
+            <div style={{textAlign:"left",marginTop:12}}>
+              <div className="SUB" style={{marginBottom:12}}>leaderboard</div>
+              {sortedPlayers.map((p,i) => (
+                <div key={p} className="srow" style={{marginBottom:6}}>
+                  <span style={{fontSize:20,width:28,textAlign:"center"}}>{i<3?MEDALS[i]:(i+1)+"."}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:i===0?"#ffcc00":i===1?"#c0c0c0":i===2?"#cd7f32":"#f0ede8"}}>{p}</div>
+                    <div className="lbw">
+                      <div className="lbb" style={{width:((scores[p]||0)/maxScore*100)+"%",background:i===0?"#ffcc00":i===1?"#c0c0c0":i===2?"#cd7f32":"#ff3c3c"}} />
+                    </div>
+                  </div>
+                  <span className="pts" style={{color:i===0?"#ffcc00":"#888"}}>{scores[p]||0}</span>
+                </div>
+              ))}
+            </div>
+
+            <hr className="hr" />
+
+            {/* Fun Stats */}
+            <div style={{textAlign:"left",marginTop:12}}>
+              <div className="SUB" style={{marginBottom:12}}>statistik</div>
+              {stats.siKilat && (
+                <div style={{display:"flex",gap:10,padding:"8px 0",borderBottom:"1px solid #1a1a28",alignItems:"center"}}>
+                  <span style={{fontSize:24}}>&#x26A1;</span>
+                  <div>
+                    <div style={{fontSize:12,color:"#ffcc00",fontWeight:"bold"}}>Si Kilat</div>
+                    <div style={{fontSize:11,color:"#888"}}>{stats.siKilat[0]} - {stats.siKilat[1]} ronde dimenangkan</div>
+                  </div>
+                </div>
+              )}
+              {stats.ensiklopedia && (
+                <div style={{display:"flex",gap:10,padding:"8px 0",borderBottom:"1px solid #1a1a28",alignItems:"center"}}>
+                  <span style={{fontSize:24}}>&#x1F9E0;</span>
+                  <div>
+                    <div style={{fontSize:12,color:"#66aaff",fontWeight:"bold"}}>Ensiklopedia</div>
+                    <div style={{fontSize:11,color:"#888"}}>{stats.ensiklopedia[0]} - {stats.ensiklopedia[1]} pengetahuan dijawab</div>
+                  </div>
+                </div>
+              )}
+              {stats.streak && (
+                <div style={{display:"flex",gap:10,padding:"8px 0",borderBottom:"1px solid #1a1a28",alignItems:"center"}}>
+                  <span style={{fontSize:24}}>&#x1F3AF;</span>
+                  <div>
+                    <div style={{fontSize:12,color:"#3cff6e",fontWeight:"bold"}}>Streak Terpanjang</div>
+                    <div style={{fontSize:11,color:"#888"}}>{stats.streak[0]} - {stats.streak[1]} kemenangan berturut-turut</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <hr className="hr" />
+
+            {/* Round history */}
+            <div style={{textAlign:"left",marginTop:12}}>
+              <div className="SUB" style={{marginBottom:12}}>riwayat ronde</div>
+              <div style={{maxHeight:200,overflowY:"auto"}}>
+                {roundHistory.map((r,i) => (
+                  <div key={i} style={{display:"flex",gap:8,padding:"6px 0",borderBottom:"1px solid #0e0e18",fontSize:11,alignItems:"center"}}>
+                    <span style={{color:"#555",minWidth:22}}>{i+1}.</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{color:"#888",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.prompt.text}</div>
+                    </div>
+                    <span style={{color:r.winner?"#3cff6e":"#ff3c3c",fontFamily:"'Space Mono',monospace",fontSize:10,flexShrink:0}}>
+                      {r.winner || "---"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={resetGame}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function clamp(min, vw, max) {
+  return Math.min(max, Math.max(min, vw * window.innerWidth / 100));
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>TEBAK HARGA - Permainan Harga Keluarga</title>
+<meta name="description" content="Permainan tebak harga seru ala Price is Right! Siapa yang paling jago nebak harga?"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── ITEM DATABASE ──────────────────────────────────────────
+const ITEMS = [
+  // Makanan & Minuman
+  {emoji:"🍜",name:"Indomie Goreng (1 bungkus)",price:3500,hint:"Makanan mahasiswa sejuta umat",cat:"food"},
+  {emoji:"🍚",name:"Nasi Padang komplit",price:25000,hint:"Rendang, ayam, sayur, sambal",cat:"food"},
+  {emoji:"🍕",name:"Pizza Hut Medium (1 box)",price:99000,hint:"Ukuran reguler, bukan personal",cat:"food"},
+  {emoji:"☕",name:"Kopi Starbucks Grande",price:55000,hint:"Bukan yang paling murah",cat:"food"},
+  {emoji:"🧋",name:"Boba Chatime Medium",price:28000,hint:"Pakai topping standard",cat:"food"},
+  {emoji:"🍔",name:"Big Mac McDonald's",price:42000,hint:"Burger saja, bukan paket",cat:"food"},
+  {emoji:"🍗",name:"Ayam KFC 1 potong",price:18000,hint:"Original recipe",cat:"food"},
+  {emoji:"🥤",name:"Aqua botol 600ml",price:4000,hint:"Beli di minimarket",cat:"food"},
+  {emoji:"🍦",name:"McFlurry Oreo",price:22000,hint:"Es krim McDonald's",cat:"food"},
+  {emoji:"🧁",name:"Martabak Manis 1 loyang",price:55000,hint:"Ukuran biasa, topping standar",cat:"food"},
+  {emoji:"🍝",name:"Mie Ayam mangkok biasa",price:15000,hint:"Di gerobak pinggir jalan",cat:"food"},
+  {emoji:"🥘",name:"Bakso mangkok biasa",price:12000,hint:"Porsi normal, pinggir jalan",cat:"food"},
+  {emoji:"🫖",name:"Teh Botol Sosro 450ml",price:5000,hint:"Apapun makanannya...",cat:"food"},
+  {emoji:"🍩",name:"Donat J.CO 1 lusin",price:120000,hint:"12 donat mixed",cat:"food"},
+  {emoji:"🥐",name:"Roti BreadTalk 1 biji",price:18000,hint:"Roti artisan kekinian",cat:"food"},
+
+  // Elektronik & Gadget
+  {emoji:"📱",name:"iPhone 16 Pro Max 256GB",price:22999000,hint:"Flagship Apple terbaru",cat:"tech"},
+  {emoji:"📱",name:"Samsung Galaxy S24 Ultra",price:19999000,hint:"Flagship Samsung terbaru",cat:"tech"},
+  {emoji:"💻",name:"MacBook Air M3",price:18499000,hint:"Laptop Apple paling populer",cat:"tech"},
+  {emoji:"🎧",name:"AirPods Pro 2",price:3799000,hint:"TWS Apple dengan ANC",cat:"tech"},
+  {emoji:"🎮",name:"PlayStation 5 Slim",price:7499000,hint:"Konsol gaming Sony",cat:"tech"},
+  {emoji:"⌚",name:"Apple Watch Series 10",price:6499000,hint:"Smartwatch Apple terbaru",cat:"tech"},
+  {emoji:"📺",name:"TV Samsung 55 inch 4K",price:8999000,hint:"Smart TV ukuran populer",cat:"tech"},
+  {emoji:"🔌",name:"Charger iPhone original",price:319000,hint:"USB-C, dari Apple Store",cat:"tech"},
+  {emoji:"📷",name:"GoPro Hero 12",price:6499000,hint:"Action camera populer",cat:"tech"},
+  {emoji:"🖨️",name:"Printer HP DeskJet",price:899000,hint:"Printer rumah basic",cat:"tech"},
+  {emoji:"🔋",name:"Power Bank Anker 10000mAh",price:249000,hint:"Merek terkenal, kapasitas standar",cat:"tech"},
+  {emoji:"📱",name:"Xiaomi Redmi Note 13",price:2499000,hint:"HP mid-range populer",cat:"tech"},
+
+  // Properti & Kendaraan
+  {emoji:"🏠",name:"Rumah di Jakarta Selatan (minimalis)",price:2500000000,hint:"2 kamar tidur, 60m\u00B2",cat:"property"},
+  {emoji:"🏠",name:"Rumah di Bandung (perumahan)",price:800000000,hint:"Tipe 36, perumahan baru",cat:"property"},
+  {emoji:"🏢",name:"Apartemen studio di Jakarta",price:500000000,hint:"20m\u00B2, dekat MRT",cat:"property"},
+  {emoji:"🚗",name:"Toyota Avanza 2024",price:237000000,hint:"Mobil keluarga terlaris",cat:"property"},
+  {emoji:"🚗",name:"Toyota Innova Zenix 2024",price:419000000,hint:"Varian bensin tipe G",cat:"property"},
+  {emoji:"🏍️",name:"Honda Beat 2024",price:17500000,hint:"Motor matic terlaris",cat:"property"},
+  {emoji:"🏍️",name:"Yamaha NMAX 2024",price:31000000,hint:"Motor matic premium",cat:"property"},
+  {emoji:"🚗",name:"Daihatsu Xenia 2024",price:209000000,hint:"MPV murah meriah",cat:"property"},
+  {emoji:"🚗",name:"Tesla Model 3",price:750000000,hint:"Mobil listrik di Indonesia",cat:"property"},
+  {emoji:"🛵",name:"Vespa Primavera 150",price:52000000,hint:"Skuter klasik Italia",cat:"property"},
+
+  // Fashion & Lifestyle
+  {emoji:"👟",name:"Nike Air Jordan 1 High",price:2279000,hint:"Sneaker ikonik",cat:"fashion"},
+  {emoji:"👜",name:"Tas Louis Vuitton Neverfull",price:24000000,hint:"Tas branded classic",cat:"fashion"},
+  {emoji:"👕",name:"Kaos Uniqlo basic",price:149000,hint:"Kaos polos supima cotton",cat:"fashion"},
+  {emoji:"👗",name:"Dress Zara basic",price:599000,hint:"Dress casual wanita",cat:"fashion"},
+  {emoji:"🧴",name:"Parfum Jo Malone 100ml",price:2350000,hint:"Parfum niche populer",cat:"fashion"},
+  {emoji:"💄",name:"Lipstik MAC matte",price:370000,hint:"Shade klasik",cat:"fashion"},
+  {emoji:"🕶️",name:"Kacamata Ray-Ban Aviator",price:2200000,hint:"Model klasik original",cat:"fashion"},
+  {emoji:"⌚",name:"Jam Casio G-Shock basic",price:899000,hint:"Model standar",cat:"fashion"},
+  {emoji:"🎒",name:"Tas Fjallraven Kanken",price:1300000,hint:"Tas punggung klasik Swedia",cat:"fashion"},
+  {emoji:"👞",name:"Sepatu Bata pantofel",price:399000,hint:"Sepatu formal basic",cat:"fashion"},
+
+  // Tiket & Pengalaman
+  {emoji:"✈️",name:"Tiket pesawat Jakarta-Bali PP",price:1200000,hint:"Ekonomi, harga rata-rata",cat:"ticket"},
+  {emoji:"🎢",name:"Tiket Dufan weekend",price:300000,hint:"Harga pintu masuk dewasa",cat:"ticket"},
+  {emoji:"🎬",name:"Tiket bioskop XXI reguler",price:50000,hint:"Weekday, bukan IMAX",cat:"ticket"},
+  {emoji:"🏨",name:"Hotel bintang 3 di Bali per malam",price:500000,hint:"Kamar standard",cat:"ticket"},
+  {emoji:"🎤",name:"Tiket konser internasional (tribun)",price:1500000,hint:"Bukan VIP",cat:"ticket"},
+  {emoji:"🚄",name:"Tiket Whoosh Jakarta-Bandung",price:150000,hint:"Kereta cepat, ekonomi",cat:"ticket"},
+  {emoji:"🎭",name:"Tiket masuk Taman Mini (TMII)",price:25000,hint:"Tiket masuk area saja",cat:"ticket"},
+  {emoji:"🏊",name:"Tiket Waterbom Bali",price:535000,hint:"Dewasa, harga normal",cat:"ticket"},
+  {emoji:"🎫",name:"Netflix Premium per bulan",price:186000,hint:"Paket tertinggi",cat:"ticket"},
+  {emoji:"🎫",name:"Spotify Premium per bulan",price:54990,hint:"Individual plan",cat:"ticket"},
+
+  // Belanja Harian
+  {emoji:"🧻",name:"Tisu Paseo 1 pack (250 sheets)",price:15000,hint:"Tisu muka standar",cat:"daily"},
+  {emoji:"🧴",name:"Sabun Lifebuoy 100ml",price:8000,hint:"Sabun cair ukuran kecil",cat:"daily"},
+  {emoji:"🪥",name:"Sikat gigi Pepsodent",price:12000,hint:"Yang biasa, bukan elektrik",cat:"daily"},
+  {emoji:"🧹",name:"Sapu ijuk biasa",price:25000,hint:"Beli di toko kelontong",cat:"daily"},
+  {emoji:"🥚",name:"Telur ayam 1 kg",price:28000,hint:"Harga pasar tradisional",cat:"daily"},
+  {emoji:"🍚",name:"Beras 5 kg (medium)",price:65000,hint:"Beras kualitas medium",cat:"daily"},
+  {emoji:"⛽",name:"Pertamax per liter",price:12950,hint:"RON 92",cat:"daily"},
+  {emoji:"🧊",name:"Es batu 1 kantong",price:5000,hint:"Ukuran standar warung",cat:"daily"},
+  {emoji:"🫙",name:"Minyak goreng 2 liter",price:32000,hint:"Merek populer",cat:"daily"},
+  {emoji:"🍞",name:"Roti tawar Sari Roti",price:15500,hint:"Ukuran standar",cat:"daily"},
+
+  // Absurd & Lucu
+  {emoji:"🦷",name:"Pasang behel gigi",price:8000000,hint:"Di dokter gigi, bukan abal-abal",cat:"absurd"},
+  {emoji:"🐱",name:"Kucing Persia kitten",price:3000000,hint:"Anakan, flatnose",cat:"absurd"},
+  {emoji:"💎",name:"Cincin emas 1 gram",price:1200000,hint:"Emas 24 karat murni",cat:"absurd"},
+  {emoji:"🎓",name:"Uang kuliah UI per semester",price:7500000,hint:"S1 reguler, BOP-B rata-rata",cat:"absurd"},
+  {emoji:"💇",name:"Potong rambut di barbershop",price:40000,hint:"Barbershop biasa, bukan premium",cat:"absurd"},
+  {emoji:"🦠",name:"Rapid test COVID antigen",price:50000,hint:"Di apotek/klinik",cat:"absurd"},
+  {emoji:"🎂",name:"Kue ulang tahun custom",price:250000,hint:"Diameter 20cm, fondant sederhana",cat:"absurd"},
+  {emoji:"🐟",name:"Ikan cupang hias",price:25000,hint:"Bukan yang kontes, yang biasa",cat:"absurd"},
+  {emoji:"🎪",name:"Sewa badut ultah per jam",price:200000,hint:"Badut + balon + MC kecil",cat:"absurd"},
+  {emoji:"📸",name:"Foto studio keluarga (1 sesi)",price:350000,hint:"4-5 orang, 10 foto edit",cat:"absurd"},
+];
+
+const CATEGORIES = {
+  food: {label:"Makanan & Minuman", emoji:"🍜"},
+  tech: {label:"Elektronik & Gadget", emoji:"📱"},
+  property: {label:"Properti & Kendaraan", emoji:"🏠"},
+  fashion: {label:"Fashion & Lifestyle", emoji:"👕"},
+  ticket: {label:"Tiket & Pengalaman", emoji:"🎫"},
+  daily: {label:"Belanja Harian", emoji:"🛒"},
+  absurd: {label:"Absurd & Lucu", emoji:"🤪"},
+};
+
+const ALL_CATS = Object.keys(CATEGORIES);
+
+// ─── HELPERS ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function formatRp(n) {
+  if (n == null) return "Rp 0";
+  const abs = Math.abs(Math.round(n));
+  const s = abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return (n < 0 ? "-Rp " : "Rp ") + s;
+}
+
+function formatRpFriendly(n) {
+  if (n == null) return "Rp 0";
+  const abs = Math.abs(n);
+  if (abs >= 1000000000) {
+    const v = abs / 1000000000;
+    const friendly = Number.isInteger(v) ? v.toString() : v.toFixed(1).replace('.0','');
+    return `Rp ${friendly.replace('.',',')} Milyar`;
+  }
+  if (abs >= 1000000) {
+    const v = abs / 1000000;
+    const friendly = Number.isInteger(v) ? v.toString() : v.toFixed(1).replace('.0','');
+    return `Rp ${friendly.replace('.',',')} Juta`;
+  }
+  return null;
+}
+
+function parseRpInput(str) {
+  const clean = str.replace(/[^\d]/g, '');
+  return clean ? parseInt(clean, 10) : 0;
+}
+
+function formatInputDisplay(str) {
+  const clean = str.replace(/[^\d]/g, '');
+  if (!clean) return '';
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti() {
+  const pieces = useRef(Array.from({length:40}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*8, drift: -30+Math.random()*60, hue: i*9,
+  }))).current;
+  return (
+    <div style={{position:"fixed",top:0,left:0,right:0,height:"100vh",overflow:"hidden",pointerEvents:"none",zIndex:999}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── COUNTING ANIMATION ────────────────────────────────────
+function CountUp({target, duration=1500}) {
+  const [val, setVal] = useState(0);
+  const startRef = useRef(null);
+  useEffect(() => {
+    let raf;
+    const animate = (ts) => {
+      if (!startRef.current) startRef.current = ts;
+      const progress = Math.min((ts - startRef.current) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setVal(Math.round(eased * target));
+      if (progress < 1) raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return formatRp(val);
+}
+
+// ─── PHASES ─────────────────────────────────────────────────
+const PH = {SETUP:"setup", ITEM:"item", PASS:"pass", GUESS:"guess", REVEAL:"reveal", RESULT:"result"};
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [playerCount, setPlayerCount] = useState(4);
+  const [totalRounds, setTotalRounds] = useState(10);
+  const [activeCats, setActiveCats] = useState(new Set(ALL_CATS));
+  const [tab, setTab] = useState("players");
+
+  // Game state
+  const [currentRound, setCurrentRound] = useState(0);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
+  const [guesses, setGuesses] = useState({});
+  const [inputVal, setInputVal] = useState("");
+  const [usedItems, setUsedItems] = useState([]);
+  const [roundHistory, setRoundHistory] = useState([]);
+  const [scores, setScores] = useState({});
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [revealDone, setRevealDone] = useState(false);
+  const [resultTab, setResultTab] = useState("lb");
+
+  // Sync names with player count
+  useEffect(() => {
+    setNames(prev => {
+      const n = [...prev];
+      while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+      return n.slice(0, playerCount);
+    });
+  }, [playerCount]);
+
+  const toggleCat = (cat) => {
+    setActiveCats(prev => {
+      const next = new Set(prev);
+      if (next.has(cat)) {
+        if (next.size > 1) next.delete(cat);
+      } else {
+        next.add(cat);
+      }
+      return next;
+    });
+  };
+
+  const selectAllCats = () => setActiveCats(new Set(ALL_CATS));
+
+  const availableItems = useMemo(() => {
+    return ITEMS.filter(it => activeCats.has(it.cat));
+  }, [activeCats]);
+
+  const pickItemFrom = (used) => {
+    let pool = availableItems.filter(it => !used.includes(it.name));
+    if (pool.length === 0) {
+      pool = availableItems;
+    }
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    return item;
+  };
+
+  const startGame = () => {
+    const initScores = {};
+    names.forEach(n => { initScores[n] = 0; });
+    setScores(initScores);
+    setCurrentRound(0);
+    setRoundHistory([]);
+    const item = pickItemFrom([]);
+    setUsedItems([item.name]);
+    setCurrentItem(item);
+    setCurrentRound(1);
+    setCurrentPlayerIdx(0);
+    setGuesses({});
+    setInputVal("");
+    setRevealDone(false);
+    setResultTab("lb");
+    setPhase(PH.PASS);
+  };
+
+  const submitGuess = () => {
+    const val = parseRpInput(inputVal);
+    if (val <= 0) return;
+    const newGuesses = {...guesses, [currentPlayerIdx]: val};
+    setGuesses(newGuesses);
+    setInputVal("");
+
+    if (currentPlayerIdx + 1 < names.length) {
+      setCurrentPlayerIdx(currentPlayerIdx + 1);
+      setPhase(PH.PASS);
+    } else {
+      // All guessed, reveal
+      setPhase(PH.REVEAL);
+      setTimeout(() => setRevealDone(true), 1600);
+    }
+  };
+
+  const getRoundResult = () => {
+    if (!currentItem) return {sorted:[], winner:-1, second:-1};
+    const price = currentItem.price;
+    const entries = names.map((name, idx) => ({
+      name, idx, guess: guesses[idx] || 0,
+      diff: (guesses[idx] || 0) - price,
+      absDiff: Math.abs((guesses[idx] || 0) - price),
+      over: (guesses[idx] || 0) > price,
+    }));
+
+    // Find without going over
+    const under = entries.filter(e => !e.over);
+    const allOver = under.length === 0;
+
+    let sorted;
+    if (allOver) {
+      sorted = [...entries].sort((a,b) => a.absDiff - b.absDiff);
+    } else {
+      const underSorted = [...under].sort((a,b) => a.absDiff - b.absDiff);
+      const overSorted = entries.filter(e => e.over).sort((a,b) => a.absDiff - b.absDiff);
+      sorted = [...underSorted, ...overSorted];
+    }
+
+    const winnerIdx = sorted[0]?.idx ?? -1;
+    // Second closest without going over
+    let secondIdx = -1;
+    if (!allOver && under.length >= 2) {
+      const underSorted = [...under].sort((a,b) => a.absDiff - b.absDiff);
+      secondIdx = underSorted[1]?.idx ?? -1;
+    }
+
+    return {sorted, winner: winnerIdx, second: secondIdx, allOver};
+  };
+
+  const finishRound = () => {
+    const result = getRoundResult();
+    const newScores = {...scores};
+    if (result.winner >= 0) newScores[names[result.winner]] = (newScores[names[result.winner]] || 0) + 3;
+    if (result.second >= 0) newScores[names[result.second]] = (newScores[names[result.second]] || 0) + 1;
+    setScores(newScores);
+
+    const histEntry = {
+      item: currentItem,
+      guesses: {...guesses},
+      winner: result.winner,
+      second: result.second,
+      allOver: result.allOver,
+    };
+    setRoundHistory(prev => [...prev, histEntry]);
+
+    if (currentRound >= totalRounds) {
+      setShowConfetti(true);
+      setPhase(PH.RESULT);
+    } else {
+      // Start next round
+      const item = pickItemFrom(usedItems);
+      setUsedItems(prev => [...prev, item.name]);
+      setCurrentItem(item);
+      setCurrentRound(currentRound + 1);
+      setCurrentPlayerIdx(0);
+      setGuesses({});
+      setInputVal("");
+      setRevealDone(false);
+      setPhase(PH.PASS);
+    }
+  };
+
+  const resetAll = () => {
+    setPhase(PH.SETUP);
+    setShowConfetti(false);
+    setCurrentRound(0);
+    setRoundHistory([]);
+    setUsedItems([]);
+    setScores({});
+  };
+
+  const backToSetup = () => {
+    setPhase(PH.SETUP);
+    setShowConfetti(false);
+  };
+
+  // ─── STATS ──────────────────────────────────────────────
+  const computeStats = () => {
+    const playerStats = {};
+    names.forEach(n => { playerStats[n] = {totalDiff:0, totalOver:0, totalUnder:0, maxDiff:0, maxDiffItem:null}; });
+    roundHistory.forEach(rh => {
+      names.forEach((n, idx) => {
+        const guess = rh.guesses[idx] || 0;
+        const diff = guess - rh.item.price;
+        const absDiff = Math.abs(diff);
+        playerStats[n].totalDiff += absDiff;
+        if (diff > 0) playerStats[n].totalOver += diff;
+        else playerStats[n].totalUnder += Math.abs(diff);
+        if (absDiff > playerStats[n].maxDiff) {
+          playerStats[n].maxDiff = absDiff;
+          playerStats[n].maxDiffItem = rh.item.name;
+        }
+      });
+    });
+
+    const byAccuracy = [...names].sort((a,b) => playerStats[a].totalDiff - playerStats[b].totalDiff);
+    const byOver = [...names].sort((a,b) => playerStats[b].totalOver - playerStats[a].totalOver);
+    const byUnder = [...names].sort((a,b) => playerStats[b].totalUnder - playerStats[a].totalUnder);
+    let maxDiffPlayer = names[0];
+    names.forEach(n => { if (playerStats[n].maxDiff > playerStats[maxDiffPlayer].maxDiff) maxDiffPlayer = n; });
+
+    return {
+      accurate: byAccuracy[0],
+      boros: byOver[0],
+      borosAmt: playerStats[byOver[0]]?.totalOver || 0,
+      pelit: byUnder[0],
+      pelitAmt: playerStats[byUnder[0]]?.totalUnder || 0,
+      terjauh: maxDiffPlayer,
+      terjauhAmt: playerStats[maxDiffPlayer]?.maxDiff || 0,
+      terjauhItem: playerStats[maxDiffPlayer]?.maxDiffItem || "",
+      playerStats,
+    };
+  };
+
+  const lbEntries = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  const maxScore = lbEntries.length ? Math.max(lbEntries[0][1], 1) : 1;
+  const MEDALS = ["🥇","🥈","🥉"];
+
+  const catBadge = (cat) => {
+    const c = CATEGORIES[cat];
+    return c ? `${c.emoji} ${c.label}` : cat;
+  };
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,9vw,80px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+        @keyframes priceIn{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+        @keyframes itemEnter{0%{transform:translateY(30px) scale(.9);opacity:0}100%{transform:translateY(0) scale(1);opacity:1}}
+        @keyframes glow{0%,100%{box-shadow:0 0 20px #ff3c3c44}50%{box-shadow:0 0 40px #ff3c3c88}}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .cat-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#888;padding:8px 12px;border-radius:6px;cursor:pointer;font-family:'Space Mono',monospace;font-size:11px;transition:all .15s;-webkit-tap-highlight-color:transparent;text-align:left}
+        .cat-btn:hover{border-color:#555}
+        .cat-btn.active{border-color:#ff3c3c;color:#f0ede8;background:#1f1020}
+        .price-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,56px);letter-spacing:3px;text-align:center;line-height:1.1;animation:priceIn .6s cubic-bezier(.2,.8,.3,1)}
+        .item-card{animation:itemEnter .5s cubic-bezier(.2,.8,.3,1)}
+        .diff-bar{height:4px;border-radius:2px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+        .price-input-wrap{position:relative;display:flex;align-items:center;gap:0}
+        .price-prefix{font-family:'Bebas Neue',sans-serif;font-size:24px;color:#ff3c3c;letter-spacing:2px;padding-right:8px;flex-shrink:0}
+        .price-inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:14px 16px;font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;border-radius:6px;width:100%;outline:none;transition:border-color .2s;text-align:center}
+        .price-inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .guess-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;border:1px solid #2a2a3a;background:#12121a;margin-bottom:6px}
+        .guess-row.winner{border-color:#3cff6e;background:#0a1a0e}
+        .guess-row.second{border-color:#ffcc00;background:#1a1a0a}
+        .guess-row.over{border-color:#ff3c3c33;background:#1a0a0a}
+        .guess-row.closest-over{border-color:#ffcc00;background:#1a1a0a}
+        .stat-card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:14px;text-align:center}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+      `}</style>
+      <div className="sl" />
+      {showConfetti && <Confetti />}
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">TEBAK HARGA</div>
+          <div className="SUB" style={{marginTop:4}}>berapa sih harganya?</div>
+          {currentRound > 0 && phase !== PH.RESULT && phase !== PH.SETUP && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {currentRound} / {totalRounds}</div>
+          )}
+        </div>
+
+        {/* ─── SETUP ─── */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["players","Pemain"],["rounds","Ronde"],["cats","Kategori"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "players" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>jumlah pemain</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:20}}>
+                  <button className="cbt" onClick={() => setPlayerCount(Math.max(2,playerCount-1))} disabled={playerCount<=2}>-</button>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#ff3c3c",minWidth:40,textAlign:"center"}}>{playerCount}</span>
+                  <button className="cbt" onClick={() => setPlayerCount(Math.min(8,playerCount+1))} disabled={playerCount>=8}>+</button>
+                </div>
+                <div className="SUB" style={{marginBottom:10}}>nama pemain</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {names.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "rounds" && (
+              <div>
+                <div className="SUB" style={{marginBottom:16}}>jumlah ronde</div>
+                <div style={{display:"flex",gap:8}}>
+                  {[5,10,15].map(r => (
+                    <button key={r}
+                      style={{
+                        flex:1,background: totalRounds===r ? "#2a0020":"#1a1a28",
+                        border: totalRounds===r ? "1px solid #ff3c3c":"1px solid #2a2a3a",
+                        color: totalRounds===r ? "#ff3c3c":"#888",
+                        borderRadius:6,padding:"16px 0",cursor:"pointer",
+                        fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:3,
+                        transition:"all .15s",
+                      }}
+                      onClick={() => setTotalRounds(r)}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <div style={{textAlign:"center",marginTop:12,fontSize:11,color:"#555"}}>
+                  {availableItems.length} item tersedia dari kategori terpilih
+                </div>
+              </div>
+            )}
+
+            {tab === "cats" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>pilih kategori</div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  <button className={"cat-btn" + (activeCats.size === ALL_CATS.length ? " active":"")}
+                    onClick={selectAllCats} style={{textAlign:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:2}}>
+                    🎲 Campur Semua
+                  </button>
+                  {ALL_CATS.map(cat => (
+                    <button key={cat} className={"cat-btn" + (activeCats.has(cat) ? " active":"")}
+                      onClick={() => toggleCat(cat)}>
+                      {CATEGORIES[cat].emoji} {CATEGORIES[cat].label}
+                      <span style={{float:"right",fontSize:10,color:"#555"}}>
+                        {ITEMS.filter(i=>i.cat===cat).length} item
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" onClick={startGame} disabled={availableItems.length < totalRounds}>
+                MULAI GAME
+              </button>
+              {availableItems.length < totalRounds && (
+                <div style={{color:"#ff3c3c",fontSize:11,marginTop:8,textAlign:"center"}}>
+                  Kurang item! Pilih lebih banyak kategori atau kurangi ronde.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── PASS SCREEN ─── */}
+        {phase === PH.PASS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12,opacity:.6}}>🙈</div>
+            <div className="SUB" style={{marginBottom:8}}>serahkan hp ke</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:16}}>
+              {names[currentPlayerIdx]}
+            </div>
+            <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>
+              Pastikan hanya <b style={{color:"#f0ede8"}}>{names[currentPlayerIdx]}</b> yang melihat layar
+            </div>
+            <button className="btn" onClick={() => setPhase(PH.GUESS)}>AKU SIAP</button>
+          </div>
+        )}
+
+        {/* ─── GUESS SCREEN ─── */}
+        {phase === PH.GUESS && currentItem && (
+          <div className="fi">
+            {/* Item Card */}
+            <div className="card item-card" style={{textAlign:"center",marginBottom:16}}>
+              <div style={{
+                display:"inline-block",background:"#1a1a28",border:"1px solid #2a2a3a",
+                borderRadius:20,padding:"3px 14px",fontSize:10,letterSpacing:2,
+                color:"#888",fontFamily:"'Space Mono',monospace",marginBottom:16
+              }}>
+                {catBadge(currentItem.cat)}
+              </div>
+              <div style={{fontSize:72,lineHeight:1,marginBottom:12}}>{currentItem.emoji}</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"clamp(24px,6vw,36px)",letterSpacing:3,lineHeight:1.2,marginBottom:8,color:"#f0ede8"}}>
+                {currentItem.name}
+              </div>
+              <div style={{fontSize:12,color:"#888",lineHeight:1.5,fontStyle:"italic"}}>
+                "{currentItem.hint}"
+              </div>
+            </div>
+
+            {/* Price Input */}
+            <div className="card" style={{textAlign:"center"}}>
+              <div className="SUB" style={{marginBottom:4}}>
+                Giliran <span style={{color:"#ff3c3c"}}>{names[currentPlayerIdx]}</span>
+              </div>
+              <div style={{fontSize:11,color:"#555",marginBottom:16}}>Berapa harganya menurutmu?</div>
+              <div className="price-input-wrap" style={{marginBottom:16,justifyContent:"center"}}>
+                <span className="price-prefix">Rp</span>
+                <input
+                  className="price-inp"
+                  type="text"
+                  inputMode="numeric"
+                  value={formatInputDisplay(inputVal)}
+                  onChange={e => setInputVal(e.target.value.replace(/[^\d]/g, ''))}
+                  onKeyDown={e => { if (e.key === 'Enter') submitGuess(); }}
+                  placeholder="0"
+                  autoFocus
+                />
+              </div>
+              {inputVal && parseRpInput(inputVal) >= 1000000 && (
+                <div style={{fontSize:12,color:"#888",marginBottom:12}}>
+                  = {formatRpFriendly(parseRpInput(inputVal)) || formatRp(parseRpInput(inputVal))}
+                </div>
+              )}
+              <button className="btn" onClick={submitGuess} disabled={parseRpInput(inputVal) <= 0}>
+                SUBMIT
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── REVEAL ─── */}
+        {phase === PH.REVEAL && currentItem && (() => {
+          const result = getRoundResult();
+          return (
+            <div className="fi">
+              {/* Item reminder */}
+              <div className="card" style={{textAlign:"center",marginBottom:8}}>
+                <div style={{fontSize:56,lineHeight:1,marginBottom:8}}>{currentItem.emoji}</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"clamp(20px,5vw,28px)",letterSpacing:2,marginBottom:12,color:"#f0ede8"}}>
+                  {currentItem.name}
+                </div>
+                <div className="SUB" style={{marginBottom:8}}>harga sebenarnya</div>
+                <div className="price-big" style={{color:"#3cff6e"}}>
+                  <CountUp target={currentItem.price} duration={1500} />
+                </div>
+                {formatRpFriendly(currentItem.price) && (
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:"#3cff6e88",letterSpacing:2,marginTop:4}}>
+                    {formatRpFriendly(currentItem.price)}
+                  </div>
+                )}
+              </div>
+
+              {/* Guesses */}
+              {revealDone && (
+                <div className="fi" style={{marginTop:8}}>
+                  <div className="SUB" style={{marginBottom:10,textAlign:"center"}}>
+                    {result.allOver ? "semua kelewatan! terdekat menang" : "tebakan pemain"}
+                  </div>
+                  {result.sorted.map((entry, i) => {
+                    const isWinner = entry.idx === result.winner;
+                    const isSecond = entry.idx === result.second;
+                    const maxDiff = Math.max(...result.sorted.map(e => e.absDiff), 1);
+                    const barWidth = Math.min((entry.absDiff / maxDiff) * 100, 100);
+
+                    let rowClass = "guess-row";
+                    if (isWinner && !result.allOver) rowClass += " winner";
+                    else if (isWinner && result.allOver) rowClass += " closest-over";
+                    else if (isSecond) rowClass += " second";
+                    else if (entry.over) rowClass += " over";
+
+                    return (
+                      <div key={entry.idx} className={rowClass} style={{animationDelay: i*0.1+'s'}}>
+                        <div style={{minWidth:24,textAlign:"center",fontSize:16}}>
+                          {isWinner ? "🏆" : isSecond ? "🥈" : (i+1)}
+                        </div>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:2}}>
+                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,
+                              color: isWinner ? "#3cff6e" : isSecond ? "#ffcc00" : "#f0ede8"
+                            }}>
+                              {entry.name}
+                            </span>
+                            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:"#f0ede8"}}>
+                              {formatRp(entry.guess)}
+                            </span>
+                          </div>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <div style={{flex:1,height:4,background:"#1a1a28",borderRadius:2,overflow:"hidden"}}>
+                              <div className="diff-bar" style={{
+                                width: barWidth + "%",
+                                background: entry.over ? "#ff3c3c" : "#3cff6e",
+                              }} />
+                            </div>
+                            <span style={{
+                              fontSize:10,fontFamily:"'Space Mono',monospace",letterSpacing:1,flexShrink:0,
+                              color: entry.over ? "#ff3c3c" : "#3cff6e"
+                            }}>
+                              {entry.over ? "+" : "-"}{formatRp(entry.absDiff).replace('Rp ','')}
+                            </span>
+                          </div>
+                          {entry.over && (
+                            <span style={{fontSize:9,background:"#ff3c3c",color:"#fff",padding:"1px 6px",borderRadius:3,fontFamily:"'Bebas Neue',sans-serif",letterSpacing:1,marginTop:3,display:"inline-block"}}>
+                              OVER!
+                            </span>
+                          )}
+                          {isWinner && result.allOver && (
+                            <span style={{fontSize:9,background:"#ffcc00",color:"#000",padding:"1px 6px",borderRadius:3,fontFamily:"'Bebas Neue',sans-serif",letterSpacing:1,marginTop:3,display:"inline-block"}}>
+                              TERDEKAT
+                            </span>
+                          )}
+                        </div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,minWidth:32,textAlign:"right",
+                          color: isWinner ? "#3cff6e" : isSecond ? "#ffcc00" : "transparent"
+                        }}>
+                          {isWinner ? "+3" : isSecond ? "+1" : ""}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <button className="btn" style={{marginTop:16}} onClick={finishRound}>
+                    {currentRound >= totalRounds ? "LIHAT HASIL" : "LANJUT"}
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ─── RESULT ─── */}
+        {phase === PH.RESULT && (() => {
+          const stats = computeStats();
+          return (
+            <div className="fi">
+              <div className="card" style={{textAlign:"center",marginBottom:8}}>
+                <div style={{fontSize:48,marginBottom:8}}>🏆</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"clamp(28px,7vw,44px)",letterSpacing:4,color:"#ffcc00",marginBottom:4}}>
+                  {lbEntries[0]?.[0] || ""}
+                </div>
+                <div className="SUB">pemenang tebak harga!</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#ff3c3c",letterSpacing:3,marginTop:8}}>
+                  {lbEntries[0]?.[1] || 0} POIN
+                </div>
+              </div>
+
+              {/* Tabs */}
+              <div style={{display:"flex",marginBottom:0}}>
+                {[["lb","Skor"],["stats","Stats"],["recap","Rekap"]].map(([k,l]) => (
+                  <button key={k} className={"tab" + (resultTab===k?" a":"")} onClick={() => setResultTab(k)}>{l}</button>
+                ))}
+              </div>
+
+              {resultTab === "lb" && (
+                <div className="card fi" style={{borderTopLeftRadius:0,borderTopRightRadius:0,borderTop:"none"}}>
+                  {lbEntries.map(([name, pts], i) => (
+                    <div key={name} style={{padding:"10px 0",borderBottom: i < lbEntries.length-1 ? "1px solid #1a1a28":"none"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <span style={{fontSize:20,minWidth:28}}>{MEDALS[i] || (i+1)}</span>
+                        <span style={{flex:1,fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2}}>{name}</span>
+                        <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,color:"#ff3c3c"}}>{pts}</span>
+                      </div>
+                      <div className="lbw" style={{marginLeft:38}}>
+                        <div className="lbb" style={{width:(pts/maxScore*100)+"%",background: i===0?"#ffcc00":i===1?"#c0c0c0":i===2?"#cd7f32":"#ff3c3c"}} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {resultTab === "stats" && (
+                <div className="card fi" style={{borderTopLeftRadius:0,borderTopRightRadius:0,borderTop:"none"}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                    <div className="stat-card">
+                      <div style={{fontSize:24,marginBottom:4}}>🎯</div>
+                      <div style={{fontSize:10,color:"#888",letterSpacing:1,marginBottom:4}}>MATA HARGA</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#3cff6e",letterSpacing:2}}>{stats.accurate}</div>
+                      <div style={{fontSize:9,color:"#555"}}>Tebakan paling akurat</div>
+                    </div>
+                    <div className="stat-card">
+                      <div style={{fontSize:24,marginBottom:4}}>🤑</div>
+                      <div style={{fontSize:10,color:"#888",letterSpacing:1,marginBottom:4}}>SI BOROS</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#ff3c3c",letterSpacing:2}}>{stats.boros}</div>
+                      <div style={{fontSize:9,color:"#555"}}>{formatRp(stats.borosAmt)} over total</div>
+                    </div>
+                    <div className="stat-card">
+                      <div style={{fontSize:24,marginBottom:4}}>💸</div>
+                      <div style={{fontSize:10,color:"#888",letterSpacing:1,marginBottom:4}}>SI PELIT</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#a0a0ff",letterSpacing:2}}>{stats.pelit}</div>
+                      <div style={{fontSize:9,color:"#555"}}>{formatRp(stats.pelitAmt)} under total</div>
+                    </div>
+                    <div className="stat-card">
+                      <div style={{fontSize:24,marginBottom:4}}>🤯</div>
+                      <div style={{fontSize:10,color:"#888",letterSpacing:1,marginBottom:4}}>TERJAUH</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#ffcc00",letterSpacing:2}}>{stats.terjauh}</div>
+                      <div style={{fontSize:9,color:"#555"}}>Selisih {formatRp(stats.terjauhAmt)}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {resultTab === "recap" && (
+                <div className="card fi" style={{borderTopLeftRadius:0,borderTopRightRadius:0,borderTop:"none",maxHeight:400,overflowY:"auto"}}>
+                  {roundHistory.map((rh, i) => (
+                    <div key={i} style={{padding:"10px 0",borderBottom: i < roundHistory.length-1 ? "1px solid #1a1a28":"none"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                        <span style={{fontSize:10,color:"#555",fontFamily:"'Space Mono',monospace"}}>{i+1}.</span>
+                        <span style={{fontSize:20}}>{rh.item.emoji}</span>
+                        <span style={{flex:1,fontSize:12,color:"#f0ede8"}}>{rh.item.name}</span>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingLeft:30}}>
+                        <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#3cff6e",letterSpacing:1}}>
+                          {formatRp(rh.item.price)}
+                        </span>
+                        <span style={{fontSize:10,color:"#888"}}>
+                          🏆 {names[rh.winner]} ({formatRp(rh.guesses[rh.winner])})
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:16}}>
+                <button className="btn" onClick={() => { setShowConfetti(false); startGame(); }}>MAIN LAGI</button>
+                <button className="ghost" onClick={backToSetup}>PENGATURAN</button>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

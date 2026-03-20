@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>IMPOSTOR - Permainan Kata Keluarga</title>
+<meta name="description" content="Permainan kata keluarga seru! Temukan siapa impostor di antara kalian."/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔪</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ─── SCORING (defaults, editable in setup) ──────────────────
+const DEFAULT_S = { WARGA_WIN:3, WARGA_VOTE:1, IMP_WIN:5, IMP_SURV:2, JOKER_ELIM:8, MRW_GUESS:10, MRW_SURV:3 };
+
+// ─── WORD PAIRS (200+) ─────────────────────────────────────
+const WORD_PAIRS = [
+  // Hewan
+  {n:"Kucing",i:"Anjing"},{n:"Singa",i:"Harimau"},{n:"Gajah",i:"Badak"},{n:"Kelinci",i:"Hamster"},
+  {n:"Ikan",i:"Udang"},{n:"Burung",i:"Kelelawar"},{n:"Kuda",i:"Zebra"},{n:"Sapi",i:"Kerbau"},
+  {n:"Kambing",i:"Domba"},{n:"Buaya",i:"Komodo"},{n:"Monyet",i:"Gorila"},{n:"Lumba-lumba",i:"Hiu"},
+  {n:"Bebek",i:"Angsa"},{n:"Ayam",i:"Merpati"},{n:"Elang",i:"Rajawali"},{n:"Penyu",i:"Kura-kura"},
+  {n:"Cumi-cumi",i:"Gurita"},{n:"Kupu-kupu",i:"Capung"},{n:"Semut",i:"Rayap"},{n:"Lebah",i:"Tawon"},
+  {n:"Katak",i:"Kodok"},{n:"Unta",i:"Llama"},{n:"Panda",i:"Beruang"},{n:"Rubah",i:"Serigala"},
+  // Makanan
+  {n:"Nasi",i:"Mie"},{n:"Rendang",i:"Gulai"},{n:"Soto",i:"Bakso"},{n:"Pizza",i:"Burger"},
+  {n:"Sushi",i:"Ramen"},{n:"Gado-gado",i:"Pecel"},{n:"Sate",i:"Tongseng"},
+  {n:"Nasi Goreng",i:"Mie Goreng"},{n:"Martabak",i:"Terang Bulan"},
+  {n:"Pempek",i:"Siomay"},{n:"Rawon",i:"Konro"},{n:"Opor Ayam",i:"Kari Ayam"},
+  {n:"Rujak",i:"Asinan"},{n:"Tempe",i:"Tahu"},{n:"Kerupuk",i:"Emping"},
+  {n:"Lontong",i:"Ketupat"},{n:"Roti",i:"Kue"},{n:"Es Krim",i:"Pudding"},{n:"Donat",i:"Bolu"},
+  {n:"Nasi Uduk",i:"Nasi Kuning"},{n:"Ayam Geprek",i:"Ayam Bakar"},{n:"Mie Ayam",i:"Mie Pangsit"},
+  {n:"Spaghetti",i:"Lasagna"},{n:"Croissant",i:"Danish"},{n:"Dim Sum",i:"Gyoza"},
+  {n:"Kebab",i:"Shawarma"},{n:"Waffle",i:"Pancake"},{n:"Sup",i:"Bubur"},
+  {n:"Gudeg",i:"Sayur Lodeh"},{n:"Iga Bakar",i:"Brisket"},{n:"Lumpia",i:"Risol"},
+  {n:"Cilok",i:"Cireng"},{n:"Seblak",i:"Batagor"},{n:"Ketoprak",i:"Kupat Tahu"},
+  // Minuman
+  {n:"Kopi",i:"Teh"},{n:"Jus Jeruk",i:"Jus Mangga"},{n:"Es Teh",i:"Es Jeruk"},
+  {n:"Susu",i:"Yogurt"},{n:"Air Mineral",i:"Soda"},{n:"Cincau",i:"Boba"},
+  {n:"Es Campur",i:"Es Buah"},{n:"Wedang Jahe",i:"Wedang Uwuh"},
+  {n:"Cappuccino",i:"Latte"},{n:"Smoothie",i:"Milkshake"},{n:"Bandrek",i:"Bajigur"},
+  // Tempat
+  {n:"Pantai",i:"Danau"},{n:"Gunung",i:"Bukit"},{n:"Pasar",i:"Mall"},
+  {n:"Rumah Sakit",i:"Klinik"},{n:"Masjid",i:"Gereja"},{n:"Sekolah",i:"Universitas"},
+  {n:"Bandara",i:"Pelabuhan"},{n:"Hotel",i:"Hostel"},{n:"Taman",i:"Kebun"},
+  {n:"Hutan",i:"Perkebunan"},{n:"Museum",i:"Galeri"},{n:"Bioskop",i:"Teater"},
+  {n:"Penjara",i:"Kantor Polisi"},{n:"Sawah",i:"Ladang"},{n:"Stadion",i:"Lapangan"},
+  {n:"Warung",i:"Restoran"},{n:"Bank",i:"Koperasi"},{n:"Apotek",i:"Toko Obat"},
+  {n:"Kebun Binatang",i:"Taman Safari"},{n:"Perpustakaan",i:"Toko Buku"},
+  {n:"Kuil",i:"Candi"},{n:"Pom Bensin",i:"Garasi"},{n:"Toilet",i:"Kamar Mandi"},
+  // Profesi
+  {n:"Dokter",i:"Perawat"},{n:"Guru",i:"Dosen"},{n:"Polisi",i:"Tentara"},
+  {n:"Pilot",i:"Pramugari"},{n:"Chef",i:"Tukang Masak"},{n:"Hakim",i:"Jaksa"},
+  {n:"Arsitek",i:"Kontraktor"},{n:"Wartawan",i:"Penulis"},{n:"Aktor",i:"Penyanyi"},
+  {n:"Petani",i:"Nelayan"},{n:"Programmer",i:"Designer"},{n:"Psikolog",i:"Psikiater"},
+  {n:"Fotografer",i:"Videografer"},{n:"Pengacara",i:"Notaris"},
+  {n:"Apoteker",i:"Dokter Gigi"},{n:"Astronot",i:"Ilmuwan"},{n:"Sopir",i:"Masinis"},
+  {n:"Tukang Cukur",i:"Stylist"},{n:"Presiden",i:"Perdana Menteri"},
+  // Transportasi
+  {n:"Motor",i:"Sepeda"},{n:"Kereta",i:"Bus"},{n:"Pesawat",i:"Helikopter"},
+  {n:"Kapal",i:"Perahu"},{n:"Taksi",i:"Angkot"},{n:"Bajaj",i:"Becak"},
+  {n:"MRT",i:"LRT"},{n:"Kapal Selam",i:"Kapal Feri"},
+  {n:"Skateboard",i:"Scooter"},{n:"Ambulans",i:"Mobil Pemadam"},
+  // Olahraga
+  {n:"Sepak Bola",i:"Futsal"},{n:"Badminton",i:"Tenis"},{n:"Renang",i:"Selam"},
+  {n:"Basket",i:"Voli"},{n:"Tinju",i:"Karate"},{n:"Lari",i:"Jalan Kaki"},
+  {n:"Panjat Tebing",i:"Hiking"},{n:"Senam",i:"Yoga"},{n:"Tenis Meja",i:"Biliar"},
+  {n:"Surfing",i:"Wakeboarding"},{n:"Panahan",i:"Menembak"},{n:"Golf",i:"Kriket"},
+  {n:"Catur",i:"Go"},{n:"Judo",i:"Taekwondo"},
+  // Pakaian & Aksesori
+  {n:"Sepatu",i:"Sandal"},{n:"Baju",i:"Jaket"},{n:"Celana",i:"Rok"},
+  {n:"Topi",i:"Helm"},{n:"Dompet",i:"Tas"},{n:"Kacamata",i:"Lensa Kontak"},
+  {n:"Jam Tangan",i:"Gelang"},{n:"Batik",i:"Tenun"},{n:"Dasi",i:"Syal"},
+  {n:"Kaos Kaki",i:"Sarung Tangan"},{n:"Anting",i:"Kalung"},{n:"Cincin",i:"Bros"},
+  // Perabotan
+  {n:"Bantal",i:"Guling"},{n:"Kasur",i:"Sofa"},{n:"Meja",i:"Kursi"},
+  {n:"Lemari",i:"Rak"},{n:"Kompor",i:"Microwave"},{n:"Kulkas",i:"Freezer"},
+  {n:"Televisi",i:"Monitor"},{n:"Kipas Angin",i:"AC"},{n:"Lampu",i:"Lilin"},
+  {n:"Pintu",i:"Jendela"},{n:"Panci",i:"Wajan"},{n:"Gelas",i:"Cangkir"},
+  {n:"Piring",i:"Mangkuk"},{n:"Sendok",i:"Garpu"},{n:"Blender",i:"Mixer"},
+  {n:"Sapu",i:"Pel"},{n:"Ember",i:"Baskom"},{n:"Selimut",i:"Sprei"},
+  // Teknologi
+  {n:"Handphone",i:"Tablet"},{n:"Laptop",i:"Komputer"},{n:"Keyboard",i:"Mouse"},
+  {n:"Printer",i:"Scanner"},{n:"Kamera",i:"Camcorder"},{n:"Headphone",i:"Earphone"},
+  {n:"Charger",i:"Power Bank"},{n:"Speaker",i:"Soundbar"},{n:"Drone",i:"RC Mobil"},
+  {n:"WiFi",i:"Bluetooth"},{n:"USB",i:"HDMI"},{n:"Instagram",i:"TikTok"},
+  {n:"WhatsApp",i:"Telegram"},{n:"YouTube",i:"Netflix"},{n:"Google",i:"Bing"},
+  // Alam
+  {n:"Hujan",i:"Badai"},{n:"Matahari",i:"Bulan"},{n:"Bintang",i:"Planet"},
+  {n:"Angin",i:"Topan"},{n:"Gempa",i:"Tsunami"},{n:"Gunung Berapi",i:"Kawah"},
+  {n:"Pelangi",i:"Awan"},{n:"Laut",i:"Samudra"},{n:"Banjir",i:"Longsor"},
+  {n:"Salju",i:"Hujan Es"},{n:"Sungai",i:"Air Terjun"},{n:"Gua",i:"Terowongan"},
+  // Hiburan & Budaya
+  {n:"Wayang",i:"Boneka"},{n:"Gitar",i:"Ukulele"},{n:"Piano",i:"Keyboard Musik"},
+  {n:"Drum",i:"Gendang"},{n:"Film",i:"Serial"},{n:"Buku",i:"Komik"},
+  {n:"Game",i:"Esport"},{n:"Konser",i:"Festival"},{n:"Karaoke",i:"Kafe Musik"},
+  {n:"Gamelan",i:"Angklung"},{n:"Biola",i:"Cello"},{n:"Podcast",i:"Radio"},
+  {n:"Stand-up Comedy",i:"Sitkom"},{n:"Manga",i:"Manhwa"},{n:"Cosplay",i:"Halloween"},
+  // Buah & Sayur
+  {n:"Apel",i:"Pir"},{n:"Mangga",i:"Pepaya"},{n:"Pisang",i:"Nanas"},
+  {n:"Durian",i:"Cempedak"},{n:"Jeruk",i:"Lemon"},{n:"Semangka",i:"Melon"},
+  {n:"Anggur",i:"Kiwi"},{n:"Wortel",i:"Lobak"},{n:"Bayam",i:"Kangkung"},
+  {n:"Tomat",i:"Cabai"},{n:"Bawang Merah",i:"Bawang Putih"},{n:"Kentang",i:"Singkong"},
+  {n:"Jagung",i:"Kacang"},{n:"Rambutan",i:"Leci"},{n:"Alpukat",i:"Kelapa"},
+  {n:"Stroberi",i:"Raspberry"},{n:"Jambu",i:"Belimbing"},{n:"Salak",i:"Markisa"},
+  {n:"Brokoli",i:"Kembang Kol"},{n:"Terong",i:"Timun"},
+  // Sekolah & Kantor
+  {n:"Pensil",i:"Pulpen"},{n:"Ujian",i:"Kuis"},{n:"Rapor",i:"Ijazah"},
+  {n:"Spidol",i:"Kapur"},{n:"Buku Tulis",i:"Binder"},{n:"Penghapus",i:"Tipe-X"},
+  {n:"Papan Tulis",i:"Proyektor"},{n:"Rapat",i:"Seminar"},
+  // Kesehatan
+  {n:"Obat",i:"Vitamin"},{n:"Suntik",i:"Infus"},{n:"Masker",i:"Face Shield"},
+  {n:"Plester",i:"Perban"},{n:"Termometer",i:"Tensimeter"},{n:"Ambulans",i:"UGD"},
+  // Lain-lain
+  {n:"Kunci",i:"Gembok"},{n:"Payung",i:"Jas Hujan"},{n:"Sabun",i:"Sampo"},
+  {n:"Cermin",i:"Foto"},{n:"Kalender",i:"Jam"},{n:"Gunting",i:"Pisau"},
+  {n:"Tisu",i:"Serbet"},{n:"Koran",i:"Majalah"},{n:"ATM",i:"Mesin EDC"},
+  {n:"Kartu Kredit",i:"Kartu Debit"},{n:"Istana",i:"Keraton"},{n:"Peta",i:"Kompas"},
+  {n:"Robot",i:"Mesin"},{n:"Petasan",i:"Kembang Api"},{n:"Detektif",i:"Mata-mata"},
+  {n:"Vampir",i:"Zombie"},{n:"Ninja",i:"Samurai"},{n:"Sulap",i:"Hipnotis"},
+  {n:"Pernikahan",i:"Tunangan"},{n:"Piala",i:"Medali"},{n:"Password",i:"PIN"},
+  {n:"Liburan",i:"Perjalanan Dinas"},{n:"Camping",i:"Glamping"},
+  {n:"Sahur",i:"Buka Puasa"},{n:"Lebaran",i:"Natal"},{n:"Gosip",i:"Berita"},
+  // Tokoh & Fantasi
+  {n:"Superman",i:"Batman"},{n:"Naga",i:"Phoenix"},{n:"Peri",i:"Kurcaci"},
+  {n:"Raja",i:"Ratu"},{n:"Pangeran",i:"Ksatria"},{n:"Bajak Laut",i:"Viking"},
+  {n:"Alien",i:"Robot"},{n:"Duyung",i:"Putri Salju"},
+  // Emosi & Konsep
+  {n:"Senang",i:"Gembira"},{n:"Sedih",i:"Kecewa"},{n:"Marah",i:"Kesal"},
+  {n:"Mimpi",i:"Khayalan"},{n:"Kenangan",i:"Nostalgia"},{n:"Janji",i:"Sumpah"},
+];
+
+// ─── ROLE INFO ──────────────────────────────────────────────
+const RI = {
+  civilian:{label:"Warga",color:"#3cff6e",bg:"#003a0a",emoji:"👤",desc:"Dapat kata warga. Temukan impostornya!"},
+  impostor:{label:"Impostor",color:"#ff3c3c",bg:"#3a0000",emoji:"🔪",desc:"Katamu berbeda! Coba tidak ketahuan."},
+  joker:{label:"Joker",color:"#ffcc00",bg:"#2a2200",emoji:"🃏",desc:"Katamu sama warga. Goal: jadilah target eliminasi pertama!"},
+  mr_white:{label:"Mr. White",color:"#a0a0ff",bg:"#0a0a2a",emoji:"❓",desc:"Tidak dapat kata. Ikuti diskusi dan coba tebak!"},
+};
+
+const SI = {
+  civilian:[{c:"Impostor ditemukan",p:"+3"},{c:"Vote benar ke impostor",p:"+1"}],
+  impostor:[{c:"Lolos voting (menang)",p:"+5"},{c:"Per warga tersisa",p:"+2"}],
+  joker:[{c:"Dieliminasi pertama",p:"+8"},{c:"Tidak dieliminasi pertama",p:"+0"}],
+  mr_white:[{c:"Tebak kata warga (benar)",p:"+10"},{c:"Lolos & warga kalah",p:"+3"}],
+};
+
+const MEDALS = ["🥇","🥈","🥉"];
+const PH = {SETUP:"setup",REVEAL:"reveal",PASS:"pass",DISCUSS:"discuss",VOTE:"vote",JOKER_BANNER:"jb",GUESS:"guess",RESULT:"result",LB:"lb"};
+
+// ─── FISHER-YATES SHUFFLE ───────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── SCORE CALCULATION ──────────────────────────────────────
+function calcScores(players, elimIdx, winner, jokerIdx, sc) {
+  return players.map((p, i) => {
+    let pts = 0;
+    const bd = [];
+    if (p.role === "civilian") {
+      if (winner === "warga") { pts += sc.WARGA_WIN; bd.push({l:"Warga menang",p:sc.WARGA_WIN}); }
+    }
+    if (p.role === "impostor" && winner === "impostor") {
+      pts += sc.IMP_WIN; bd.push({l:"Impostor menang",p:sc.IMP_WIN});
+      const sv = players.filter((x, j) => j !== elimIdx && x.role === "civilian").length;
+      if (sv > 0) { pts += sv * sc.IMP_SURV; bd.push({l:sv+" warga tersisa",p:sv*sc.IMP_SURV}); }
+    }
+    if (p.role === "joker" && i === jokerIdx && jokerIdx >= 0) {
+      pts += sc.JOKER_ELIM; bd.push({l:"Dieliminasi pertama!",p:sc.JOKER_ELIM});
+    }
+    if (p.role === "mr_white") {
+      if (i === elimIdx && winner === "mr_white") { pts += sc.MRW_GUESS; bd.push({l:"Tebak kata benar!",p:sc.MRW_GUESS}); }
+      else if (i !== elimIdx && winner !== "warga") { pts += sc.MRW_SURV; bd.push({l:"Lolos & warga kalah",p:sc.MRW_SURV}); }
+    }
+    return {name:p.name, role:p.role, pts, bd};
+  });
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:24}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*15,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:120,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [rc, setRc] = useState({civilian:4, impostor:1, joker:0, mr_white:0});
+  const [sc, setSc] = useState({...DEFAULT_S});
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4","Pemain 5"]);
+  const [players, setPlayers] = useState([]);
+  const [pair, setPair] = useState(null);
+  const [revIdx, setRevIdx] = useState(0);
+  const [showWord, setShowWord] = useState(false);
+  const [elimIdx, setElimIdx] = useState(null);
+  const [jokerElimIdx, setJokerElimIdx] = useState(-1);
+  const [guessVal, setGuessVal] = useState("");
+  const [winner, setWinner] = useState(null);
+  const [roundScores, setRoundScores] = useState([]);
+  const [lb, setLb] = useState({});
+  const [roundNum, setRoundNum] = useState(0);
+  const [tab, setTab] = useState("roles");
+  const [scoreTab, setScoreTab] = useState("round");
+  const [expanded, setExpanded] = useState(null);
+  const [usedPairs, setUsedPairs] = useState([]);
+
+  const total = Object.values(rc).reduce((a,b) => a+b, 0);
+
+  useEffect(() => {
+    const n = [...names];
+    while (n.length < total) n.push("Pemain " + (n.length + 1));
+    setNames(n.slice(0, total));
+  }, [total]);
+
+  const ri = (role) => RI[role] || RI.civilian;
+
+  const adjRole = (role, d) => {
+    const next = rc[role] + d;
+    if (next < 0 || (role === "impostor" && next < 1)) return;
+    setRc({...rc, [role]: next});
+  };
+
+  // Pick a word pair, avoiding recent repeats
+  const pickPair = () => {
+    let available = WORD_PAIRS.filter((_,i) => !usedPairs.includes(i));
+    if (available.length === 0) {
+      setUsedPairs([]);
+      available = WORD_PAIRS;
+    }
+    const idx = WORD_PAIRS.indexOf(available[Math.floor(Math.random() * available.length)]);
+    setUsedPairs(prev => [...prev, idx]);
+    return WORD_PAIRS[idx];
+  };
+
+  const startGame = () => {
+    const p = pickPair();
+    const roles = shuffle([
+      ...Array(rc.civilian).fill("civilian"),
+      ...Array(rc.impostor).fill("impostor"),
+      ...Array(rc.joker).fill("joker"),
+      ...Array(rc.mr_white).fill("mr_white"),
+    ]);
+    const ps = names.map((name, idx) => ({
+      name, role: roles[idx],
+      word: roles[idx]==="civilian"||roles[idx]==="joker" ? p.n : roles[idx]==="impostor" ? p.i : null,
+    }));
+    setPair(p); setPlayers(ps); setRevIdx(0); setShowWord(false);
+    setElimIdx(null); setJokerElimIdx(-1);
+    setGuessVal(""); setWinner(null); setRoundScores([]); setExpanded(null);
+    setRoundNum(rn => rn + 1); setPhase(PH.PASS);
+  };
+
+  const activePlayers = players.filter((_, i) => i !== jokerElimIdx);
+
+  const doFinish = (win, eIdx, jIdx) => {
+    setWinner(win);
+    const scores = calcScores(players, eIdx, win, jIdx, sc);
+    setRoundScores(scores);
+    const newLb = {...lb};
+    scores.forEach(s => { newLb[s.name] = (newLb[s.name] || 0) + s.pts; });
+    setLb(newLb);
+    setPhase(PH.RESULT);
+  };
+
+  // Manual vote: pick who was eliminated by group discussion
+  const manualEliminate = (origIdx) => {
+    const role = players[origIdx]?.role;
+    setElimIdx(origIdx);
+    if (role === "joker") { setJokerElimIdx(origIdx); setPhase(PH.JOKER_BANNER); }
+    else if (role === "mr_white") { setPhase(PH.GUESS); }
+    else if (role === "impostor") { doFinish("warga", origIdx, jokerElimIdx); }
+    else { doFinish("impostor", origIdx, jokerElimIdx); }
+  };
+
+  const submitGuess = () => {
+    const correct = guessVal.trim().toLowerCase() === pair?.n?.toLowerCase();
+    doFinish(correct ? "mr_white" : "warga", elimIdx, jokerElimIdx);
+  };
+
+  const continueAfterJoker = () => {
+    setElimIdx(null); setPhase(PH.DISCUSS);
+  };
+  const resetAll = () => { setLb({}); setRoundNum(0); setUsedPairs([]); setPhase(PH.SETUP); };
+
+  const lbEntries = Object.entries(lb).sort((a,b) => b[1] - a[1]);
+  const maxLb = lbEntries.length ? lbEntries[0][1] : 1;
+  const WC = {warga:"#3cff6e", impostor:"#ff3c3c", joker:"#ffcc00", mr_white:"#a0a0ff"};
+  const WL = {warga:"WARGA MENANG!", impostor:"IMPOSTOR MENANG!", joker:"JOKER MENANG!", mr_white:"MR. WHITE MENANG!"};
+  const WE = {warga:"🎉", impostor:"💀", joker:"🃏", mr_white:"❓"};
+
+  const curPlayer = players[revIdx];
+  const isSpecialRole = curPlayer && (curPlayer.role==="joker" || curPlayer.role==="mr_white");
+
+  // Pass-and-play privacy screen
+  const PassScreen = ({nextName, onReady, label}) => (
+    <div className="card fi" style={{textAlign:"center"}}>
+      <div style={{fontSize:48,marginBottom:12,opacity:.6}}>🙈</div>
+      <div className="SUB" style={{marginBottom:8}}>{label || "serahkan hp ke"}</div>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:16}}>{nextName}</div>
+      <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>
+        Pastikan hanya <b style={{color:"#f0ede8"}}>{nextName}</b> yang melihat layar
+      </div>
+      <button className="btn" onClick={onReady}>AKU SIAP</button>
+    </div>
+  );
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,10vw,88px);letter-spacing:8px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .WORD{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,14vw,96px);letter-spacing:6px;color:#f0ede8;text-align:center;line-height:1;padding:16px 0}
+        .vbtn{background:#1a1a28;border:1px solid #2a2a3a;padding:12px 14px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;width:100%;-webkit-tap-highlight-color:transparent}
+        .vbtn:hover:not(:disabled){border-color:#ff3c3c;background:#1f1f2e}
+        .vbtn:active:not(:disabled){transform:scale(.98)}
+        .vbtn.sel{border-color:#ff3c3c;background:#2a0000}
+        .vbtn:disabled{cursor:not-allowed;opacity:.6}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 3px;transition:all .3s}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .bl{animation:bl 1s step-end infinite}
+        @keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(140px) rotate(360deg);opacity:0}}
+        .vbw{height:3px;background:#1a1a28;border-radius:2px;margin-top:4px}
+        .vb{height:3px;background:#ff3c3c;border-radius:2px;transition:width .4s}
+        .rbig{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,9vw,68px);letter-spacing:5px;text-align:center;line-height:1.1}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:background .15s}
+        .srow:hover{background:#1a1a28}
+        .srow:active{background:#1f1f30}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .bkd{background:#0e0e18;border:1px solid #2a2a3a;border-radius:6px;padding:10px 12px;margin-top:4px}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #1a1a28;font-size:11px}
+        .role-badge{display:inline-flex;align-items:center;gap:6px;border-radius:4px;padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px}
+        .word-count{font-family:'Bebas Neue',sans-serif;font-size:14px;color:#555;letter-spacing:2px}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">IMPOSTOR</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:4}}>
+            <div className="SUB">permainan kata keluarga</div>
+            {roundNum > 0 && (
+              <div onClick={() => setPhase(PH.LB)} style={{cursor:"pointer",background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:12,padding:"3px 12px",fontSize:10,letterSpacing:2,color:"#ffcc00",fontFamily:"'Space Mono',monospace",transition:"all .15s"}}>
+                🏆 LB
+              </div>
+            )}
+          </div>
+          {roundNum > 0 && phase !== PH.LB && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {roundNum}</div>
+          )}
+        </div>
+
+        {/* SETUP */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["roles","Peran"],["names","Nama"],["rules","Skor"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+            {tab === "roles" && (
+              <div>
+                <div className="SUB" style={{marginBottom:16}}>total pemain: <span style={{color:"#f0ede8",fontFamily:"'Bebas Neue',sans-serif",fontSize:18}}>{total}</span></div>
+                {[["civilian",0],["impostor",1],["joker",0],["mr_white",0]].map(([key,min]) => {
+                  const info = ri(key);
+                  return (
+                    <div key={key} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 0",borderBottom:"1px solid #1a1a28"}}>
+                      <span style={{fontSize:24,width:32,textAlign:"center"}}>{info.emoji}</span>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:3,color:info.color}}>{info.label}</div>
+                        <div style={{fontSize:10,color:"#555",lineHeight:1.4}}>{info.desc}</div>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+                        <button className="cbt" onClick={() => adjRole(key,-1)} disabled={rc[key]<=min}>−</button>
+                        <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,minWidth:26,textAlign:"center",color:info.color}}>{rc[key]}</span>
+                        <button className="cbt" onClick={() => adjRole(key,1)}>+</button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {total < 3 && <div style={{color:"#ff3c3c",fontSize:11,marginTop:10}}>Minimal 3 pemain</div>}
+                <div className="word-count" style={{marginTop:12,textAlign:"center"}}>{WORD_PAIRS.length} pasang kata tersedia</div>
+              </div>
+            )}
+            {tab === "names" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>nama pemain ({total} orang)</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {names.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {tab === "rules" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>sistem penilaian (tap angka untuk edit)</div>
+                {[
+                  {role:"civilian",emoji:"👤",fields:[
+                    {key:"WARGA_WIN",label:"Warga menang"},
+                  ]},
+                  {role:"impostor",emoji:"🔪",fields:[
+                    {key:"IMP_WIN",label:"Impostor menang"},
+                    {key:"IMP_SURV",label:"Per warga tersisa"},
+                  ]},
+                  {role:"joker",emoji:"🃏",fields:[
+                    {key:"JOKER_ELIM",label:"Dieliminasi pertama"},
+                  ]},
+                  {role:"mr_white",emoji:"❓",fields:[
+                    {key:"MRW_GUESS",label:"Tebak kata benar"},
+                    {key:"MRW_SURV",label:"Lolos & warga kalah"},
+                  ]},
+                ].map(({role,emoji,fields}) => (
+                  <div key={role} style={{marginBottom:14}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:ri(role).color,letterSpacing:3,marginBottom:6}}>{emoji} {ri(role).label}</div>
+                    {fields.map(f => (
+                      <div key={f.key} className="rr">
+                        <span style={{color:"#888"}}>{f.label}</span>
+                        <input
+                          type="number"
+                          value={sc[f.key]}
+                          onChange={e => setSc({...sc, [f.key]: parseInt(e.target.value) || 0})}
+                          style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:4,color:ri(role).color,fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,width:50,textAlign:"center",padding:"2px 4px",outline:"none"}}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                <button className="ghost" style={{marginTop:8,fontSize:10}} onClick={() => setSc({...DEFAULT_S})}>RESET KE DEFAULT</button>
+              </div>
+            )}
+            <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" disabled={total < 3} onClick={startGame}>
+                {roundNum > 0 ? "MAIN LAGI" : "MULAI GAME"}
+              </button>
+              {roundNum > 0 && <button className="ghost" onClick={resetAll}>RESET LEADERBOARD</button>}
+            </div>
+          </div>
+        )}
+
+        {/* PASS SCREEN (before reveal) */}
+        {phase === PH.PASS && curPlayer && (
+          <PassScreen
+            nextName={curPlayer.name}
+            onReady={() => setPhase(PH.REVEAL)}
+            label="serahkan hp ke"
+          />
+        )}
+
+        {/* REVEAL */}
+        {phase === PH.REVEAL && curPlayer && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div className="SUB" style={{marginBottom:6}}>giliran melihat kata</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:4,marginBottom:16}}>{curPlayer.name}</div>
+            <div style={{marginBottom:20}}>
+              {players.map((_,i) => (
+                <span key={i} className="dot" style={{background:i<revIdx?"#3cff6e":i===revIdx?"#ff3c3c":"#2a2a3a"}} />
+              ))}
+            </div>
+            {!showWord ? (
+              <button className="btn" onClick={() => setShowWord(true)}>LIHAT KATAKU</button>
+            ) : (
+              <div>
+                {isSpecialRole && (
+                  <div style={{marginBottom:12}}>
+                    <div className="role-badge" style={{background:ri(curPlayer.role).bg,border:"1px solid "+ri(curPlayer.role).color+"44",marginBottom:8}}>
+                      <span style={{fontSize:22}}>{ri(curPlayer.role).emoji}</span>
+                      <span style={{color:ri(curPlayer.role).color}}>{ri(curPlayer.role).label}</span>
+                    </div>
+                    <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"8px 12px",marginBottom:8,fontSize:11,color:"#666",textAlign:"left"}}>
+                      {ri(curPlayer.role).desc}
+                    </div>
+                  </div>
+                )}
+                {curPlayer.word
+                  ? <div>
+                    <div className="WORD">{curPlayer.word}</div>
+                    <div style={{fontSize:10,color:"#555",letterSpacing:2,marginBottom:16}}>JANGAN TUNJUKKAN KE SIAPAPUN</div>
+                  </div>
+                  : <div style={{fontSize:13,color:"#a0a0ff",margin:"16px 0",lineHeight:1.7}}>Kamu tidak mendapat kata.<br/>Ikuti diskusi dan tebak!</div>
+                }
+                <button className="btn" onClick={() => {
+                  setShowWord(false);
+                  if (revIdx + 1 < players.length) {
+                    setRevIdx(revIdx + 1);
+                    setPhase(PH.PASS);
+                  } else {
+                    setPhase(PH.DISCUSS);
+                  }
+                }}>
+                  {revIdx + 1 < players.length ? "PEMAIN BERIKUTNYA" : "MULAI DISKUSI"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* DISCUSS — group discussion screen */}
+        {phase === PH.DISCUSS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:40,marginBottom:8}}>💬</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:8}}>WAKTU DISKUSI!</div>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:16}}>
+              Diskusikan kata kalian tanpa menyebutkannya secara langsung.<br/>
+              Setelah selesai diskusi, tekan tombol voting.
+            </div>
+            {jokerElimIdx >= 0 && (
+              <div style={{background:"#2a2200",border:"1px solid #ffcc0033",borderRadius:6,padding:"6px 12px",marginBottom:12,fontSize:11,color:"#ffcc00"}}>
+                Joker sudah keluar — lanjutkan tanpa mereka!
+              </div>
+            )}
+            <button className="btn" onClick={() => setPhase(PH.VOTE)}>🗳️ MULAI VOTING</button>
+          </div>
+        )}
+
+        {/* VOTE — manual: pick who was voted out */}
+        {phase === PH.VOTE && activePlayers.length > 0 && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:36,marginBottom:8}}>🗳️</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:4,color:"#ff3c3c",marginBottom:4}}>HASIL VOTING</div>
+              <div className="SUB">pilih pemain yang tereliminasi</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {activePlayers.map((p) => {
+                const origIdx = players.findIndex(pl => pl.name === p.name);
+                return (
+                  <button key={p.name} className="vbtn"
+                    onClick={() => manualEliminate(origIdx)}>
+                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:13}}>{p.name}</span>
+                    <span style={{color:"#ff3c3c",fontSize:14}}>ELIMINASI</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="hr"/>
+            <div className="SUB" style={{textAlign:"center"}}>tap nama pemain yang paling banyak di-vote</div>
+          </div>
+        )}
+
+        {/* JOKER BANNER */}
+        {phase === PH.JOKER_BANNER && jokerElimIdx >= 0 && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <Confetti color="#ffcc00"/>
+            <div style={{fontSize:56,marginBottom:8}}>🃏</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:40,letterSpacing:6,color:"#ffcc00",marginBottom:6}}>JOKER MENANG!</div>
+            <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#ffcc00",marginBottom:8}}>{players[jokerElimIdx]?.name}</div>
+            <div style={{fontSize:12,color:"#888",marginBottom:8,lineHeight:1.7}}>Berhasil dieliminasi pertama dan meraih</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:48,color:"#ffcc00",letterSpacing:4,marginBottom:16}}>+{sc.JOKER_ELIM} POIN</div>
+            <div style={{background:"#2a2200",border:"1px solid #ffcc0033",borderRadius:6,padding:"10px 14px",marginBottom:20,fontSize:12,color:"#aaa",lineHeight:1.6}}>
+              Game tetap berlanjut!<br/>Pemain lain masih harus menemukan Impostor.
+            </div>
+            <button className="btn" style={{background:"#b38a00"}} onClick={continueAfterJoker}>LANJUTKAN GAME</button>
+          </div>
+        )}
+
+        {/* MR WHITE GUESS */}
+        {phase === PH.GUESS && elimIdx !== null && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:40,marginBottom:8}}>❓</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#a0a0ff",marginBottom:6}}>MR. WHITE DIELIMINASI!</div>
+            <div style={{fontSize:12,color:"#888",marginBottom:4,lineHeight:1.7}}>
+              <b style={{color:"#a0a0ff"}}>{players[elimIdx]?.name}</b> adalah Mr. White.<br/>Tebak kata warga untuk menang!
+            </div>
+            <div style={{background:"#0a0a2a",border:"1px solid #a0a0ff44",borderRadius:6,padding:"6px 12px",margin:"12px 0",fontSize:11,color:"#a0a0ff"}}>
+              Tebak benar = +{sc.MRW_GUESS} poin besar!
+            </div>
+            <input className="inp" value={guessVal} onChange={e => setGuessVal(e.target.value)}
+              placeholder="Tebak kata warga..."
+              style={{marginBottom:12,textAlign:"center",fontSize:16}}
+              onKeyDown={e => { if (e.key === "Enter" && guessVal.trim()) submitGuess(); }}
+              autoFocus
+            />
+            <button className="btn" disabled={!guessVal.trim()} onClick={submitGuess}>TEBAK SEKARANG</button>
+          </div>
+        )}
+
+        {/* RESULT */}
+        {phase === PH.RESULT && winner && (
+          <div className="card fi">
+            <Confetti color={WC[winner]}/>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:40,marginBottom:4}}>{WE[winner]}</div>
+              <div className="rbig" style={{color:WC[winner]}}>{WL[winner]}</div>
+              {jokerElimIdx >= 0 && winner !== "joker" && (
+                <div style={{fontSize:11,color:"#ffcc00",marginTop:6}}>
+                  🃏 {players[jokerElimIdx]?.name} (Joker) juga menang ronde ini!
+                </div>
+              )}
+            </div>
+            <div style={{display:"flex",marginBottom:16}}>
+              <button className={"tab" + (scoreTab==="round"?" a":"")} onClick={() => setScoreTab("round")}>Skor Ronde</button>
+              <button className={"tab" + (scoreTab==="lb"?" a":"")} onClick={() => setScoreTab("lb")}>Leaderboard</button>
+            </div>
+            {scoreTab === "round" && (
+              <div>
+                {[...roundScores].sort((a,b) => b.pts - a.pts).map((s, rank) => {
+                  const info = ri(s.role); const isExp = expanded === s.name;
+                  return (
+                    <div key={s.name} style={{marginBottom:8}}>
+                      <div className="srow" style={{background:rank===0?"#1a1a10":"#0e0e18",border:"1px solid "+(rank===0?"#ffcc0033":"#2a2a3a")}}
+                        onClick={() => setExpanded(isExp ? null : s.name)}>
+                        <div style={{fontSize:18,width:28,textAlign:"center"}}>{rank < 3 ? MEDALS[rank] : info.emoji}</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:rank===0?"#ffcc00":"#f0ede8"}}>{s.name}</div>
+                          <div style={{fontSize:10,color:info.color,letterSpacing:2}}>{info.label}</div>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div className="pts" style={{color:s.pts > 0 ? (rank===0?"#ffcc00":info.color) : "#555"}}>{s.pts > 0 ? "+"+s.pts : s.pts}</div>
+                          <div style={{color:"#555",fontSize:12,transition:"transform .2s",transform:isExp?"rotate(180deg)":"rotate(0)"}}>▼</div>
+                        </div>
+                      </div>
+                      {isExp && (
+                        <div className="bkd fi">
+                          {s.bd.length === 0
+                            ? <div style={{color:"#555",fontSize:11,padding:"6px 0"}}>Tidak ada poin ronde ini.</div>
+                            : s.bd.map((b,bi) => (
+                              <div key={bi} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:"1px solid #1a1a28",fontSize:11}}>
+                                <span style={{color:"#888"}}>{b.l}</span>
+                                <span style={{color:info.color,fontFamily:"'Bebas Neue',sans-serif",fontSize:16}}>+{b.p}</span>
+                              </div>
+                            ))
+                          }
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                <div style={{fontSize:10,color:"#444",textAlign:"center",marginTop:8}}>tap nama untuk detail poin</div>
+              </div>
+            )}
+            {scoreTab === "lb" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>total setelah {roundNum} ronde</div>
+                {lbEntries.map(([name,pts], rank) => {
+                  const w = maxLb > 0 ? Math.max(4, (pts/maxLb)*100) : 0;
+                  return (
+                    <div key={name} style={{marginBottom:10}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{fontSize:18,width:28}}>{rank < 3 ? MEDALS[rank] : "#"+(rank+1)}</div>
+                        <div style={{flex:1,fontFamily:"'Space Mono',monospace",fontSize:13,color:rank===0?"#ffcc00":"#f0ede8"}}>{name}</div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:rank===0?"#ffcc00":"#f0ede8",letterSpacing:2}}>{pts}</div>
+                      </div>
+                      <div className="lbw"><div className="lbb" style={{width:w+"%",background:rank===0?"#ffcc00":rank===1?"#aaa":rank===2?"#cd7f32":"#3a3a5a"}}/></div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"8px 14px",margin:"16px 0",fontSize:12}}>
+              <div style={{color:"#555",marginBottom:3,letterSpacing:2,fontSize:10}}>PASANGAN KATA</div>
+              <span style={{color:"#3cff6e"}}>Warga: {pair?.n}</span>
+              <span style={{color:"#555",margin:"0 10px"}}>vs</span>
+              <span style={{color:"#ff3c3c"}}>Impostor: {pair?.i}</span>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={() => setPhase(PH.SETUP)}>GANTI PEMAIN / PERAN</button>
+            </div>
+          </div>
+        )}
+
+        {/* LEADERBOARD */}
+        {phase === PH.LB && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:40,marginBottom:4}}>🏆</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:42,letterSpacing:6,color:"#ffcc00"}}>LEADERBOARD</div>
+              <div className="SUB">{roundNum} ronde dimainkan</div>
+            </div>
+            {lbEntries.length === 0
+              ? <div style={{textAlign:"center",color:"#555",fontSize:12,padding:"20px 0"}}>Belum ada data</div>
+              : lbEntries.map(([name,pts], rank) => {
+                const w = maxLb > 0 ? Math.max(4, (pts/maxLb)*100) : 0;
+                return (
+                  <div key={name} style={{marginBottom:14}}>
+                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{fontSize:24,width:36,textAlign:"center"}}>{rank < 3 ? MEDALS[rank] : <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#555"}}>{"#"+(rank+1)}</span>}</div>
+                      <div style={{flex:1,fontFamily:"'Space Mono',monospace",fontSize:14,color:rank===0?"#ffcc00":"#f0ede8"}}>{name}</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:2,color:rank===0?"#ffcc00":rank===1?"#ccc":rank===2?"#cd7f32":"#888"}}>{pts}</div>
+                    </div>
+                    <div style={{marginLeft:48}}>
+                      <div className="lbw"><div className="lbb" style={{width:w+"%",background:rank===0?"linear-gradient(90deg,#ffcc00,#ff9900)":rank===1?"#aaa":rank===2?"#cd7f32":"#3a3a5a"}}/></div>
+                    </div>
+                  </div>
+                );
+              })
+            }
+            <div className="hr"/>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:4}}>
+              <button className="btn" onClick={startGame}>MAIN RONDE BARU</button>
+              <button className="ghost" onClick={() => setPhase(PH.SETUP)}>PENGATURAN</button>
+              <button className="ghost" style={{color:"#ff3c3c55",borderColor:"#ff3c3c22"}} onClick={resetAll}>RESET SEMUA SKOR</button>
+            </div>
+          </div>
+        )}
+
+        <div style={{textAlign:"center",paddingBottom:8}}>
+          <div className="SUB bl">SELAMAT BERMAIN</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>

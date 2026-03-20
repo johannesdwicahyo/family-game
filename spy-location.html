@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>SPY LOCATION - Permainan Lokasi Keluarga</title>
+<meta name="description" content="Permainan lokasi keluarga seru! Temukan siapa spy di antara kalian."/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕵️</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ─── SCORING ────────────────────────────────────────────────
+const SCORE = { SPY_NOT_CAUGHT: 4, SPY_GUESS_RIGHT: 3, WARGA_WIN: 2, SPY_WRONG_ACCUSE: 4, WRONGLY_ACCUSED: -1 };
+
+// ─── LOCATION DATABASE ──────────────────────────────────────
+const LOCATIONS = [
+  // Tempat Umum
+  {name:"Pasar Tanah Abang",cat:"Tempat Umum",roles:["Pedagang","Pembeli","Tukang Parkir","Kuli Angkut","Satpam","Penjual Jus"]},
+  {name:"Rumah Sakit",cat:"Tempat Umum",roles:["Dokter","Perawat","Pasien","Satpam","Apoteker","Pengunjung","Cleaning Service"]},
+  {name:"Sekolah",cat:"Tempat Umum",roles:["Guru","Murid","Kepala Sekolah","Satpam","Penjual Kantin","Tukang Kebun"]},
+  {name:"Mall",cat:"Tempat Umum",roles:["Pengunjung","Kasir","Satpam","Cleaning Service","Pramuniaga","Tukang Parkir"]},
+  {name:"Masjid",cat:"Tempat Umum",roles:["Imam","Jamaah","Marbot","Muazin","Anak Kecil","Pengurus"]},
+  {name:"Bank",cat:"Tempat Umum",roles:["Teller","Nasabah","Satpam","Manager","Cleaning Service","Customer Service"]},
+  {name:"Kantor Polisi",cat:"Tempat Umum",roles:["Polisi","Pelapor","Tahanan","Detektif","Satpam","Pengacara"]},
+  {name:"Pom Bensin",cat:"Tempat Umum",roles:["Petugas","Pengendara Motor","Sopir Truk","Kasir Minimarket","Montir"]},
+  {name:"Salon",cat:"Tempat Umum",roles:["Kapster","Pelanggan","Kasir","Tukang Pijat","Manicurist"]},
+  {name:"Gym / Tempat Fitness",cat:"Tempat Umum",roles:["Member","Trainer","Resepsionis","Cleaning Service","Newbie"]},
+  {name:"Perpustakaan",cat:"Tempat Umum",roles:["Pustakawan","Mahasiswa","Pengunjung","Petugas","Penulis"]},
+  {name:"Puskesmas",cat:"Tempat Umum",roles:["Dokter","Bidan","Pasien","Perawat","Apoteker"]},
+  {name:"Warung Kopi",cat:"Tempat Umum",roles:["Barista","Pelanggan","Pemilik","Freelancer","Mahasiswa"]},
+  {name:"Pasar Malam",cat:"Tempat Umum",roles:["Penjual","Pengunjung","Tukang Mainan","Penjual Makanan","Anak Kecil"]},
+  {name:"Kantor Pos",cat:"Tempat Umum",roles:["Petugas","Pengirim","Kurir","Kasir","Pelanggan"]},
+  // Transportasi
+  {name:"Bandara Soekarno-Hatta",cat:"Transportasi",roles:["Pilot","Pramugari","Penumpang","Petugas Imigrasi","Cleaning Crew","Petugas Bagasi"]},
+  {name:"Stasiun Kereta",cat:"Transportasi",roles:["Masinis","Penumpang","Petugas Loket","Satpam","Pedagang Asongan","Porter"]},
+  {name:"Terminal Bus",cat:"Transportasi",roles:["Sopir","Kenek","Penumpang","Calo","Pedagang","Petugas"]},
+  {name:"Pelabuhan",cat:"Transportasi",roles:["Nahkoda","ABK","Penumpang","Petugas Pelabuhan","Nelayan","Kuli Angkut"]},
+  {name:"Halte TransJakarta",cat:"Transportasi",roles:["Penumpang","Petugas","Sopir Bus","Satpam","Pengamen"]},
+  {name:"Kapal Pesiar",cat:"Transportasi",roles:["Kapten","Penumpang VIP","Koki","Pelayan","Entertainer","Petugas Keamanan"]},
+  {name:"Dalam Pesawat",cat:"Transportasi",roles:["Pilot","Pramugari","Penumpang Bisnis","Penumpang Ekonomi","Bayi Menangis","Air Marshal"]},
+  {name:"Kereta Api Malam",cat:"Transportasi",roles:["Masinis","Penumpang","Penjual Makanan","Kondektur","Pengamen"]},
+  {name:"Ojek Online",cat:"Transportasi",roles:["Driver","Penumpang","Customer Service","Merchant","Kurir"]},
+  {name:"Angkot",cat:"Transportasi",roles:["Sopir","Penumpang","Pengamen","Pedagang Asongan","Mahasiswa"]},
+  // Hiburan
+  {name:"Bioskop",cat:"Hiburan",roles:["Penonton","Petugas Tiket","Penjual Popcorn","Satpam","Pasangan Pacaran","Anak Kecil Berisik"]},
+  {name:"Konser Musik",cat:"Hiburan",roles:["Penyanyi","Penonton VIP","Penonton Umum","Sound Engineer","Satpam","Pedagang Merchandise"]},
+  {name:"Taman Bermain / Dufan",cat:"Hiburan",roles:["Pengunjung","Operator Wahana","Badut Maskot","Fotografer","Penjual Makanan","Anak Hilang"]},
+  {name:"Kebun Binatang",cat:"Hiburan",roles:["Pengunjung","Penjaga Hewan","Fotografer","Anak Sekolah","Guide","Penjual Makanan"]},
+  {name:"Karaoke",cat:"Hiburan",roles:["Penyanyi Jago","Penyanyi Fals","Yang Cuma Makan","Petugas","Yang Pegang Remote"]},
+  {name:"Studio TV",cat:"Hiburan",roles:["Presenter","Kameraman","Penonton","Produser","Make-up Artist","Bintang Tamu"]},
+  {name:"Sirkus",cat:"Hiburan",roles:["Pesulap","Akrobat","Badut","Penonton","Pawang Hewan","MC"]},
+  {name:"Pesta Pernikahan",cat:"Hiburan",roles:["Pengantin","Tamu","MC","Fotografer","Koki Katering","Anak Kecil"]},
+  {name:"Pesta Ulang Tahun",cat:"Hiburan",roles:["Yang Ulang Tahun","Tamu","Yang Bawa Kue","DJ","Yang Telat Datang"]},
+  {name:"Escape Room",cat:"Hiburan",roles:["Pemain","Game Master","Yang Panik","Yang Sok Pinter","Yang Cuma Nonton"]},
+  {name:"Turnamen Esport",cat:"Hiburan",roles:["Pro Player","Komentator","Penonton","Coach","Sponsor","Cosplayer"]},
+  {name:"Stand-Up Comedy Show",cat:"Hiburan",roles:["Komika","Penonton","MC","Manager","Yang Nggak Ngerti Joke"]},
+  // Alam
+  {name:"Pantai Kuta",cat:"Alam",roles:["Turis","Penjual Jagung Bakar","Surfer","Lifeguard","Tukang Foto","Pedagang Suvenir"]},
+  {name:"Gunung Bromo",cat:"Alam",roles:["Pendaki","Guide","Tukang Ojek","Fotografer","Penjual Jaket","Turis"]},
+  {name:"Hutan Hujan",cat:"Alam",roles:["Peneliti","Guide","Fotografer Alam","Penduduk Lokal","Petualang","Yang Tersesat"]},
+  {name:"Danau Toba",cat:"Alam",roles:["Turis","Nelayan","Pemilik Penginapan","Guide","Penyelam","Pedagang"]},
+  {name:"Raja Ampat",cat:"Alam",roles:["Penyelam","Guide Snorkeling","Turis","Nahkoda Boat","Marine Biologist","Fotografer"]},
+  {name:"Air Terjun",cat:"Alam",roles:["Pengunjung","Guide Lokal","Fotografer","Yang Takut Basah","Anak Kecil","Pedagang"]},
+  {name:"Sawah Terasering Bali",cat:"Alam",roles:["Petani","Turis","Fotografer","Guide","Pelukis","Instagrammer"]},
+  {name:"Taman Nasional Komodo",cat:"Alam",roles:["Ranger","Turis","Guide","Fotografer","Peneliti","Yang Takut Komodo"]},
+  {name:"Gua Pindul",cat:"Alam",roles:["Pemandu","Pengunjung","Instruktur","Yang Claustrophobia","Anak Sekolah"]},
+  {name:"Kawah Ijen",cat:"Alam",roles:["Penambang Belerang","Turis","Pendaki","Guide","Fotografer"]},
+  // Indonesia Spesifik
+  {name:"Warung Padang",cat:"Indonesia Spesifik",roles:["Pemilik","Pelanggan","Koki","Kasir","Tukang Cuci","Pelanggan Tetap"]},
+  {name:"Indomaret",cat:"Indonesia Spesifik",roles:["Kasir","Pembeli","Anak Magang","Kurir","Yang Bingung Milih","Satpam"]},
+  {name:"Nikahan Adat Jawa",cat:"Indonesia Spesifik",roles:["Pengantin","Dalang","Perias","Tamu","Juru Masak","MC"]},
+  {name:"Hajatan di RT",cat:"Indonesia Spesifik",roles:["Tuan Rumah","Tetangga","Ibu-ibu Masak","Anak Kecil","Marbot","Yang Bawa Amplop"]},
+  {name:"Warteg",cat:"Indonesia Spesifik",roles:["Pemilik","Pelanggan","Kuli Bangunan","Mahasiswa","Ojol Driver","Tukang Cuci"]},
+  {name:"Pengajian",cat:"Indonesia Spesifik",roles:["Ustadz","Jamaah","Yang Ketiduran","Ibu-ibu","Anak Kecil","Panitia"]},
+  {name:"Arisan Ibu-ibu",cat:"Indonesia Spesifik",roles:["Ketua Arisan","Anggota","Yang Selalu Telat","Tuan Rumah","Yang Menang Arisan"]},
+  {name:"Pos Ronda",cat:"Indonesia Spesifik",roles:["Pak RT","Warga","Yang Ketiduran","Yang Bawa Kopi","Hansip"]},
+  {name:"Lebaran di Kampung",cat:"Indonesia Spesifik",roles:["Tuan Rumah","Tamu","Anak Kecil","Nenek","Yang Masak","Yang Bagi Amplop"]},
+  {name:"Sunatan / Khitanan",cat:"Indonesia Spesifik",roles:["Anak yang Disunat","Orangtua","Mantri Sunat","Tamu","MC","Yang Bawa Hadiah"]},
+  // Internasional
+  {name:"Disneyland",cat:"Internasional",roles:["Turis","Mickey Mouse","Operator Wahana","Penjual Suvenir","Anak Kecil","Fotografer"]},
+  {name:"Piramida Mesir",cat:"Internasional",roles:["Arkeolog","Guide","Turis","Penjual Suvenir","Penunggang Unta","Fotografer"]},
+  {name:"Times Square New York",cat:"Internasional",roles:["Turis","Street Performer","Polisi","Homeless Person","Pedagang Hot Dog"]},
+  {name:"Menara Eiffel",cat:"Internasional",roles:["Turis","Guide","Pelukis Jalanan","Penjual Suvenir","Fotografer","Pasangan Romantis"]},
+  {name:"Tembok Besar China",cat:"Internasional",roles:["Turis","Guide","Penjual Suvenir","Fotografer","Penjaga","Peneliti"]},
+  {name:"Safari Afrika",cat:"Internasional",roles:["Guide","Turis","Fotografer","Driver","Ranger","Peneliti"]},
+  {name:"Antariksa / Space Station",cat:"Internasional",roles:["Astronot","Mission Control","Ilmuwan","Engineer","Alien","Robot"]},
+  {name:"Arena Gladiator Roma",cat:"Internasional",roles:["Gladiator","Kaisar","Penonton","Budak","Singa","Komentator"]},
+  {name:"Titanic",cat:"Internasional",roles:["Kapten","Penumpang Kelas 1","Penumpang Kelas 3","Musisi","Koki","Iceberg Spotter"]},
+  {name:"Hogwarts",cat:"Internasional",roles:["Harry Potter","Dumbledore","Murid","Profesor","Hagrid","Hantu"]},
+  // Fantasi
+  {name:"Rumah Hantu",cat:"Fantasi",roles:["Hantu","Pengunjung","Yang Menangis","Yang Sok Berani","Petugas","Pocong"]},
+  {name:"Pulau Terpencil",cat:"Fantasi",roles:["Survivor","Yang Bisa Masak","Yang Bisa Bikin Api","Yang Panik","Yang Santai","Kapten Kapal"]},
+  {name:"Mesin Waktu",cat:"Fantasi",roles:["Penemu","Penumpang","Orang Masa Depan","Orang Masa Lalu","Robot","Time Police"]},
+  {name:"Kerajaan Dongeng",cat:"Fantasi",roles:["Raja","Ratu","Pangeran","Penyihir","Naga","Rakyat Jelata"]},
+  {name:"Zombie Apocalypse",cat:"Fantasi",roles:["Survivor","Zombie","Dokter","Tentara","Ilmuwan","Yang Digigit"]},
+  {name:"Dunia Bawah Laut",cat:"Fantasi",roles:["Duyung","Penyelam","Hiu","Gurita","Nemo","Poseidon"]},
+  {name:"Planet Mars",cat:"Fantasi",roles:["Astronot","Alien","Robot","Ilmuwan","Kolonis","Yang Homesick"]},
+  {name:"Penjara Alcatraz",cat:"Fantasi",roles:["Tahanan","Sipir","Warden","Yang Mau Kabur","Pengacara","Tikus"]},
+];
+
+const CATEGORIES = ["Tempat Umum","Transportasi","Hiburan","Alam","Indonesia Spesifik","Internasional","Fantasi"];
+
+// ─── PHASES ─────────────────────────────────────────────────
+const PH = {SETUP:"setup",PASS:"pass",REVEAL:"reveal",DISCUSS:"discuss",VOTE_PASS:"vote_pass",VOTE:"vote",SPY_GUESS:"spy_guess",RESULT:"result",LB:"lb"};
+
+// ─── SHUFFLE ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:24}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*15,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:120,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── FORMAT TIMER ───────────────────────────────────────────
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec < 10 ? "0" : ""}${sec}`;
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4","Pemain 5"]);
+  const [playerCount, setPlayerCount] = useState(5);
+  const [spyCount, setSpyCount] = useState(1);
+  const [timerMin, setTimerMin] = useState(5);
+  const [catFilter, setCatFilter] = useState(Object.fromEntries(CATEGORIES.map(c => [c, true])));
+  const [tab, setTab] = useState("pemain");
+
+  // Game state
+  const [players, setPlayers] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [revIdx, setRevIdx] = useState(0);
+  const [showCard, setShowCard] = useState(false);
+
+  // Discussion
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  const timerRef = useRef(null);
+
+  // Voting
+  const [votes, setVotes] = useState({});
+  const [voterIdx, setVoterIdx] = useState(0);
+  const [elimIdx, setElimIdx] = useState(null);
+
+  // Spy guess
+  const [spyGuess, setSpyGuess] = useState(null);
+
+  // Results
+  const [winner, setWinner] = useState(null);
+  const [roundScores, setRoundScores] = useState([]);
+  const [lb, setLb] = useState({});
+  const [roundNum, setRoundNum] = useState(0);
+  const [usedLocs, setUsedLocs] = useState([]);
+  const [scoreTab, setScoreTab] = useState("round");
+
+  // Adjust names when player count changes
+  useEffect(() => {
+    const n = [...names];
+    while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+    setNames(n.slice(0, playerCount));
+  }, [playerCount]);
+
+  // Timer effect
+  useEffect(() => {
+    if (timerActive && timeLeft > 0) {
+      timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+      return () => clearTimeout(timerRef.current);
+    }
+    if (timerActive && timeLeft === 0) {
+      setTimerActive(false);
+      // Time's up — spy wins
+      endGame("spy_timeout");
+    }
+  }, [timerActive, timeLeft]);
+
+  const enabledCats = Object.entries(catFilter).filter(([,v]) => v).map(([k]) => k);
+  const availableLocs = LOCATIONS.filter(l => enabledCats.includes(l.cat));
+
+  const pickLocation = () => {
+    let pool = availableLocs.filter(l => !usedLocs.includes(l.name));
+    if (pool.length === 0) {
+      setUsedLocs([]);
+      pool = availableLocs;
+    }
+    const loc = pool[Math.floor(Math.random() * pool.length)];
+    setUsedLocs(prev => [...prev, loc.name]);
+    return loc;
+  };
+
+  const startGame = () => {
+    const loc = pickLocation();
+    const shuffledRoles = shuffle(loc.roles);
+    const spyIndices = new Set();
+    while (spyIndices.size < spyCount) {
+      spyIndices.add(Math.floor(Math.random() * playerCount));
+    }
+    const ps = names.map((name, idx) => ({
+      name,
+      isSpy: spyIndices.has(idx),
+      role: spyIndices.has(idx) ? null : shuffledRoles[idx % shuffledRoles.length],
+    }));
+    setLocation(loc);
+    setPlayers(ps);
+    setRevIdx(0);
+    setShowCard(false);
+    setVotes({});
+    setVoterIdx(0);
+    setElimIdx(null);
+    setSpyGuess(null);
+    setWinner(null);
+    setRoundScores([]);
+    setTimeLeft(timerMin * 60);
+    setTimerActive(false);
+    setRoundNum(rn => rn + 1);
+    setPhase(PH.PASS);
+  };
+
+  const endGame = (reason, eIdx, finalVotes) => {
+    setTimerActive(false);
+    clearTimeout(timerRef.current);
+    if (reason === "spy_timeout") {
+      // Spy wins — time ran out
+      finishWithWinner("spy", null, votes);
+    }
+  };
+
+  const finishWithWinner = (win, eIdx, finalVotes) => {
+    setWinner(win);
+    const scores = players.map((p, i) => {
+      let pts = 0;
+      const bd = [];
+      if (win === "spy" || win === "spy_guess") {
+        if (p.isSpy) {
+          if (win === "spy") { pts += SCORE.SPY_NOT_CAUGHT; bd.push({l:"Spy tidak tertangkap",p:SCORE.SPY_NOT_CAUGHT}); }
+          else { pts += SCORE.SPY_GUESS_RIGHT; bd.push({l:"Tebak lokasi benar",p:SCORE.SPY_GUESS_RIGHT}); }
+        }
+      }
+      if (win === "spy_wrong_accuse") {
+        if (p.isSpy) { pts += SCORE.SPY_WRONG_ACCUSE; bd.push({l:"Warga salah tuduh",p:SCORE.SPY_WRONG_ACCUSE}); }
+        if (i === eIdx && !p.isSpy) { pts += SCORE.WRONGLY_ACCUSED; bd.push({l:"Dituduh salah",p:SCORE.WRONGLY_ACCUSED}); }
+      }
+      if (win === "warga") {
+        if (!p.isSpy) { pts += SCORE.WARGA_WIN; bd.push({l:"Warga menang",p:SCORE.WARGA_WIN}); }
+      }
+      return {name:p.name, isSpy:p.isSpy, role:p.role, pts, bd};
+    });
+    setRoundScores(scores);
+    const newLb = {...lb};
+    scores.forEach(s => { newLb[s.name] = (newLb[s.name] || 0) + s.pts; });
+    setLb(newLb);
+    setPhase(PH.RESULT);
+  };
+
+  const submitVote = (targetIdx) => {
+    const nv = {...votes, [voterIdx]: targetIdx};
+    setVotes(nv);
+    if (voterIdx + 1 < players.length) {
+      setVoterIdx(voterIdx + 1);
+      setPhase(PH.VOTE_PASS);
+      return;
+    }
+    // Tally
+    const tally = {};
+    Object.values(nv).forEach(v => { tally[v] = (tally[v] || 0) + 1; });
+    const maxV = Math.max(...Object.values(tally));
+    const tied = Object.keys(tally).filter(k => tally[k] === maxV).map(Number);
+    const topIdx = tied[Math.floor(Math.random() * tied.length)];
+    setElimIdx(topIdx);
+    if (players[topIdx].isSpy) {
+      // Spy caught — give them a chance to guess
+      setPhase(PH.SPY_GUESS);
+    } else {
+      // Wrong person — spy wins
+      finishWithWinner("spy_wrong_accuse", topIdx, nv);
+    }
+  };
+
+  const submitSpyGuess = (guessName) => {
+    setSpyGuess(guessName);
+    if (guessName === location.name) {
+      finishWithWinner("spy_guess", elimIdx, votes);
+    } else {
+      finishWithWinner("warga", elimIdx, votes);
+    }
+  };
+
+  const resetAll = () => { setLb({}); setRoundNum(0); setUsedLocs([]); setPhase(PH.SETUP); };
+
+  const lbEntries = Object.entries(lb).sort((a,b) => b[1] - a[1]);
+  const maxLb = lbEntries.length ? lbEntries[0][1] : 1;
+
+  const curPlayer = players[revIdx];
+
+  const allLocationNames = LOCATIONS.map(l => l.name).sort();
+
+  // ─── PASS SCREEN ──────────────────────────────────────────
+  const PassScreen = ({nextName, onReady, label}) => (
+    <div className="card fi" style={{textAlign:"center"}}>
+      <div style={{fontSize:48,marginBottom:12,opacity:.6}}>🙈</div>
+      <div className="SUB" style={{marginBottom:8}}>{label || "serahkan hp ke"}</div>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:16}}>{nextName}</div>
+      <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>
+        Pastikan hanya <b style={{color:"#f0ede8"}}>{nextName}</b> yang melihat layar
+      </div>
+      <button className="btn" onClick={onReady}>AKU SIAP</button>
+    </div>
+  );
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,9vw,72px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .WORD{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,10vw,72px);letter-spacing:4px;color:#f0ede8;text-align:center;line-height:1.1;padding:12px 0}
+        .vbtn{background:#1a1a28;border:1px solid #2a2a3a;padding:12px 14px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;width:100%;-webkit-tap-highlight-color:transparent}
+        .vbtn:hover:not(:disabled){border-color:#ff3c3c;background:#1f1f2e}
+        .vbtn:active:not(:disabled){transform:scale(.98)}
+        .vbtn.sel{border-color:#ff3c3c;background:#2a0000}
+        .vbtn:disabled{cursor:not-allowed;opacity:.6}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 3px;transition:all .3s}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .bl{animation:bl 1s step-end infinite}
+        @keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(140px) rotate(360deg);opacity:0}}
+        .rbig{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,9vw,68px);letter-spacing:5px;text-align:center;line-height:1.1}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:background .15s}
+        .srow:hover{background:#1a1a28}
+        .srow:active{background:#1f1f30}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .bkd{background:#0e0e18;border:1px solid #2a2a3a;border-radius:6px;padding:10px 12px;margin-top:4px}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .rr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #1a1a28;font-size:11px}
+        .role-badge{display:inline-flex;align-items:center;gap:6px;border-radius:4px;padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .cat-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#666;padding:6px 12px;border-radius:16px;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;letter-spacing:1px}
+        .cat-btn.on{border-color:#ff3c3c;color:#ff3c3c;background:#2a0000}
+        .cat-btn:active{transform:scale(.95)}
+        .timer-big{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,18vw,120px);letter-spacing:8px;text-align:center;line-height:1}
+        .player-ring{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px 0}
+        .player-chip{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:11px;color:#888;letter-spacing:1px}
+        .spy-card{background:linear-gradient(135deg,#1a0000 0%,#2a0008 50%,#1a0000 100%);border:1px solid #ff3c3c44;border-radius:8px;padding:24px 20px}
+        .loc-list{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:4px 0}
+        .loc-list::-webkit-scrollbar{width:4px}
+        .loc-list::-webkit-scrollbar-track{background:#1a1a28;border-radius:2px}
+        .loc-list::-webkit-scrollbar-thumb{background:#ff3c3c44;border-radius:2px}
+        .loc-item{background:#1a1a28;border:1px solid #2a2a3a;padding:8px 12px;border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;color:#888;cursor:pointer;transition:all .15s;text-align:left}
+        .loc-item:hover{border-color:#ff3c3c;color:#f0ede8;background:#1f1f2e}
+        .loc-item.sel{border-color:#ff3c3c;color:#ff3c3c;background:#2a0000}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        .pulse{animation:pulse 1.5s ease-in-out infinite}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">SPY LOCATION</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:4}}>
+            <div className="SUB">permainan lokasi keluarga</div>
+            {roundNum > 0 && (
+              <div onClick={() => { setTimerActive(false); setPhase(PH.LB); }} style={{cursor:"pointer",background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:12,padding:"3px 12px",fontSize:10,letterSpacing:2,color:"#ffcc00",fontFamily:"'Space Mono',monospace",transition:"all .15s"}}>
+                🏆 LB
+              </div>
+            )}
+          </div>
+          {roundNum > 0 && phase !== PH.LB && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {roundNum}</div>
+          )}
+        </div>
+
+        {/* ═══════ SETUP ═══════ */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["pemain","Pemain"],["waktu","Waktu"],["kategori","Lokasi"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "pemain" && (
+              <div>
+                {/* Player count */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <div>
+                    <div className="SUB">jumlah pemain</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <button className="cbt" onClick={() => setPlayerCount(Math.max(4, playerCount - 1))} disabled={playerCount <= 4}>−</button>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,minWidth:26,textAlign:"center",color:"#f0ede8"}}>{playerCount}</span>
+                    <button className="cbt" onClick={() => setPlayerCount(Math.min(8, playerCount + 1))} disabled={playerCount >= 8}>+</button>
+                  </div>
+                </div>
+                {/* Spy count */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,paddingBottom:16,borderBottom:"1px solid #1a1a28"}}>
+                  <div>
+                    <div className="SUB">jumlah spy</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <button className="cbt" onClick={() => setSpyCount(1)} disabled={spyCount <= 1}>−</button>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,minWidth:26,textAlign:"center",color:"#ff3c3c"}}>{spyCount}</span>
+                    <button className="cbt" onClick={() => setSpyCount(Math.min(2, spyCount + 1))} disabled={spyCount >= 2 || spyCount >= playerCount - 2}>+</button>
+                  </div>
+                </div>
+                {/* Player names */}
+                <div className="SUB" style={{marginBottom:10}}>nama pemain</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {names.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "waktu" && (
+              <div>
+                <div className="SUB" style={{marginBottom:16}}>durasi diskusi</div>
+                <div style={{display:"flex",gap:8}}>
+                  {[3,5,8].map(m => (
+                    <button key={m} onClick={() => setTimerMin(m)}
+                      style={{
+                        flex:1,background:timerMin===m?"#2a0000":"#1a1a28",
+                        border:"1px solid "+(timerMin===m?"#ff3c3c":"#2a2a3a"),
+                        color:timerMin===m?"#ff3c3c":"#666",
+                        padding:"16px 0",borderRadius:6,cursor:"pointer",
+                        fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:3,
+                        transition:"all .15s"
+                      }}
+                    >
+                      {m} <span style={{fontSize:14,letterSpacing:1}}>MIN</span>
+                    </button>
+                  ))}
+                </div>
+                <div style={{marginTop:20}}>
+                  <div className="SUB" style={{marginBottom:14}}>cara bermain</div>
+                  <div style={{fontSize:11,color:"#666",lineHeight:1.8}}>
+                    <div style={{marginBottom:8}}>1. Setiap pemain melihat <b style={{color:"#3cff6e"}}>lokasi</b> dan <b style={{color:"#3cff6e"}}>perannya</b></div>
+                    <div style={{marginBottom:8}}>2. <b style={{color:"#ff3c3c"}}>Spy</b> tidak tahu lokasinya</div>
+                    <div style={{marginBottom:8}}>3. Tanya satu sama lain tentang lokasi</div>
+                    <div style={{marginBottom:8}}>4. Vote siapa yang paling mencurigakan</div>
+                    <div>5. Spy tertangkap? Dia bisa tebak lokasi!</div>
+                  </div>
+                </div>
+                <div style={{marginTop:20}}>
+                  <div className="SUB" style={{marginBottom:14}}>penilaian</div>
+                  {[
+                    {c:"Spy tidak tertangkap",p:"+4",clr:"#ff3c3c"},
+                    {c:"Spy tertangkap, tebak lokasi benar",p:"+3",clr:"#ff3c3c"},
+                    {c:"Warga tangkap spy & spy salah tebak",p:"+2",clr:"#3cff6e"},
+                    {c:"Warga salah tuduh non-spy",p:"+4 spy",clr:"#ff3c3c"},
+                    {c:"Non-spy dituduh salah",p:"-1",clr:"#888"},
+                  ].map((r,i) => (
+                    <div key={i} className="rr">
+                      <span style={{color:"#888"}}>{r.c}</span>
+                      <span style={{color:r.clr,fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2}}>{r.p}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "kategori" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>kategori lokasi</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:16}}>
+                  {CATEGORIES.map(cat => (
+                    <button key={cat} className={"cat-btn" + (catFilter[cat] ? " on" : "")}
+                      onClick={() => {
+                        const next = {...catFilter, [cat]: !catFilter[cat]};
+                        // Ensure at least one category is on
+                        if (Object.values(next).some(v => v)) setCatFilter(next);
+                      }}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <div style={{fontSize:11,color:"#555",letterSpacing:1,marginBottom:12}}>
+                  {availableLocs.length} lokasi tersedia
+                </div>
+                <div className="hr"/>
+                <div style={{maxHeight:240,overflowY:"auto",paddingRight:4}}>
+                  {enabledCats.map(cat => (
+                    <div key={cat} style={{marginBottom:12}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#ff3c3c",letterSpacing:2,marginBottom:6}}>{cat}</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                        {LOCATIONS.filter(l => l.cat === cat).map(l => (
+                          <span key={l.name} style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:4,padding:"3px 8px",fontSize:10,color:"#888",fontFamily:"'Space Mono',monospace"}}>{l.name}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" disabled={availableLocs.length === 0} onClick={startGame}>
+                {roundNum > 0 ? "MAIN LAGI" : "MULAI GAME"}
+              </button>
+              {roundNum > 0 && <button className="ghost" onClick={resetAll}>RESET LEADERBOARD</button>}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ PASS SCREEN (before reveal) ═══════ */}
+        {phase === PH.PASS && curPlayer && (
+          <PassScreen
+            nextName={curPlayer.name}
+            onReady={() => setPhase(PH.REVEAL)}
+            label="serahkan hp ke"
+          />
+        )}
+
+        {/* ═══════ REVEAL ═══════ */}
+        {phase === PH.REVEAL && curPlayer && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div className="SUB" style={{marginBottom:6}}>giliran melihat kartu</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:4,marginBottom:16}}>{curPlayer.name}</div>
+            <div style={{marginBottom:20}}>
+              {players.map((_,i) => (
+                <span key={i} className="dot" style={{background:i<revIdx?"#3cff6e":i===revIdx?"#ff3c3c":"#2a2a3a"}} />
+              ))}
+            </div>
+            {!showCard ? (
+              <button className="btn" onClick={() => setShowCard(true)}>LIHAT KARTUKU</button>
+            ) : (
+              <div>
+                {curPlayer.isSpy ? (
+                  /* SPY CARD */
+                  <div className="spy-card fi" style={{textAlign:"center"}}>
+                    <div style={{fontSize:56,marginBottom:8}}>🕵️</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(32,8,48),letterSpacing:4,color:"#ff3c3c",marginBottom:8,textShadow:"0 0 20px #ff3c3c66"}}>KAMU ADALAH SPY!</div>
+                    <div style={{fontSize:12,color:"#ff6666",marginBottom:16,lineHeight:1.6}}>
+                      Cari tahu lokasinya tanpa ketahuan!
+                    </div>
+                    <div className="hr" style={{borderColor:"#ff3c3c22"}}/>
+                    <div className="SUB" style={{marginTop:12,marginBottom:8,color:"#ff3c3c88"}}>daftar semua lokasi</div>
+                    <div className="loc-list" style={{maxHeight:160}}>
+                      {allLocationNames.map(n => (
+                        <div key={n} style={{padding:"5px 10px",fontSize:11,color:"#884444",fontFamily:"'Space Mono',monospace",borderBottom:"1px solid #2a000a"}}>
+                          {n}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* NON-SPY CARD */
+                  <div>
+                    <div style={{background:"#003a0a22",border:"1px solid #3cff6e22",borderRadius:6,padding:"6px 14px",marginBottom:12,display:"inline-block"}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:2,color:"#3cff6e"}}>👤 KAMU BUKAN SPY</span>
+                    </div>
+                    <div className="WORD">{location.name}</div>
+                    <div style={{marginTop:4,marginBottom:16}}>
+                      <div className="role-badge" style={{background:"#1a1a28",border:"1px solid #2a2a3a",display:"inline-flex"}}>
+                        <span style={{color:"#888",fontSize:14,letterSpacing:2}}>Peran:</span>
+                        <span style={{color:"#f0ede8",fontSize:18}}>{curPlayer.role}</span>
+                      </div>
+                    </div>
+                    <div style={{fontSize:10,color:"#555",letterSpacing:2,marginBottom:16}}>JANGAN TUNJUKKAN KE SIAPAPUN</div>
+                  </div>
+                )}
+                <button className="btn" style={{marginTop:12}} onClick={() => {
+                  setShowCard(false);
+                  if (revIdx + 1 < players.length) {
+                    setRevIdx(revIdx + 1);
+                    setPhase(PH.PASS);
+                  } else {
+                    setTimeLeft(timerMin * 60);
+                    setTimerActive(true);
+                    setPhase(PH.DISCUSS);
+                  }
+                }}>
+                  {revIdx + 1 < players.length ? "LANJUT" : "MULAI DISKUSI"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════ DISCUSSION ═══════ */}
+        {phase === PH.DISCUSS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{marginBottom:8}}>
+              <div className="SUB" style={{marginBottom:4}}>waktu tersisa</div>
+              <div className="timer-big" style={{color: timeLeft <= 30 ? "#ff3c3c" : timeLeft <= 60 ? "#ffcc00" : "#f0ede8"}}>
+                {fmtTime(timeLeft)}
+              </div>
+              {timeLeft <= 30 && timeLeft > 0 && (
+                <div className="pulse" style={{fontSize:11,color:"#ff3c3c",letterSpacing:2,marginTop:4}}>WAKTU HAMPIR HABIS!</div>
+              )}
+            </div>
+            <div className="hr"/>
+            <div className="player-ring">
+              {players.map((p,i) => (
+                <div key={i} className="player-chip">{p.name}</div>
+              ))}
+            </div>
+            <div className="hr"/>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:4}}>
+              Tanya-tanya satu sama lain tentang lokasi.<br/>
+              <span style={{color:"#555"}}>Hati-hati, spy mendengarkan!</span>
+            </div>
+            <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"8px 12px",margin:"12px 0",fontSize:11,color:"#666",fontStyle:"italic"}}>
+              Contoh: "Apa yang biasanya kamu lakukan di sana?"
+            </div>
+            <button className="btn" onClick={() => {
+              setTimerActive(false);
+              clearTimeout(timerRef.current);
+              setVoterIdx(0);
+              setVotes({});
+              setPhase(PH.VOTE_PASS);
+            }}>
+              MULAI VOTING
+            </button>
+          </div>
+        )}
+
+        {/* ═══════ VOTE PASS ═══════ */}
+        {phase === PH.VOTE_PASS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12,opacity:.6}}>🗳️</div>
+            <div className="SUB" style={{marginBottom:8}}>serahkan hp ke</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:8}}>{players[voterIdx]?.name}</div>
+            <div className="SUB" style={{marginBottom:24}}>voting {voterIdx + 1} dari {players.length}</div>
+            <button className="btn" onClick={() => setPhase(PH.VOTE)}>MULAI VOTE</button>
+          </div>
+        )}
+
+        {/* ═══════ VOTE ═══════ */}
+        {phase === PH.VOTE && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div className="SUB" style={{marginBottom:6}}>giliran voting</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:4,color:"#ff3c3c"}}>{players[voterIdx]?.name}</div>
+              <div className="SUB" style={{marginTop:4}}>pilih siapa yang menurutmu spy</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {players.map((p, i) => {
+                if (i === voterIdx) return null;
+                const selected = votes[voterIdx] === i;
+                return (
+                  <button key={i} className={"vbtn" + (selected ? " sel" : "")}
+                    onClick={() => setVotes({...votes, [voterIdx]: i})}
+                  >
+                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:selected?"#ff3c3c":"#f0ede8"}}>{p.name}</span>
+                    {selected && <span style={{color:"#ff3c3c",fontSize:12}}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{marginTop:16}}>
+              <button className="btn" disabled={votes[voterIdx] === undefined}
+                onClick={() => submitVote(votes[voterIdx])}
+              >
+                KONFIRMASI VOTE
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ SPY GUESS ═══════ */}
+        {phase === PH.SPY_GUESS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <Confetti color="#ff3c3c"/>
+            <div style={{fontSize:48,marginBottom:8}}>🕵️</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:4}}>SPY TERTANGKAP!</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:3,color:"#f0ede8",marginBottom:12}}>
+              {players[elimIdx]?.name}
+            </div>
+            <div className="hr"/>
+            <div style={{fontSize:12,color:"#888",marginTop:12,marginBottom:12,lineHeight:1.6}}>
+              Tapi spy punya <b style={{color:"#ffcc00"}}>satu kesempatan</b> terakhir!<br/>
+              Tebak lokasinya untuk tetap menang.
+            </div>
+            <div className="SUB" style={{marginBottom:8}}>pilih lokasi</div>
+            <div className="loc-list" style={{maxHeight:240}}>
+              {allLocationNames.map(n => (
+                <button key={n} className={"loc-item" + (spyGuess === n ? " sel" : "")}
+                  onClick={() => setSpyGuess(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+            <button className="btn" style={{marginTop:16}} disabled={!spyGuess}
+              onClick={() => submitSpyGuess(spyGuess)}
+            >
+              TEBAK LOKASI
+            </button>
+          </div>
+        )}
+
+        {/* ═══════ RESULT ═══════ */}
+        {phase === PH.RESULT && (
+          <div className="card fi" style={{textAlign:"center",position:"relative"}}>
+            <Confetti color={winner === "warga" ? "#3cff6e" : "#ff3c3c"} />
+            <div style={{fontSize:56,marginBottom:8}}>
+              {winner === "warga" ? "🎉" : winner === "spy_guess" ? "🕵️" : "💀"}
+            </div>
+            <div className="rbig" style={{color:winner === "warga" ? "#3cff6e" : "#ff3c3c",marginBottom:8}}>
+              {winner === "warga" ? "WARGA MENANG!" : winner === "spy_guess" ? "SPY MENANG!" : winner === "spy_wrong_accuse" ? "SPY MENANG!" : "SPY MENANG!"}
+            </div>
+            <div style={{fontSize:12,color:"#888",marginBottom:16,lineHeight:1.6}}>
+              {winner === "warga" && "Spy tertangkap dan gagal menebak lokasi!"}
+              {winner === "spy_guess" && "Spy tertangkap tapi berhasil menebak lokasi!"}
+              {winner === "spy_wrong_accuse" && (<span>Warga salah tuduh <b style={{color:"#f0ede8"}}>{players[elimIdx]?.name}</b>!</span>)}
+              {winner === "spy" && "Waktu habis tanpa voting!"}
+              {winner === "spy_timeout" && "Waktu habis tanpa voting!"}
+            </div>
+            <div className="hr"/>
+
+            {/* Location reveal */}
+            <div style={{marginTop:12,marginBottom:8}}>
+              <div className="SUB" style={{marginBottom:6}}>lokasinya adalah</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(28,7,44),letterSpacing:3,color:"#ffcc00"}}>{location?.name}</div>
+              <div style={{fontSize:11,color:"#555",marginTop:4}}>{location?.cat}</div>
+            </div>
+
+            {/* Player roles */}
+            <div className="hr"/>
+            <div style={{display:"flex",marginBottom:12,marginTop:12}}>
+              {[["round","Ronde"],["total","Total"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (scoreTab===k?" a":"")} onClick={() => setScoreTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {scoreTab === "round" && (
+              <div>
+                {roundScores.map((s, i) => (
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid #1a1a28"}}>
+                    <div style={{fontSize:20,width:28,textAlign:"center"}}>{s.isSpy ? "🕵️" : "👤"}</div>
+                    <div style={{flex:1,textAlign:"left"}}>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#f0ede8"}}>{s.name}</div>
+                      <div style={{fontSize:10,color:s.isSpy?"#ff3c3c":"#3cff6e",fontFamily:"'Bebas Neue',sans-serif",letterSpacing:2}}>
+                        {s.isSpy ? "SPY" : s.role}
+                      </div>
+                      {s.bd.length > 0 && (
+                        <div style={{marginTop:2}}>
+                          {s.bd.map((b,j) => (
+                            <span key={j} style={{fontSize:9,color:"#555",marginRight:8}}>{b.l}: <span style={{color:b.p >= 0 ? "#3cff6e" : "#ff3c3c"}}>{b.p >= 0 ? "+" : ""}{b.p}</span></span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="pts" style={{color:s.pts > 0 ? "#3cff6e" : s.pts < 0 ? "#ff3c3c" : "#555"}}>
+                      {s.pts > 0 ? "+" : ""}{s.pts}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {scoreTab === "total" && (
+              <div>
+                {lbEntries.map(([name, pts], i) => (
+                  <div key={name} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid #1a1a28"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:i<3?"#ffcc00":"#555",minWidth:28,textAlign:"center"}}>
+                      {i < 3 ? ["🥇","🥈","🥉"][i] : i+1}
+                    </div>
+                    <div style={{flex:1,textAlign:"left"}}>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#f0ede8"}}>{name}</div>
+                      <div className="lbw"><div className="lbb" style={{width:Math.max(4,(pts/Math.max(maxLb,1))*100)+"%",background:i===0?"#ffcc00":"#ff3c3c"}}/></div>
+                    </div>
+                    <div className="pts" style={{color:"#ffcc00"}}>{pts}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={() => setPhase(PH.SETUP)}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════ LEADERBOARD ═══════ */}
+        {phase === PH.LB && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:40,marginBottom:8}}>🏆</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:4,color:"#ffcc00",marginBottom:4}}>LEADERBOARD</div>
+            <div className="SUB" style={{marginBottom:16}}>{roundNum} ronde dimainkan</div>
+            {lbEntries.length === 0 ? (
+              <div style={{color:"#555",fontSize:12,padding:"20px 0"}}>Belum ada skor</div>
+            ) : (
+              <div>
+                {lbEntries.map(([name, pts], i) => (
+                  <div key={name} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid #1a1a28"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:i<3?"#ffcc00":"#555",minWidth:32,textAlign:"center"}}>
+                      {i < 3 ? ["🥇","🥈","🥉"][i] : i+1}
+                    </div>
+                    <div style={{flex:1,textAlign:"left"}}>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:"#f0ede8"}}>{name}</div>
+                      <div className="lbw"><div className="lbb" style={{width:Math.max(4,(pts/Math.max(maxLb,1))*100)+"%",background:i===0?"#ffcc00":"#ff3c3c"}}/></div>
+                    </div>
+                    <div className="pts" style={{color:"#ffcc00"}}>{pts}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{marginTop:20,display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={() => setPhase(PH.SETUP)}>PENGATURAN</button>
+              <button className="ghost" onClick={resetAll}>RESET SEMUA</button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+// Helper — inline clamp for font sizes in JSX
+function clamp(min, vw, max) {
+  return `clamp(${min}px, ${vw}vw, ${max}px)`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

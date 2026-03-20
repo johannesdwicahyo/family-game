@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>BOM KATA - Permainan Kata Keluarga</title>
+<meta name="description" content="Permainan bom kata keluarga seru! Sebutkan kata yang mengandung suku kata sebelum bom meledak!"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💣</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── SYLLABLE DATABASE ──────────────────────────────────────
+const SYLLABLES = {
+  easy: ["MA","KA","RI","AN","IN","TA","LA","BA","SA","PA","RA","DA","NA","TI","SI","DI","KU","BU","MI","SE","TE","BE","KE","PE","ME","GU","JA","SU","MU","TU"],
+  medium: ["GAR","BAN","MAN","TAN","PER","KAN","TER","LAN","RAN","BER","SAN","PAN","DAN","GAN","KER","JAN","WAR","TAR","BAR","LAR","MAR","PIN","TIN","BIN","LIN","MIN","SIN","KIN","DIN","RIN"],
+  hard: ["NYA","NGA","NGE","NGI","NGU","MPU","NDA","MBA","NCA","NJA","KSA","KSI","SWA","DWI","TRA","PRI","GRA","KRI","BLO","GLO","SKA","STA","STI","STR","SPE","SPO"],
+};
+
+const DIFFICULTY = {
+  easy:   { label:"Mudah",  sub:"Suku kata umum, waktu lama", fuseMin:8,  fuseMax:15, color:"#3cff6e" },
+  medium: { label:"Sedang", sub:"Campuran, waktu menengah",   fuseMin:6,  fuseMax:12, color:"#ffcc00" },
+  hard:   { label:"Sulit",  sub:"Suku kata tricky, waktu singkat", fuseMin:4, fuseMax:9, color:"#ff3c3c" },
+};
+
+// ─── PHASES ─────────────────────────────────────────────────
+const PH = { SETUP:"setup", PASS:"pass", PLAY:"play", BOOM:"boom", ELIM:"elim", WIN:"win" };
+
+// ─── SHUFFLE ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randRange(min, max) { return min + Math.random() * (max - min); }
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:30}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*12,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:140,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── BOMB COMPONENT ─────────────────────────────────────────
+function BombTimer({ progress, exploded }) {
+  // progress: 0 = just started, 1 = about to explode
+  const intensity = Math.min(progress * 1.5, 1);
+  const shakeAmt = intensity * 12;
+  const glowColor = `rgba(255,60,60,${0.1 + intensity * 0.6})`;
+  const pulseSpeed = Math.max(0.1, 0.8 - intensity * 0.7);
+
+  if (exploded) {
+    return (
+      <div style={{fontSize:100,textAlign:"center",animation:"explode .6s ease-out forwards"}}>
+        💥
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      textAlign:"center",position:"relative",
+      animation: `bombShake ${pulseSpeed}s ease-in-out infinite`,
+      ["--shake"]: shakeAmt + "px",
+    }}>
+      <div style={{
+        fontSize: 80,
+        filter: `drop-shadow(0 0 ${10 + intensity * 30}px ${glowColor})`,
+        transition: "filter .3s",
+      }}>
+        💣
+      </div>
+      {/* Fuse sparks */}
+      <div style={{
+        position:"absolute",top:-4,left:"50%",transform:"translateX(-50%) translateX(18px)",
+        width:8,height:8,borderRadius:"50%",
+        background: intensity > 0.3 ? "#ff3c3c" : "#ffcc00",
+        boxShadow: `0 0 ${6 + intensity * 14}px ${intensity > 0.3 ? "#ff3c3c" : "#ffcc00"}`,
+        animation: `sparkle ${pulseSpeed * 0.5}s ease-in-out infinite alternate`,
+        opacity: 0.5 + intensity * 0.5,
+      }} />
+      {/* Urgency bar (subtle, no exact time) */}
+      <div style={{
+        margin:"12px auto 0",width:120,height:4,background:"#1a1a28",borderRadius:2,overflow:"hidden",
+      }}>
+        <div style={{
+          height:"100%",borderRadius:2,transition:"width .5s, background .5s",
+          width: (100 - progress * 100) + "%",
+          background: progress < 0.5 ? "#3cff6e" : progress < 0.8 ? "#ffcc00" : "#ff3c3c",
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [tab, setTab] = useState("players");
+
+  // Setup state
+  const [playerNames, setPlayerNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [numPlayers, setNumPlayers] = useState(4);
+  const [difficulty, setDifficulty] = useState("medium");
+  const [livesPerPlayer, setLivesPerPlayer] = useState(3);
+
+  // Game state
+  const [players, setPlayers] = useState([]); // [{name, lives, eliminated, elimOrder}]
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [syllable, setSyllable] = useState("");
+  const [inputVal, setInputVal] = useState("");
+  const [usedWords, setUsedWords] = useState([]);
+  const [error, setError] = useState("");
+  const [showValid, setShowValid] = useState(false);
+  const [fuseEnd, setFuseEnd] = useState(0);
+  const [fuseDuration, setFuseDuration] = useState(10);
+  const [progress, setProgress] = useState(0);
+  const [exploded, setExploded] = useState(false);
+  const [elimOrder, setElimOrder] = useState(0);
+  const [screenShake, setScreenShake] = useState(false);
+  const [totalWordsPlayed, setTotalWordsPlayed] = useState(0);
+  const [longestWord, setLongestWord] = useState("");
+  const [usedSyllables, setUsedSyllables] = useState([]);
+
+  const timerRef = useRef(null);
+  const inputRef = useRef(null);
+  const fuseEndRef = useRef(0);
+
+  const diff = DIFFICULTY[difficulty];
+
+  // Sync player names with numPlayers
+  useEffect(() => {
+    setPlayerNames(prev => {
+      const n = [...prev];
+      while (n.length < numPlayers) n.push("Pemain " + (n.length + 1));
+      return n.slice(0, numPlayers);
+    });
+  }, [numPlayers]);
+
+  const pickSyllable = useCallback(() => {
+    const pool = difficulty === "easy" ? SYLLABLES.easy
+      : difficulty === "hard" ? SYLLABLES.hard
+      : [...SYLLABLES.easy.slice(0,10), ...SYLLABLES.medium];
+
+    let available = pool.filter(s => !usedSyllables.includes(s));
+    if (available.length === 0) {
+      setUsedSyllables([]);
+      available = pool;
+    }
+    const picked = pickRandom(available);
+    setUsedSyllables(prev => [...prev, picked]);
+    return picked;
+  }, [difficulty, usedSyllables]);
+
+  const getAlivePlayers = useCallback(() => {
+    return players.filter(p => !p.eliminated);
+  }, [players]);
+
+  const getNextAliveIdx = useCallback((fromIdx) => {
+    const n = players.length;
+    let idx = (fromIdx + 1) % n;
+    let safety = 0;
+    while (players[idx]?.eliminated && safety < n) {
+      idx = (idx + 1) % n;
+      safety++;
+    }
+    return idx;
+  }, [players]);
+
+  const startFuse = useCallback(() => {
+    const dur = randRange(diff.fuseMin, diff.fuseMax);
+    const end = Date.now() + dur * 1000;
+    setFuseDuration(dur);
+    setFuseEnd(end);
+    fuseEndRef.current = end;
+    setProgress(0);
+    setExploded(false);
+  }, [diff]);
+
+  // Timer tick
+  useEffect(() => {
+    if (phase !== PH.PLAY || exploded) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      const now = Date.now();
+      const end = fuseEndRef.current;
+      const dur = fuseDuration * 1000;
+      const elapsed = dur - (end - now);
+      const prog = Math.min(elapsed / dur, 1);
+      setProgress(prog);
+
+      if (now >= end) {
+        clearInterval(timerRef.current);
+        setExploded(true);
+        setScreenShake(true);
+        setTimeout(() => {
+          setScreenShake(false);
+          setPhase(PH.BOOM);
+        }, 1200);
+      }
+    }, 50);
+
+    return () => clearInterval(timerRef.current);
+  }, [phase, exploded, fuseDuration]);
+
+  const startGame = () => {
+    const ps = playerNames.map(name => ({
+      name, lives: livesPerPlayer, eliminated: false, elimOrder: -1,
+    }));
+    setPlayers(ps);
+    setCurrentIdx(0);
+    setUsedWords([]);
+    setError("");
+    setElimOrder(0);
+    setTotalWordsPlayed(0);
+    setLongestWord("");
+    setUsedSyllables([]);
+
+    const syl = pickSyllable();
+    setSyllable(syl);
+    setInputVal("");
+    setPhase(PH.PASS);
+  };
+
+  const startTurn = () => {
+    setInputVal("");
+    setError("");
+    setShowValid(false);
+    startFuse();
+    setPhase(PH.PLAY);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const submitWord = () => {
+    const word = inputVal.trim();
+    if (!word) return;
+
+    const wordLower = word.toLowerCase();
+    const sylLower = syllable.toLowerCase();
+
+    if (word.length < 3) {
+      setError("Minimal 3 huruf!");
+      setInputVal("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+      return;
+    }
+    if (!wordLower.includes(sylLower)) {
+      setError(`Kata harus mengandung "${syllable}"!`);
+      setInputVal("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+      return;
+    }
+    if (usedWords.includes(wordLower)) {
+      setError("Kata sudah dipakai!");
+      setInputVal("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+      return;
+    }
+
+    // Valid
+    setError("");
+    setShowValid(true);
+    setUsedWords(prev => [...prev, wordLower]);
+    setTotalWordsPlayed(prev => prev + 1);
+    if (word.length > longestWord.length) setLongestWord(word);
+
+    clearInterval(timerRef.current);
+
+    setTimeout(() => {
+      setShowValid(false);
+      const nextIdx = getNextAliveIdx(currentIdx);
+      setCurrentIdx(nextIdx);
+      const newSyl = pickSyllable();
+      setSyllable(newSyl);
+      setInputVal("");
+      setPhase(PH.PASS);
+    }, 600);
+  };
+
+  const handleBoom = () => {
+    // Current player loses a life
+    const updated = [...players];
+    updated[currentIdx] = { ...updated[currentIdx], lives: updated[currentIdx].lives - 1 };
+
+    let newElimOrder = elimOrder;
+    if (updated[currentIdx].lives <= 0) {
+      updated[currentIdx].eliminated = true;
+      updated[currentIdx].elimOrder = elimOrder;
+      newElimOrder = elimOrder + 1;
+      setElimOrder(newElimOrder);
+    }
+
+    setPlayers(updated);
+
+    // Check win condition
+    const alive = updated.filter(p => !p.eliminated);
+    if (alive.length <= 1) {
+      setPhase(PH.WIN);
+      return;
+    }
+
+    if (updated[currentIdx].eliminated) {
+      setPhase(PH.ELIM);
+    } else {
+      // Same player continues with new syllable
+      const newSyl = pickSyllable();
+      setSyllable(newSyl);
+      setInputVal("");
+      // Move to next player
+      const nextIdx = getNextAliveIdx(currentIdx);
+      setCurrentIdx(nextIdx);
+      setPhase(PH.PASS);
+    }
+  };
+
+  const handleAfterElim = () => {
+    const alive = players.filter(p => !p.eliminated);
+    if (alive.length <= 1) {
+      setPhase(PH.WIN);
+      return;
+    }
+    const nextIdx = getNextAliveIdx(currentIdx);
+    setCurrentIdx(nextIdx);
+    const newSyl = pickSyllable();
+    setSyllable(newSyl);
+    setInputVal("");
+    setPhase(PH.PASS);
+  };
+
+  const winner = players.filter(p => !p.eliminated)[0];
+  const elimPlayers = players.filter(p => p.eliminated).sort((a,b) => a.elimOrder - b.elimOrder);
+
+  const currentPlayer = players[currentIdx];
+
+  return (
+    <div style={{
+      minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",
+      fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",
+      alignItems:"center",padding:"24px 16px 56px",
+      animation: screenShake ? "screenShake .6s ease-out" : "none",
+    }}>
+      <style>{`
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,10vw,88px);letter-spacing:8px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+
+        .syl-box{
+          font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,18vw,100px);letter-spacing:10px;
+          color:#f0ede8;text-align:center;line-height:1;padding:20px;
+          background:#1a1a28;border:2px solid #2a2a3a;border-radius:12px;
+          text-shadow:0 0 30px rgba(255,60,60,0.3);position:relative;
+        }
+        .syl-glow{
+          box-shadow:0 0 40px rgba(255,60,60,0.15), inset 0 0 40px rgba(255,60,60,0.05);
+        }
+
+        .word-inp{
+          background:#1a1a28;border:2px solid #2a2a3a;color:#f0ede8;
+          padding:16px 20px;font-family:'Space Mono',monospace;font-size:20px;
+          border-radius:8px;width:100%;outline:none;transition:all .2s;
+          text-align:center;letter-spacing:3px;
+        }
+        .word-inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 4px #ff3c3c22}
+        .word-inp.err{border-color:#ff3c3c;animation:shake .4s ease-in-out;background:#1a0a0a}
+        .word-inp.ok{border-color:#3cff6e;background:#0a1a0a}
+
+        .diff-opt{
+          background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;padding:12px 14px;
+          cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:2px;
+          -webkit-tap-highlight-color:transparent;
+        }
+        .diff-opt:hover{border-color:#ff3c3c44}
+        .diff-opt.sel{border-color:#ff3c3c;background:#2a0000}
+
+        .player-ring{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+        .player-pip{
+          background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;padding:6px 10px;
+          font-family:'Space Mono',monospace;font-size:11px;transition:all .3s;
+          display:flex;align-items:center;gap:4px;
+        }
+        .player-pip.active{border-color:#ff3c3c;background:#2a0000;color:#ff3c3c}
+        .player-pip.dead{opacity:.3;text-decoration:line-through}
+
+        .lives{display:flex;gap:2px;font-size:14px}
+
+        .used-words{
+          max-height:80px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:4px;
+          padding:8px;background:#0e0e18;border-radius:6px;border:1px solid #1e1e2e;
+        }
+        .used-word{
+          background:#1a1a28;border:1px solid #2a2a3a;border-radius:4px;
+          padding:2px 8px;font-size:10px;color:#666;font-family:'Space Mono',monospace;
+        }
+
+        .boom-overlay{
+          position:fixed;top:0;left:0;right:0;bottom:0;
+          background:rgba(255,20,20,0.15);pointer-events:none;z-index:10;
+          animation:redFlash .8s ease-out forwards;
+        }
+
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+        @keyframes screenShake{0%,100%{transform:translate(0)}10%{transform:translate(-6px,4px)}20%{transform:translate(8px,-2px)}30%{transform:translate(-4px,6px)}40%{transform:translate(6px,-4px)}50%{transform:translate(-2px,2px)}60%{transform:translate(4px,-6px)}70%{transform:translate(-8px,4px)}80%{transform:translate(2px,-2px)}90%{transform:translate(-4px,6px)}}
+        @keyframes bombShake{0%,100%{transform:translate(0)}25%{transform:translate(calc(var(--shake)*-0.5),calc(var(--shake)*0.3))}50%{transform:translate(calc(var(--shake)*0.5),calc(var(--shake)*-0.3))}75%{transform:translate(calc(var(--shake)*-0.3),calc(var(--shake)*0.5))}}
+        @keyframes sparkle{from{opacity:.4;transform:scale(.8)}to{opacity:1;transform:scale(1.3)}}
+        @keyframes explode{0%{transform:scale(1);opacity:1}50%{transform:scale(2.5);opacity:1}100%{transform:scale(3);opacity:0}}
+        @keyframes redFlash{0%{opacity:1}100%{opacity:0}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(160px) rotate(360deg);opacity:0}}
+        @keyframes pulseGlow{0%,100%{box-shadow:0 0 20px rgba(255,60,60,0.1)}50%{box-shadow:0 0 50px rgba(255,60,60,0.3)}}
+        @keyframes greenFlash{0%{background:rgba(60,255,110,0.2)}100%{background:transparent}}
+        @keyframes elimIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+      `}</style>
+
+      <div className="sl" />
+      {screenShake && <div className="boom-overlay" />}
+      {showValid && <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,animation:"greenFlash .5s ease-out forwards",pointerEvents:"none",zIndex:10}} />}
+
+      <div className="wrap">
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">BOM KATA</div>
+          <div className="SUB">permainan kata keluarga</div>
+        </div>
+
+        {/* ═══════════════ SETUP ═══════════════ */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["players","Pemain"],["diff","Level"],["rules","Aturan"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "players" && (
+              <div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <div className="SUB">jumlah pemain</div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <button className="cbt" onClick={() => setNumPlayers(Math.max(2,numPlayers-1))} disabled={numPlayers<=2}>−</button>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,minWidth:26,textAlign:"center",color:"#ff3c3c"}}>{numPlayers}</span>
+                    <button className="cbt" onClick={() => setNumPlayers(Math.min(8,numPlayers+1))} disabled={numPlayers>=8}>+</button>
+                  </div>
+                </div>
+
+                <div className="SUB" style={{marginBottom:10}}>nyawa per pemain</div>
+                <div style={{display:"flex",gap:8,marginBottom:20}}>
+                  {[2,3].map(v => (
+                    <button key={v} className={"diff-opt" + (livesPerPlayer===v?" sel":"")}
+                      onClick={() => setLivesPerPlayer(v)}
+                      style={{flex:1,textAlign:"center",alignItems:"center"}}>
+                      <div style={{fontSize:20}}>{Array(v).fill("❤️").join("")}</div>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:livesPerPlayer===v?"#ff3c3c":"#888"}}>{v} NYAWA</div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="SUB" style={{marginBottom:10}}>nama pemain</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {playerNames.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...playerNames]; u[i]=e.target.value; setPlayerNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "diff" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>pilih tingkat kesulitan</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {Object.entries(DIFFICULTY).map(([key, d]) => (
+                    <button key={key} className={"diff-opt" + (difficulty===key?" sel":"")} onClick={() => setDifficulty(key)}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:3,color:difficulty===key?d.color:"#888"}}>
+                        {d.label}
+                      </div>
+                      <div style={{fontSize:10,color:"#555"}}>{d.sub}</div>
+                      <div style={{fontSize:10,color:"#444",marginTop:2}}>Waktu: {d.fuseMin}-{d.fuseMax} detik</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "rules" && (
+              <div style={{fontSize:12,color:"#888",lineHeight:1.8}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:3,color:"#ff3c3c",marginBottom:10}}>CARA BERMAIN</div>
+                <div style={{marginBottom:12}}>
+                  <b style={{color:"#f0ede8"}}>1.</b> Suku kata muncul di layar<br/>
+                  <b style={{color:"#f0ede8"}}>2.</b> Ketik kata yang <b style={{color:"#ff3c3c"}}>mengandung</b> suku kata tersebut<br/>
+                  <b style={{color:"#f0ede8"}}>3.</b> Tekan Enter sebelum bom meledak!<br/>
+                  <b style={{color:"#f0ede8"}}>4.</b> Kata harus minimal 3 huruf<br/>
+                  <b style={{color:"#f0ede8"}}>5.</b> Kata tidak boleh diulang<br/>
+                  <b style={{color:"#f0ede8"}}>6.</b> Kalau bom meledak, kamu kehilangan satu nyawa<br/>
+                  <b style={{color:"#f0ede8"}}>7.</b> Nyawa habis = eliminasi!<br/>
+                  <b style={{color:"#f0ede8"}}>8.</b> Pemain terakhir yang bertahan = <b style={{color:"#3cff6e"}}>PEMENANG!</b>
+                </div>
+                <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:10}}>
+                  <div style={{color:"#ffcc00",fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,marginBottom:6}}>CONTOH</div>
+                  <div>Suku kata: <b style={{color:"#ff3c3c",fontSize:16}}>MA</b></div>
+                  <div style={{color:"#3cff6e"}}>✓ "makan" — ✓ "rumah" — ✓ "semangat"</div>
+                  <div style={{color:"#ff3c3c"}}>✗ "kuda" — ✗ "ap" — ✗ kata yang sudah dipakai</div>
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" onClick={startGame} disabled={numPlayers < 2}>
+                MULAI GAME
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════ PASS SCREEN ═══════════════ */}
+        {phase === PH.PASS && currentPlayer && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12,opacity:.6}}>📱</div>
+            <div className="SUB" style={{marginBottom:8}}>berikan ke</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:8}}>
+              {currentPlayer.name}
+            </div>
+            <div style={{marginBottom:16}}>
+              <div className="lives" style={{justifyContent:"center",fontSize:20}}>
+                {Array(livesPerPlayer).fill(0).map((_, i) => (
+                  <span key={i}>{i < currentPlayer.lives ? "❤️" : "🖤"}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Player ring */}
+            <div className="player-ring" style={{marginBottom:20}}>
+              {players.map((p, i) => (
+                <div key={i} className={"player-pip" + (i === currentIdx ? " active" : "") + (p.eliminated ? " dead" : "")}>
+                  <span>{p.name}</span>
+                  {!p.eliminated && <span style={{fontSize:10}}>{Array(p.lives).fill("❤️").join("")}</span>}
+                </div>
+              ))}
+            </div>
+
+            <button className="btn" onClick={startTurn}>SIAP!</button>
+          </div>
+        )}
+
+        {/* ═══════════════ PLAY ═══════════════ */}
+        {phase === PH.PLAY && currentPlayer && (
+          <div className="card fi">
+            {/* Current player */}
+            <div style={{textAlign:"center",marginBottom:8}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c"}}>
+                {currentPlayer.name}
+              </div>
+              <div className="lives" style={{justifyContent:"center"}}>
+                {Array(livesPerPlayer).fill(0).map((_, i) => (
+                  <span key={i}>{i < currentPlayer.lives ? "❤️" : "🖤"}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Bomb */}
+            <div style={{margin:"12px 0"}}>
+              <BombTimer progress={progress} exploded={exploded} />
+            </div>
+
+            {/* Syllable */}
+            <div className={"syl-box syl-glow"} style={{
+              marginBottom:16,
+              animation: `pulseGlow ${Math.max(0.3, 1.5 - progress * 1.2)}s ease-in-out infinite`,
+              borderColor: progress > 0.7 ? "#ff3c3c" : "#2a2a3a",
+            }}>
+              {syllable}
+            </div>
+
+            {/* Input */}
+            <div style={{marginBottom:12}}>
+              <input
+                ref={inputRef}
+                className={"word-inp" + (error ? " err" : "") + (showValid ? " ok" : "")}
+                value={inputVal}
+                onChange={e => { setInputVal(e.target.value.toUpperCase()); setError(""); }}
+                onKeyDown={e => { if (e.key === "Enter") submitWord(); }}
+                placeholder={`Kata dengan "${syllable}"...`}
+                autoComplete="off"
+                autoCapitalize="characters"
+                disabled={exploded}
+              />
+              {error && (
+                <div style={{color:"#ff3c3c",fontSize:12,marginTop:6,textAlign:"center",fontFamily:"'Space Mono',monospace"}}>
+                  {error}
+                </div>
+              )}
+            </div>
+
+            <button className="btn" onClick={submitWord} disabled={exploded || !inputVal.trim()}>
+              KIRIM
+            </button>
+
+            {/* Player ring mini */}
+            <div className="player-ring" style={{marginTop:14}}>
+              {players.map((p, i) => (
+                <div key={i} className={"player-pip" + (i === currentIdx ? " active" : "") + (p.eliminated ? " dead" : "")}>
+                  <span style={{fontSize:10}}>{p.name}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Used words */}
+            {usedWords.length > 0 && (
+              <div style={{marginTop:12}}>
+                <div className="SUB" style={{marginBottom:6,fontSize:9}}>kata terpakai ({usedWords.length})</div>
+                <div className="used-words">
+                  {usedWords.map((w,i) => <span key={i} className="used-word">{w}</span>)}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════ BOOM ═══════════════ */}
+        {phase === PH.BOOM && currentPlayer && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:80,marginBottom:8}}>💥</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,letterSpacing:4,color:"#ff3c3c",marginBottom:8}}>
+              BOOM!
+            </div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:3,marginBottom:12}}>
+              {currentPlayer.name}
+            </div>
+            <div style={{fontSize:14,color:"#888",marginBottom:16}}>
+              kehilangan satu nyawa!
+            </div>
+            <div className="lives" style={{justifyContent:"center",fontSize:28,marginBottom:20}}>
+              {Array(livesPerPlayer).fill(0).map((_, i) => (
+                <span key={i}>{i < currentPlayer.lives ? "❤️" : "🖤"}</span>
+              ))}
+            </div>
+            <button className="btn" onClick={handleBoom}>
+              {currentPlayer.lives <= 0 ? "LANJUTKAN" : "LANJUTKAN"}
+            </button>
+          </div>
+        )}
+
+        {/* ═══════════════ ELIMINATED ═══════════════ */}
+        {phase === PH.ELIM && currentPlayer && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:80,marginBottom:8,animation:"elimIn .5s ease-out"}}>☠️</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:8}}>
+              TERELIMINASI!
+            </div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:4,marginBottom:12,textDecoration:"line-through",opacity:0.6}}>
+              {currentPlayer.name}
+            </div>
+            <div style={{fontSize:14,color:"#666",marginBottom:20}}>
+              telah meninggalkan permainan
+            </div>
+
+            {/* Remaining players */}
+            <div className="SUB" style={{marginBottom:8}}>pemain tersisa</div>
+            <div className="player-ring" style={{marginBottom:20}}>
+              {players.filter(p => !p.eliminated).map((p, i) => (
+                <div key={i} className="player-pip">
+                  <span>{p.name}</span>
+                  <span style={{fontSize:10}}>{Array(p.lives).fill("❤️").join("")}</span>
+                </div>
+              ))}
+            </div>
+
+            <button className="btn" onClick={handleAfterElim}>LANJUTKAN</button>
+          </div>
+        )}
+
+        {/* ═══════════════ WIN ═══════════════ */}
+        {phase === PH.WIN && (
+          <div className="card fi" style={{textAlign:"center",position:"relative"}}>
+            <Confetti />
+            <div style={{fontSize:60,marginBottom:8,position:"relative",zIndex:3}}>🏆</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:4,color:"#ffcc00",marginBottom:4,position:"relative",zIndex:3}}>
+              PEMENANG
+            </div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(42,10,68),letterSpacing:5,color:"#3cff6e",marginBottom:20,position:"relative",zIndex:3,fontSize:"clamp(42px,10vw,68px)"}}>
+              {winner?.name}
+            </div>
+
+            {/* Elimination order */}
+            <div style={{marginBottom:16,position:"relative",zIndex:3}}>
+              <div className="SUB" style={{marginBottom:10}}>urutan eliminasi</div>
+              {elimPlayers.map((p, i) => (
+                <div key={i} style={{
+                  display:"flex",alignItems:"center",justifyContent:"space-between",
+                  padding:"8px 12px",background:"#0e0e18",border:"1px solid #1e1e2e",
+                  borderRadius:6,marginBottom:4,
+                }}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#555"}}>#{i+1}</span>
+                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#888",textDecoration:"line-through"}}>{p.name}</span>
+                  </div>
+                  <span>☠️</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Stats */}
+            <div style={{
+              background:"#0e0e18",border:"1px solid #1e1e2e",borderRadius:6,padding:12,marginBottom:20,
+              position:"relative",zIndex:3,
+            }}>
+              <div className="SUB" style={{marginBottom:8}}>statistik</div>
+              <div style={{display:"flex",justifyContent:"space-around"}}>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"#ff3c3c"}}>{totalWordsPlayed}</div>
+                  <div style={{fontSize:9,color:"#555",letterSpacing:1}}>TOTAL KATA</div>
+                </div>
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:"#ffcc00"}}>{longestWord || "-"}</div>
+                  <div style={{fontSize:9,color:"#555",letterSpacing:1}}>TERPANJANG</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8,position:"relative",zIndex:3}}>
+              <button className="btn" onClick={() => {
+                startGame();
+              }}>MAIN LAGI</button>
+              <button className="ghost" onClick={() => setPhase(PH.SETUP)}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

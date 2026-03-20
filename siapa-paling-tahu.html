@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>SIAPA PALING TAHU? - Trivia Keluarga</title>
+<meta name="description" content="Permainan trivia keluarga! Seberapa kenal kamu dengan keluargamu?"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── PROMPTS ────────────────────────────────────────────────
+const PROMPTS = [
+  {id:"food",     label:"Makanan favorit saya..."},
+  {id:"drink",    label:"Minuman favorit saya..."},
+  {id:"movie",    label:"Film/serial favorit saya..."},
+  {id:"song",     label:"Lagu favorit saya..."},
+  {id:"animal",   label:"Kalau jadi hewan, saya jadi..."},
+  {id:"fear",     label:"Hal yang paling saya takuti..."},
+  {id:"dream",    label:"Mimpi terbesar saya..."},
+  {id:"habit",    label:"Kebiasaan aneh saya..."},
+  {id:"vacation", label:"Tempat liburan impian saya..."},
+  {id:"cantlive", label:"Saya paling tidak bisa hidup tanpa..."},
+  {id:"talent",   label:"Bakat tersembunyi saya..."},
+  {id:"lottery",  label:"Kalau menang lotre, saya akan..."},
+  {id:"change",   label:"Satu hal yang ingin saya ubah di dunia..."},
+  {id:"hero",     label:"Superhero favorit saya..."},
+  {id:"happy",    label:"Saya paling bahagia ketika..."},
+  {id:"meet",     label:"Kalau bisa ketemu siapa saja, saya mau ketemu..."},
+  {id:"hobby",    label:"Hobi yang ingin saya coba..."},
+  {id:"describe", label:"Kata-kata yang menggambarkan saya..."},
+];
+
+const PROMPT_QUESTIONS = {
+  food:"Apa makanan favorit",
+  drink:"Apa minuman favorit",
+  movie:"Apa film/serial favorit",
+  song:"Apa lagu favorit",
+  animal:"Kalau jadi hewan, apa pilihan",
+  fear:"Apa hal yang paling ditakuti",
+  dream:"Apa mimpi terbesar",
+  habit:"Apa kebiasaan aneh",
+  vacation:"Apa tempat liburan impian",
+  cantlive:"Apa yang tidak bisa dilepaskan oleh",
+  talent:"Apa bakat tersembunyi",
+  lottery:"Kalau menang lotre, apa yang akan dilakukan",
+  change:"Apa satu hal yang ingin diubah di dunia oleh",
+  hero:"Siapa superhero favorit",
+  happy:"Kapan waktu paling bahagia",
+  meet:"Siapa yang ingin ditemui oleh",
+  hobby:"Apa hobi yang ingin dicoba oleh",
+  describe:"Kata apa yang menggambarkan",
+};
+
+const MEDALS = ["🥇","🥈","🥉"];
+const PH = {
+  SETUP:"setup", FILLIN_PASS:"fillin_pass", FILLIN:"fillin", FILLIN_DONE:"fillin_done",
+  QUESTION:"question", ANSWER_PASS:"answer_pass", ANSWER:"answer",
+  REVEAL:"reveal", RESULTS:"results"
+};
+
+// ─── FISHER-YATES SHUFFLE ───────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:24}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*15,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:120,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── CLAMP HELPER ───────────────────────────────────────────
+function cssClamp(min, max) { return `clamp(${min}px, ${(min+max)/2}vw, ${max}px)`; }
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Papa","Mama","Kakak","Adik"]);
+  const [numQ, setNumQ] = useState(5);
+  const [playerCount, setPlayerCount] = useState(4);
+
+  // Fill-in state
+  const [fillPlayerIdx, setFillPlayerIdx] = useState(0);
+  const [fillPromptIdx, setFillPromptIdx] = useState(0);
+  const [fillValue, setFillValue] = useState("");
+  const [answers, setAnswers] = useState({}); // {playerName: {promptId: "answer"}}
+
+  // Game state
+  const [questions, setQuestions] = useState([]); // [{playerIdx, promptId}]
+  const [qIdx, setQIdx] = useState(0);
+  const [voterIdx, setVoterIdx] = useState(0);
+  const [voters, setVoters] = useState([]);
+  const [options, setOptions] = useState([]);
+  const [votes, setVotes] = useState({}); // {voterName: chosenAnswer}
+  const [scores, setScores] = useState({}); // {name: points}
+  const [decoyScores, setDecoyScores] = useState({}); // {name: decoysSuccessful}
+  const [mysteryScores, setMysteryScores] = useState({}); // {name: timesGuessedWrong}
+  const [roundVotes, setRoundVotes] = useState({});
+  const [correctAnswer, setCorrectAnswer] = useState("");
+  const [decoyInfo, setDecoyInfo] = useState(null); // {name, count} for best deceiver this round
+
+  const activeNames = useMemo(() => names.slice(0, playerCount), [names, playerCount]);
+
+  // Adjust names array when player count changes
+  useEffect(() => {
+    const n = [...names];
+    while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+    setNames(n);
+  }, [playerCount]);
+
+  const totalFillSteps = PROMPTS.length;
+  const fillProgress = fillPromptIdx + 1;
+
+  // Generate questions for the game
+  const generateQuestions = () => {
+    const qs = [];
+    activeNames.forEach((_, pIdx) => {
+      const shuffled = shuffle(PROMPTS.map(p => p.id));
+      const picked = shuffled.slice(0, Math.min(numQ, PROMPTS.length));
+      picked.forEach(promptId => {
+        qs.push({playerIdx: pIdx, promptId});
+      });
+    });
+    return shuffle(qs);
+  };
+
+  // Generate options for a question
+  const generateOptions = (q) => {
+    const subjectName = activeNames[q.playerIdx];
+    const realAnswer = answers[subjectName]?.[q.promptId] || "";
+
+    // Collect decoys from other players for the SAME prompt
+    let decoys = [];
+    activeNames.forEach((name, idx) => {
+      if (idx !== q.playerIdx && answers[name]?.[q.promptId]) {
+        const ans = answers[name][q.promptId];
+        if (ans.toLowerCase() !== realAnswer.toLowerCase()) {
+          decoys.push({answer: ans, owner: name});
+        }
+      }
+    });
+    decoys = shuffle(decoys);
+
+    // If not enough decoys, pad from other prompts
+    if (decoys.length < 3) {
+      const otherPrompts = shuffle(PROMPTS.filter(p => p.id !== q.promptId));
+      for (const op of otherPrompts) {
+        if (decoys.length >= 3) break;
+        for (const name of shuffle([...activeNames])) {
+          if (decoys.length >= 3) break;
+          if (name === subjectName) continue;
+          const ans = answers[name]?.[op.id];
+          if (ans && ans.toLowerCase() !== realAnswer.toLowerCase() && !decoys.find(d => d.answer.toLowerCase() === ans.toLowerCase())) {
+            decoys.push({answer: ans, owner: name});
+          }
+        }
+      }
+    }
+
+    const picked = decoys.slice(0, 3);
+    const opts = [{answer: realAnswer, isCorrect: true, owner: subjectName}, ...picked.map(d => ({answer: d.answer, isCorrect: false, owner: d.owner}))];
+    return shuffle(opts);
+  };
+
+  const startFillIn = () => {
+    setAnswers({});
+    setFillPlayerIdx(0);
+    setFillPromptIdx(0);
+    setFillValue("");
+    setPhase(PH.FILLIN_PASS);
+  };
+
+  const submitFillAnswer = () => {
+    const name = activeNames[fillPlayerIdx];
+    const promptId = PROMPTS[fillPromptIdx].id;
+    const newAnswers = {...answers};
+    if (!newAnswers[name]) newAnswers[name] = {};
+    newAnswers[name][promptId] = fillValue.trim();
+    setAnswers(newAnswers);
+    setFillValue("");
+
+    if (fillPromptIdx + 1 < PROMPTS.length) {
+      setFillPromptIdx(fillPromptIdx + 1);
+    } else {
+      // This player is done
+      if (fillPlayerIdx + 1 < activeNames.length) {
+        setFillPlayerIdx(fillPlayerIdx + 1);
+        setFillPromptIdx(0);
+        setPhase(PH.FILLIN_PASS);
+      } else {
+        setPhase(PH.FILLIN_DONE);
+      }
+    }
+  };
+
+  const startGame = () => {
+    const qs = generateQuestions();
+    setQuestions(qs);
+    setQIdx(0);
+    setScores({});
+    setDecoyScores({});
+    setMysteryScores({});
+    setupQuestion(qs, 0);
+  };
+
+  const setupQuestion = (qs, idx) => {
+    const q = qs[idx];
+    const subjectName = activeNames[q.playerIdx];
+    const voterList = activeNames.filter((_, i) => i !== q.playerIdx);
+    setVoters(voterList);
+    setVoterIdx(0);
+    setVotes({});
+    setRoundVotes({});
+    setDecoyInfo(null);
+    setCorrectAnswer(answers[subjectName]?.[q.promptId] || "");
+    setOptions(generateOptions(q));
+    setPhase(PH.ANSWER_PASS);
+  };
+
+  const submitAnswer = (chosenAnswer) => {
+    const voterName = voters[voterIdx];
+    const newVotes = {...roundVotes, [voterName]: chosenAnswer};
+    setRoundVotes(newVotes);
+
+    if (voterIdx + 1 < voters.length) {
+      setVoterIdx(voterIdx + 1);
+      setPhase(PH.ANSWER_PASS);
+    } else {
+      // All voted — calculate results
+      const q = questions[qIdx];
+      const subjectName = activeNames[q.playerIdx];
+      const real = answers[subjectName]?.[q.promptId] || "";
+      const newScores = {...scores};
+      const newDecoy = {...decoyScores};
+      const newMystery = {...mysteryScores};
+
+      // Track decoy fooling
+      const decoyFools = {}; // {ownerName: count}
+
+      Object.entries(newVotes).forEach(([voter, chosen]) => {
+        if (chosen.toLowerCase() === real.toLowerCase()) {
+          newScores[voter] = (newScores[voter] || 0) + 2;
+        } else {
+          // Wrong guess — add to mystery score for subject
+          newMystery[subjectName] = (newMystery[subjectName] || 0) + 1;
+          // Find which decoy owner fooled this voter
+          const decoyOpt = options.find(o => o.answer === chosen && !o.isCorrect);
+          if (decoyOpt) {
+            decoyFools[decoyOpt.owner] = (decoyFools[decoyOpt.owner] || 0) + 1;
+          }
+        }
+      });
+
+      // Award decoy bonus
+      let bestDeceiver = null;
+      let bestDeceiverCount = 0;
+      Object.entries(decoyFools).forEach(([owner, count]) => {
+        newDecoy[owner] = (newDecoy[owner] || 0) + count;
+        newScores[owner] = (newScores[owner] || 0) + count; // +1 per fool
+        if (count > bestDeceiverCount) {
+          bestDeceiver = owner;
+          bestDeceiverCount = count;
+        }
+      });
+
+      setScores(newScores);
+      setDecoyScores(newDecoy);
+      setMysteryScores(newMystery);
+      setDecoyInfo(bestDeceiver ? {name: bestDeceiver, count: bestDeceiverCount} : null);
+      setPhase(PH.REVEAL);
+    }
+  };
+
+  const nextQuestion = () => {
+    if (qIdx + 1 < questions.length) {
+      const next = qIdx + 1;
+      setQIdx(next);
+      setupQuestion(questions, next);
+    } else {
+      setPhase(PH.RESULTS);
+    }
+  };
+
+  const resetAll = () => {
+    setPhase(PH.SETUP);
+    setAnswers({});
+    setQuestions([]);
+    setScores({});
+    setDecoyScores({});
+    setMysteryScores({});
+  };
+
+  // Current question info
+  const curQ = questions[qIdx];
+  const curSubject = curQ ? activeNames[curQ.playerIdx] : "";
+  const curPromptLabel = curQ ? PROMPT_QUESTIONS[curQ.promptId] : "";
+
+  // Results calculations
+  const sortedScores = useMemo(() => {
+    return Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  }, [scores]);
+  const maxScore = sortedScores.length ? sortedScores[0][1] : 1;
+
+  // Fun stats
+  const bestKnower = sortedScores.length ? sortedScores[0] : null;
+  const bestDeceiver = useMemo(() => {
+    const entries = Object.entries(decoyScores).sort((a,b) => b[1] - a[1]);
+    return entries.length ? entries[0] : null;
+  }, [decoyScores]);
+  const mostMysterious = useMemo(() => {
+    const entries = Object.entries(mysteryScores).sort((a,b) => b[1] - a[1]);
+    return entries.length ? entries[0] : null;
+  }, [mysteryScores]);
+
+  // Pass-and-play privacy screen
+  const PassScreen = ({nextName, onReady, label, emoji, sub}) => (
+    <div className="card fi" style={{textAlign:"center"}}>
+      <div style={{fontSize:48,marginBottom:12,opacity:.6}}>{emoji || "🙈"}</div>
+      <div className="SUB" style={{marginBottom:8}}>{label || "serahkan hp ke"}</div>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:16}}>{nextName}</div>
+      {sub && <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>{sub}</div>}
+      {!sub && <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>
+        Pastikan hanya <b style={{color:"#f0ede8"}}>{nextName}</b> yang melihat layar
+      </div>}
+      <button className="btn" onClick={onReady}>AKU SIAP</button>
+    </div>
+  );
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,64px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .vbtn{background:#1a1a28;border:1px solid #2a2a3a;padding:14px 16px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;justify-content:center;align-items:center;width:100%;-webkit-tap-highlight-color:transparent;font-family:'Space Mono',monospace;font-size:14px;color:#f0ede8;text-align:center}
+        .vbtn:hover:not(:disabled){border-color:#ff3c3c;background:#1f1f2e}
+        .vbtn:active:not(:disabled){transform:scale(.98)}
+        .vbtn.sel{border-color:#ff3c3c;background:#2a0000}
+        .vbtn:disabled{cursor:not-allowed;opacity:.6}
+        .vbtn.correct{border-color:#3cff6e;background:#003a0a;color:#3cff6e}
+        .vbtn.wrong{border-color:#ff3c3c;background:#2a0000;color:#ff3c3c;opacity:.6}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .bl{animation:bl 1s step-end infinite}
+        @keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(140px) rotate(360deg);opacity:0}}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .rbig{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,9vw,68px);letter-spacing:5px;text-align:center;line-height:1.1}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:background .15s}
+        .srow:hover{background:#1a1a28}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .qopt{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:20px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;cursor:pointer;transition:all .15s;border:1px solid #2a2a3a;background:transparent;color:#666}
+        .qopt.active{border-color:#ff3c3c;color:#ff3c3c;background:#1a1a28}
+        .pbar{height:3px;background:#1a1a28;border-radius:2px;overflow:hidden}
+        .pfill{height:3px;background:#ff3c3c;border-radius:2px;transition:width .4s}
+        .stat-card{background:#1a1a28;border:1px solid #2a2a3a;border-radius:8px;padding:14px;text-align:center}
+        .stat-emoji{font-size:28px;margin-bottom:4px}
+        .stat-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:#666;text-transform:uppercase;margin-bottom:4px}
+        .stat-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">SIAPA PALING TAHU?</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:4}}>
+            <div className="SUB">trivia keluarga</div>
+          </div>
+        </div>
+
+        {/* ═══ SETUP ═══ */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div className="SUB" style={{marginBottom:16}}>pemain</div>
+
+            {/* Player count */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,padding:"10px 0",borderBottom:"1px solid #1a1a28"}}>
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:3}}>JUMLAH PEMAIN</div>
+                <div style={{fontSize:10,color:"#555"}}>Minimal 3 untuk mekanisme pengecoh</div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <button className="cbt" onClick={() => setPlayerCount(Math.max(3, playerCount-1))} disabled={playerCount<=3}>-</button>
+                <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,minWidth:26,textAlign:"center",color:"#ff3c3c"}}>{playerCount}</span>
+                <button className="cbt" onClick={() => setPlayerCount(Math.min(8, playerCount+1))} disabled={playerCount>=8}>+</button>
+              </div>
+            </div>
+
+            {/* Names */}
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+              {activeNames.map((n,i) => (
+                <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                  <input className="inp" value={n}
+                    onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                    placeholder={"Pemain " + (i+1)}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Questions per player */}
+            <div className="SUB" style={{marginBottom:10}}>pertanyaan per pemain</div>
+            <div style={{display:"flex",gap:8,marginBottom:20}}>
+              {[3,5,7].map(n => (
+                <button key={n} className={"qopt" + (numQ===n?" active":"")} onClick={() => setNumQ(n)} style={{flex:1,justifyContent:"center"}}>
+                  {n}
+                </button>
+              ))}
+            </div>
+
+            <div style={{fontSize:10,color:"#555",textAlign:"center",marginBottom:16,lineHeight:1.5}}>
+              Total: {activeNames.length * numQ} pertanyaan akan ditanyakan<br/>
+              Setiap pemain mengisi {PROMPTS.length} prompt tentang diri sendiri
+            </div>
+
+            <button className="btn" disabled={activeNames.some(n => !n.trim())} onClick={startFillIn}>
+              MULAI ISI JAWABAN
+            </button>
+          </div>
+        )}
+
+        {/* ═══ FILL-IN PASS SCREEN ═══ */}
+        {phase === PH.FILLIN_PASS && (
+          <PassScreen
+            nextName={activeNames[fillPlayerIdx]}
+            onReady={() => setPhase(PH.FILLIN)}
+            label="serahkan hp ke"
+            emoji="📝"
+            sub={`${activeNames[fillPlayerIdx]} akan mengisi ${PROMPTS.length} jawaban tentang diri sendiri secara rahasia.`}
+          />
+        )}
+
+        {/* ═══ FILL-IN ═══ */}
+        {phase === PH.FILLIN && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div className="SUB" style={{marginBottom:4}}>
+              {activeNames[fillPlayerIdx]} — jawaban rahasia
+            </div>
+
+            {/* Overall progress */}
+            <div style={{fontSize:10,color:"#444",marginBottom:12,letterSpacing:2}}>
+              Pemain {fillPlayerIdx + 1} dari {activeNames.length}
+            </div>
+
+            {/* Prompt progress */}
+            <div style={{marginBottom:16}}>
+              <div className="pbar" style={{marginBottom:6}}>
+                <div className="pfill" style={{width:((fillPromptIdx+1)/PROMPTS.length*100)+"%"}} />
+              </div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:"#555",letterSpacing:2}}>
+                {fillPromptIdx + 1} / {PROMPTS.length}
+                {fillPromptIdx >= PROMPTS.length - 3 && <span style={{color:"#3cff6e",marginLeft:8}}>Hampir selesai!</span>}
+              </div>
+            </div>
+
+            {/* Prompt */}
+            <div style={{
+              fontFamily:"'Bebas Neue',sans-serif",
+              fontSize:cssClamp(24,32),
+              letterSpacing:3,
+              color:"#f0ede8",
+              marginBottom:20,
+              lineHeight:1.3,
+              minHeight:80,
+              display:"flex",
+              alignItems:"center",
+              justifyContent:"center",
+            }}>
+              {PROMPTS[fillPromptIdx].label}
+            </div>
+
+            <input
+              className="inp"
+              value={fillValue}
+              onChange={e => setFillValue(e.target.value)}
+              placeholder="Ketik jawabanmu..."
+              style={{marginBottom:16,textAlign:"center",fontSize:16}}
+              onKeyDown={e => { if (e.key === "Enter" && fillValue.trim()) submitFillAnswer(); }}
+              autoFocus
+            />
+
+            <button className="btn" disabled={!fillValue.trim()} onClick={submitFillAnswer}>
+              {fillPromptIdx + 1 < PROMPTS.length ? "LANJUT" : "SELESAI"}
+            </button>
+          </div>
+        )}
+
+        {/* ═══ FILL-IN DONE ═══ */}
+        {phase === PH.FILLIN_DONE && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12}}>🎉</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:5,color:"#3cff6e",marginBottom:8}}>SEMUA SUDAH SIAP!</div>
+            <div style={{fontSize:12,color:"#888",marginBottom:8,lineHeight:1.6}}>
+              Semua pemain sudah mengisi jawaban mereka.
+            </div>
+            <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"10px 14px",marginBottom:20,fontSize:12,color:"#aaa",lineHeight:1.6}}>
+              <b style={{color:"#ff3c3c"}}>{activeNames.length * numQ}</b> pertanyaan akan ditanyakan.<br/>
+              Setiap orang menebak jawaban tentang yang lain!
+            </div>
+            <button className="btn" onClick={startGame}>MULAI GAME!</button>
+          </div>
+        )}
+
+        {/* ═══ ANSWER PASS SCREEN ═══ */}
+        {phase === PH.ANSWER_PASS && curQ && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            {/* Question progress */}
+            <div style={{marginBottom:12}}>
+              <div className="pbar" style={{marginBottom:6}}>
+                <div className="pfill" style={{width:((qIdx+1)/questions.length*100)+"%"}} />
+              </div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:"#555",letterSpacing:2}}>
+                Pertanyaan {qIdx + 1} / {questions.length}
+              </div>
+            </div>
+
+            {/* Show the question to everyone */}
+            <div style={{
+              background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:8,padding:"16px",marginBottom:16
+            }}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:cssClamp(22,28),letterSpacing:2,color:"#ff3c3c",lineHeight:1.3}}>
+                {curPromptLabel} {curSubject}?
+              </div>
+            </div>
+
+            <div style={{fontSize:48,marginBottom:12,opacity:.6}}>🗳️</div>
+            <div className="SUB" style={{marginBottom:8}}>serahkan hp ke</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:5,color:"#ff3c3c",marginBottom:6}}>{voters[voterIdx]}</div>
+            <div className="SUB" style={{marginBottom:6}}>voting {voterIdx + 1} dari {voters.length}</div>
+            <div style={{fontSize:11,color:"#555",marginBottom:20}}>
+              <b style={{color:"#888"}}>{curSubject}</b> tidak ikut menjawab pertanyaan ini
+            </div>
+            <button className="btn" onClick={() => setPhase(PH.ANSWER)}>AKU SIAP</button>
+          </div>
+        )}
+
+        {/* ═══ ANSWER ═══ */}
+        {phase === PH.ANSWER && curQ && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div className="SUB" style={{marginBottom:4}}>giliran menjawab</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:8}}>{voters[voterIdx]}</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:"#f0ede8",lineHeight:1.3}}>
+                {curPromptLabel} {curSubject}?
+              </div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {options.map((opt, i) => {
+                const selected = roundVotes[voters[voterIdx]] === opt.answer;
+                return (
+                  <button key={i} className={"vbtn" + (selected?" sel":"")}
+                    onClick={() => { if (!roundVotes[voters[voterIdx]]) submitAnswer(opt.answer); }}
+                    disabled={!!roundVotes[voters[voterIdx]]}>
+                    {opt.answer}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="hr"/>
+            <div style={{textAlign:"center"}}>
+              <div className="pbar" style={{marginBottom:6}}>
+                <div className="pfill" style={{width:((voterIdx+1)/voters.length*100)+"%"}} />
+              </div>
+              <div className="SUB">{voterIdx + 1} / {voters.length}</div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ REVEAL ═══ */}
+        {phase === PH.REVEAL && curQ && (
+          <div className="card fi" style={{position:"relative"}}>
+            {Object.values(roundVotes).some(v => v.toLowerCase() === correctAnswer.toLowerCase()) && <Confetti />}
+
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:"#888",marginBottom:4}}>
+                {curPromptLabel} {curSubject}?
+              </div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:cssClamp(32,42),letterSpacing:4,color:"#3cff6e",marginBottom:8}}>
+                {correctAnswer}
+              </div>
+            </div>
+
+            {/* Show options with results */}
+            <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:16}}>
+              {options.map((opt, i) => {
+                const isCorrect = opt.isCorrect;
+                return (
+                  <div key={i} className={"vbtn " + (isCorrect ? "correct" : "")} style={{cursor:"default",flexDirection:"column",alignItems:"stretch",padding:"10px 14px"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span>{opt.answer}</span>
+                      {isCorrect && <span style={{color:"#3cff6e",fontSize:14}}>&#10003; BENAR</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Who got it right/wrong */}
+            <div style={{marginBottom:16}}>
+              <div className="SUB" style={{marginBottom:8}}>hasil voting</div>
+              {voters.map(voter => {
+                const chose = roundVotes[voter];
+                const correct = chose?.toLowerCase() === correctAnswer.toLowerCase();
+                return (
+                  <div key={voter} style={{
+                    display:"flex",alignItems:"center",justifyContent:"space-between",
+                    padding:"8px 10px",borderBottom:"1px solid #1a1a28"
+                  }}>
+                    <span style={{fontFamily:"'Space Mono',monospace",fontSize:13}}>{voter}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:11,color:"#555"}}>{chose}</span>
+                      <span style={{fontSize:16}}>{correct ? "✅" : "❌"}</span>
+                      {correct && <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#3cff6e",letterSpacing:2}}>+2</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Decoy bonus */}
+            {decoyInfo && (
+              <div style={{background:"#2a2200",border:"1px solid #ffcc0033",borderRadius:6,padding:"10px 14px",marginBottom:16,textAlign:"center"}}>
+                <div style={{fontSize:12,color:"#ffcc00",lineHeight:1.6}}>
+                  🎭 Jawaban <b>{decoyInfo.name}</b> menipu <b>{decoyInfo.count}</b> orang! <span style={{fontFamily:"'Bebas Neue',sans-serif",letterSpacing:2}}>+{decoyInfo.count}</span>
+                </div>
+              </div>
+            )}
+
+            <button className="btn" onClick={nextQuestion}>
+              {qIdx + 1 < questions.length ? "PERTANYAAN BERIKUTNYA" : "LIHAT HASIL AKHIR"}
+            </button>
+          </div>
+        )}
+
+        {/* ═══ RESULTS ═══ */}
+        {phase === PH.RESULTS && (
+          <div className="card fi">
+            <Confetti color="#ffcc00"/>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:48,marginBottom:4}}>🏆</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:cssClamp(36,52),letterSpacing:5,color:"#ffcc00"}}>HASIL AKHIR</div>
+            </div>
+
+            {/* Leaderboard */}
+            {sortedScores.map(([name, pts], rank) => {
+              const w = maxScore > 0 ? Math.max(4, (pts/maxScore)*100) : 4;
+              return (
+                <div key={name} style={{marginBottom:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{fontSize:22,width:32,textAlign:"center"}}>{rank < 3 ? MEDALS[rank] : <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#555"}}>{"#"+(rank+1)}</span>}</div>
+                    <div style={{flex:1,fontFamily:"'Space Mono',monospace",fontSize:14,color:rank===0?"#ffcc00":"#f0ede8"}}>{name}</div>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:2,color:rank===0?"#ffcc00":rank===1?"#ccc":rank===2?"#cd7f32":"#888"}}>{pts}</div>
+                  </div>
+                  <div style={{marginLeft:42}}>
+                    <div className="lbw"><div className="lbb" style={{width:w+"%",background:rank===0?"linear-gradient(90deg,#ffcc00,#ff9900)":rank===1?"#aaa":rank===2?"#cd7f32":"#3a3a5a"}}/></div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="hr"/>
+
+            {/* Fun stats */}
+            <div className="SUB" style={{marginBottom:12,textAlign:"center"}}>penghargaan khusus</div>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+              {bestKnower && (
+                <div className="stat-card">
+                  <div className="stat-emoji">🧠</div>
+                  <div className="stat-label">Paling Kenal Keluarga</div>
+                  <div className="stat-name" style={{color:"#3cff6e"}}>{bestKnower[0]}</div>
+                  <div style={{fontSize:10,color:"#555"}}>{bestKnower[1]} poin dari tebakan benar</div>
+                </div>
+              )}
+              {bestDeceiver && bestDeceiver[1] > 0 && (
+                <div className="stat-card">
+                  <div className="stat-emoji">🎭</div>
+                  <div className="stat-label">Master Penipu</div>
+                  <div className="stat-name" style={{color:"#ffcc00"}}>{bestDeceiver[0]}</div>
+                  <div style={{fontSize:10,color:"#555"}}>Jawabannya menipu {bestDeceiver[1]} kali</div>
+                </div>
+              )}
+              {mostMysterious && mostMysterious[1] > 0 && (
+                <div className="stat-card">
+                  <div className="stat-emoji">🔮</div>
+                  <div className="stat-label">Paling Misterius</div>
+                  <div className="stat-name" style={{color:"#a0a0ff"}}>{mostMysterious[0]}</div>
+                  <div style={{fontSize:10,color:"#555"}}>Ditebak salah {mostMysterious[1]} kali</div>
+                </div>
+              )}
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={() => {setPhase(PH.FILLIN_DONE); /* reuse answers, new questions */}}>MAIN LAGI</button>
+              <button className="ghost" onClick={resetAll}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+        <div style={{textAlign:"center",paddingBottom:8}}>
+          <div className="SUB bl">SELAMAT BERMAIN</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>SIAPA AKU? - Tebak Siapa di Dahi</title>
+<meta name="description" content="Permainan tebak karakter keluarga! Tempel HP di dahi dan tebak siapa kamu."/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤔</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ─── WORD DATABASE ──────────────────────────────────────────
+const CATEGORIES = {
+  "Tokoh Indonesia": [
+    "Jokowi","Soekarno","Raditya Dika","Agnez Mo","Deddy Corbuzier","Raffi Ahmad","Baim Wong",
+    "Najwa Shihab","Tukul Arwana","Susi Pudjiastuti","BJ Habibie","Megawati","Atta Halilintar",
+    "Ariel Noah","Maudy Ayunda","Dian Sastro","Reza Rahadian","Joe Taslim","Iqbaal Ramadhan",
+    "Fiersa Besari","Hindia","Rich Brian","NIKI","Sri Mulyani","Sandiaga Uno","Anies Baswedan",
+    "Ganjar Pranowo","Prabowo","Ahok","Ridwan Kamil","Gading Marten","Chelsea Islan"
+  ],
+  "Kartun & Film": [
+    "SpongeBob","Doraemon","Naruto","Upin Ipin","Elsa (Frozen)","Mickey Mouse","Pikachu","Shrek",
+    "Iron Man","Batman","Si Bolang","Adit Sopo Jarwo","Nobita","Crayon Shin-chan","Luffy (One Piece)",
+    "Goku","Tom & Jerry","Dora the Explorer","Peppa Pig","Mario","Sonic","Harry Potter","Thanos",
+    "Spider-Man","Captain America","Buzz Lightyear","Simba","Moana","Rapunzel","Minion"
+  ],
+  "Hewan": [
+    "Kucing","Gajah","Lumba-lumba","Komodo","Elang","Ular","Penguin","Jerapah","Kuda Nil","Gurita",
+    "Buaya","Harimau","Panda","Koala","Kanguru","Kura-kura","Capung","Kupu-kupu","Semut","Lebah",
+    "Hiu","Paus","Burung Hantu","Merak","Katak","Bunglon","Kelelawar","Rajawali","Landak","Tupai"
+  ],
+  "Profesi": [
+    "Dokter","Guru","Polisi","Pilot","Chef","Astronot","Petani","Nelayan","Presiden","Penyanyi",
+    "Aktor","Youtuber","Programmer","Hakim","Pemadam Kebakaran","Tukang Pos","Pelukis","Fotografer",
+    "Arsitek","Sopir Taksi","Masinis","Kapten Kapal","Wartawan","Atlet","Pesulap","Badut","Tentara",
+    "Apoteker","Dosen","Satpam"
+  ],
+  "Makanan & Minuman": [
+    "Rendang","Nasi Goreng","Bakso","Sate","Gado-gado","Pizza","Sushi","Indomie","Martabak","Pempek",
+    "Es Cendol","Gudeg","Rawon","Ketoprak","Boba","Durian","Es Krim","Nasi Padang","Ayam Geprek",
+    "Seblak","Cireng","Kerak Telor","Bubur Ayam","Soto Betawi","Klepon","Onde-onde","Roti Canai",
+    "Coto Makassar","Papeda","Kopi Tubruk"
+  ],
+  "Tempat Terkenal": [
+    "Monas","Borobudur","Bali","Raja Ampat","Bromo","Eiffel Tower","Tembok Besar China",
+    "Piramida Mesir","Taj Mahal","Colosseum","Statue of Liberty","Machu Picchu","Taman Mini",
+    "Ancol","Dufan","Trans Studio","Malioboro","Tanah Lot","Bunaken","Labuan Bajo","Toba","Dieng",
+    "Wakatobi","Prambanan","Kawah Ijen","Tana Toraja","Komodo Island","Disneyland","Big Ben",
+    "Mount Everest"
+  ],
+  "Superhero & Fiksi": [
+    "Superman","Batman","Spider-Man","Wonder Woman","Thor","Hulk","Black Panther","Deadpool",
+    "Wolverine","Flash","Aquaman","Green Lantern","Doctor Strange","Ant-Man","Black Widow","Loki",
+    "Thanos","Joker","Darth Vader","Yoda","Gandalf","Voldemort","Gollum","Optimus Prime","Pikachu",
+    "Goku","Naruto","Luffy","Sailor Moon","Ultraman"
+  ],
+};
+
+const CAT_EMOJI = {
+  "Tokoh Indonesia":"🇮🇩","Kartun & Film":"🎬","Hewan":"🐾","Profesi":"💼",
+  "Makanan & Minuman":"🍜","Tempat Terkenal":"🗺️","Superhero & Fiksi":"🦸",
+};
+
+const MEDALS = ["🥇","🥈","🥉"];
+
+// ─── SHUFFLE ───────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── PHASES ────────────────────────────────────────────────
+const PH = { SETUP:"setup", PASS:"pass", PLAY:"play", TURN_RESULT:"turn_result", RESULT:"result" };
+
+// ─── MAIN APP ──────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [playerCount, setPlayerCount] = useState(4);
+  const [category, setCategory] = useState("Campur");
+  const [timerDuration, setTimerDuration] = useState(45);
+  const [roundsPerPlayer, setRoundsPerPlayer] = useState(1);
+  const [tab, setTab] = useState("pemain");
+
+  // Game state
+  const [currentPlayerIdx, setCurrentPlayerIdx] = useState(0);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [scores, setScores] = useState({});
+  const [roundDetails, setRoundDetails] = useState({});
+  const [wordQueue, setWordQueue] = useState([]);
+  const [currentWord, setCurrentWord] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [turnCorrect, setTurnCorrect] = useState(0);
+  const [turnSkipped, setTurnSkipped] = useState(0);
+  const [turnWords, setTurnWords] = useState([]);
+  const [flash, setFlash] = useState(null); // "correct", "skip", "timesup"
+  const [expanded, setExpanded] = useState(null);
+
+  const timerRef = useRef(null);
+  const flashTimeoutRef = useRef(null);
+
+  // Adjust names when player count changes
+  useEffect(() => {
+    setNames(prev => {
+      const n = [...prev];
+      while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+      return n.slice(0, playerCount);
+    });
+  }, [playerCount]);
+
+  // Timer logic
+  useEffect(() => {
+    if (isPlaying && timeLeft > 0) {
+      timerRef.current = setTimeout(() => setTimeLeft(t => t - 1), 1000);
+      return () => clearTimeout(timerRef.current);
+    }
+    if (isPlaying && timeLeft === 0) {
+      // Time's up!
+      setIsPlaying(false);
+      setFlash("timesup");
+      setTimeout(() => setFlash(null), 1200);
+      setTimeout(() => {
+        // Save score
+        const playerName = names[currentPlayerIdx];
+        const key = `${playerName}-r${currentRound}`;
+        setScores(prev => ({...prev, [playerName]: (prev[playerName] || 0) + turnCorrect}));
+        setRoundDetails(prev => ({...prev, [key]: {correct: turnCorrect, skipped: turnSkipped, words: turnWords}}));
+        setPhase(PH.TURN_RESULT);
+      }, 1400);
+    }
+  }, [isPlaying, timeLeft]);
+
+  // Build word queue for a round
+  const buildWordQueue = () => {
+    let words = [];
+    if (category === "Campur") {
+      Object.values(CATEGORIES).forEach(w => words.push(...w));
+    } else {
+      words = [...CATEGORIES[category]];
+    }
+    return shuffle(words);
+  };
+
+  const nextWord = (queue) => {
+    if (queue.length === 0) {
+      queue = buildWordQueue();
+    }
+    const word = queue.shift();
+    return { word, queue };
+  };
+
+  const startGame = () => {
+    setScores({});
+    setRoundDetails({});
+    setCurrentPlayerIdx(0);
+    setCurrentRound(1);
+    setExpanded(null);
+    setPhase(PH.PASS);
+  };
+
+  const startTurn = () => {
+    let queue = buildWordQueue();
+    const { word, queue: newQueue } = nextWord(queue);
+    setWordQueue(newQueue);
+    setCurrentWord(word);
+    setTimeLeft(timerDuration);
+    setTurnCorrect(0);
+    setTurnSkipped(0);
+    setTurnWords([]);
+    setIsPlaying(true);
+    setFlash(null);
+    setPhase(PH.PLAY);
+  };
+
+  const handleCorrect = () => {
+    if (!isPlaying) return;
+    const newCorrect = turnCorrect + 1;
+    setTurnCorrect(newCorrect);
+    setTurnWords(prev => [...prev, {word: currentWord, result: "correct"}]);
+    setFlash("correct");
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    flashTimeoutRef.current = setTimeout(() => setFlash(null), 300);
+    // Next word
+    let queue = [...wordQueue];
+    const { word, queue: newQueue } = nextWord(queue);
+    setWordQueue(newQueue);
+    setCurrentWord(word);
+  };
+
+  const handleSkip = () => {
+    if (!isPlaying) return;
+    setTurnSkipped(prev => prev + 1);
+    setTurnWords(prev => [...prev, {word: currentWord, result: "skip"}]);
+    setFlash("skip");
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    flashTimeoutRef.current = setTimeout(() => setFlash(null), 300);
+    // Next word
+    let queue = [...wordQueue];
+    const { word, queue: newQueue } = nextWord(queue);
+    setWordQueue(newQueue);
+    setCurrentWord(word);
+  };
+
+  const nextTurn = () => {
+    const nextIdx = currentPlayerIdx + 1;
+    if (nextIdx < names.length) {
+      setCurrentPlayerIdx(nextIdx);
+      setPhase(PH.PASS);
+    } else if (currentRound < roundsPerPlayer) {
+      setCurrentRound(r => r + 1);
+      setCurrentPlayerIdx(0);
+      setPhase(PH.PASS);
+    } else {
+      setPhase(PH.RESULT);
+    }
+  };
+
+  const resetAll = () => {
+    setPhase(PH.SETUP);
+    setScores({});
+    setRoundDetails({});
+  };
+
+  const timerPct = timerDuration > 0 ? (timeLeft / timerDuration) * 100 : 0;
+  const timerColor = timeLeft > 10 ? "#ff3c3c" : timeLeft > 5 ? "#ffcc00" : "#ff3c3c";
+  const sortedScores = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  const maxScore = sortedScores.length ? sortedScores[0][1] : 1;
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,9vw,78px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(140px) rotate(360deg);opacity:0}}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:background .15s}
+        .srow:hover{background:#1a1a28}
+        .srow:active{background:#1f1f30}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .bkd{background:#0e0e18;border:1px solid #2a2a3a;border-radius:6px;padding:10px 12px;margin-top:4px}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .rbig{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,9vw,68px);letter-spacing:5px;text-align:center;line-height:1.1}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .cat-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#888;padding:10px 14px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace;font-size:12px;text-align:left;display:flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
+        .cat-btn:hover{border-color:#ff3c3c;color:#f0ede8}
+        .cat-btn.sel{border-color:#ff3c3c;background:#2a0000;color:#f0ede8}
+        .opt-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#888;padding:8px 16px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;-webkit-tap-highlight-color:transparent}
+        .opt-btn:hover{border-color:#ff3c3c;color:#f0ede8}
+        .opt-btn.sel{border-color:#ff3c3c;background:#2a0000;color:#ff3c3c}
+        .play-word{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,14vw,96px);letter-spacing:4px;color:#f0ede8;text-align:center;line-height:1.1;transform:rotate(180deg);padding:20px 0;word-break:break-word}
+        .action-btn{border:none;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;cursor:pointer;border-radius:8px;flex:1;min-height:70px;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:8px}
+        .action-btn:active{transform:scale(.95)}
+        .timer-bar{height:8px;border-radius:4px;transition:width 1s linear}
+        .flash-overlay{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:100;transition:opacity .3s}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+        .word-result{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1a1a28;font-size:12px}
+      `}</style>
+
+      {/* Flash overlays */}
+      {flash === "correct" && <div className="flash-overlay" style={{background:"rgba(60,255,110,0.15)",opacity:1}}/>}
+      {flash === "skip" && <div className="flash-overlay" style={{background:"rgba(255,204,0,0.12)",opacity:1}}/>}
+      {flash === "timesup" && <div className="flash-overlay" style={{background:"rgba(255,60,60,0.25)",opacity:1,animation:"pulse .3s ease 2"}}/>}
+
+      <div className="sl"/>
+      <div className="wrap">
+
+        {/* HEADER */}
+        {phase !== PH.PLAY && (
+          <div style={{textAlign:"center"}}>
+            <div className="T">SIAPA AKU?</div>
+            <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:4}}>
+              <div className="SUB">tebak siapa di dahi</div>
+            </div>
+            {phase !== PH.SETUP && phase !== PH.RESULT && (
+              <div className="round-badge" style={{marginTop:8}}>
+                Ronde {currentRound} / {roundsPerPlayer}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── SETUP ─────────────────────────────────────── */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["pemain","Pemain"],["kategori","Kategori"],["aturan","Aturan"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "pemain" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>jumlah pemain</div>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20,justifyContent:"center"}}>
+                  <button className="cbt" onClick={() => setPlayerCount(Math.max(2,playerCount-1))} disabled={playerCount<=2}>−</button>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:36,color:"#ff3c3c",minWidth:40,textAlign:"center"}}>{playerCount}</span>
+                  <button className="cbt" onClick={() => setPlayerCount(Math.min(8,playerCount+1))} disabled={playerCount>=8}>+</button>
+                </div>
+                <div className="SUB" style={{marginBottom:10}}>nama pemain</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {names.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "kategori" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>pilih kategori</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <button className={"cat-btn" + (category==="Campur"?" sel":"")} onClick={() => setCategory("Campur")}>
+                    <span style={{fontSize:18}}>🎲</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2}}>Campur (Semua)</div>
+                      <div style={{fontSize:10,color:"#555"}}>{Object.values(CATEGORIES).flat().length} kata</div>
+                    </div>
+                    {category==="Campur" && <span style={{color:"#ff3c3c"}}>✓</span>}
+                  </button>
+                  {Object.keys(CATEGORIES).map(cat => (
+                    <button key={cat} className={"cat-btn" + (category===cat?" sel":"")} onClick={() => setCategory(cat)}>
+                      <span style={{fontSize:18}}>{CAT_EMOJI[cat]}</span>
+                      <div style={{flex:1}}>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2}}>{cat}</div>
+                        <div style={{fontSize:10,color:"#555"}}>{CATEGORIES[cat].length} kata</div>
+                      </div>
+                      {category===cat && <span style={{color:"#ff3c3c"}}>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "aturan" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>durasi timer</div>
+                <div style={{display:"flex",gap:8,marginBottom:20}}>
+                  {[30,45,60].map(t => (
+                    <button key={t} className={"opt-btn" + (timerDuration===t?" sel":"")} style={{flex:1}} onClick={() => setTimerDuration(t)}>
+                      {t}s
+                    </button>
+                  ))}
+                </div>
+                <div className="SUB" style={{marginBottom:12}}>ronde per pemain</div>
+                <div style={{display:"flex",gap:8,marginBottom:20}}>
+                  {[1,2,3].map(r => (
+                    <button key={r} className={"opt-btn" + (roundsPerPlayer===r?" sel":"")} style={{flex:1}} onClick={() => setRoundsPerPlayer(r)}>
+                      {r}
+                    </button>
+                  ))}
+                </div>
+                <div className="hr"/>
+                <div className="SUB" style={{marginBottom:10,marginTop:8}}>cara bermain</div>
+                <div style={{fontSize:12,color:"#888",lineHeight:1.8}}>
+                  <div style={{marginBottom:6}}>1. Tempel HP di dahi (nama terbalik agar orang lain bisa baca)</div>
+                  <div style={{marginBottom:6}}>2. Tanya ke teman: "Siapa aku?"</div>
+                  <div style={{marginBottom:6}}>3. Teman menjawab dengan petunjuk (tanpa menyebut nama langsung)</div>
+                  <div style={{marginBottom:6}}>4. Tebak benar = <span style={{color:"#3cff6e"}}>+1 poin</span>, lewati = 0</div>
+                  <div>5. Jawab sebanyak mungkin sebelum waktu habis!</div>
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" onClick={startGame}>MULAI GAME</button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── PASS SCREEN ───────────────────────────────── */}
+        {phase === PH.PASS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12,opacity:.6}}>📱</div>
+            <div className="SUB" style={{marginBottom:8}}>serahkan hp ke</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:16}}>{names[currentPlayerIdx]}</div>
+            <div style={{fontSize:12,color:"#555",marginBottom:8,lineHeight:1.6}}>
+              Tempel HP di dahi setelah menekan <b style={{color:"#f0ede8"}}>MULAI</b>
+            </div>
+            <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:20}}>
+              {names.map((_,i) => (
+                <span key={i} style={{width:8,height:8,borderRadius:"50%",background:i<currentPlayerIdx?"#3cff6e":i===currentPlayerIdx?"#ff3c3c":"#2a2a3a",display:"inline-block",transition:"all .3s"}}/>
+              ))}
+            </div>
+            <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"8px 14px",marginBottom:20,fontSize:11,color:"#888"}}>
+              <span style={{marginRight:6}}>{CAT_EMOJI[category] || "🎲"}</span>
+              Kategori: <span style={{color:"#f0ede8"}}>{category}</span>
+              <span style={{margin:"0 8px",color:"#333"}}>|</span>
+              Timer: <span style={{color:"#f0ede8"}}>{timerDuration}s</span>
+            </div>
+            <button className="btn" onClick={startTurn}>MULAI</button>
+          </div>
+        )}
+
+        {/* ─── PLAY SCREEN ───────────────────────────────── */}
+        {phase === PH.PLAY && (
+          <div className="fi" style={{width:"100%",maxWidth:460,display:"flex",flexDirection:"column",minHeight:"calc(100dvh - 48px)",padding:"0"}}>
+            {/* Timer section at top */}
+            <div style={{textAlign:"center",marginBottom:8}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(56,80),letterSpacing:4,color:timeLeft<=5?"#ff3c3c":timeLeft<=10?"#ffcc00":"#f0ede8",animation:timeLeft<=5?"pulse 1s ease infinite":"none"}}>
+                {timeLeft}
+              </div>
+              <div style={{background:"#1a1a28",borderRadius:4,overflow:"hidden",height:8,margin:"0 20px"}}>
+                <div className="timer-bar" style={{width:timerPct+"%",background:timeLeft<=5?"#ff3c3c":timeLeft<=10?"#ffcc00":"#ff3c3c"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",margin:"8px 20px 0",fontSize:11,color:"#555"}}>
+                <span>{names[currentPlayerIdx]}</span>
+                <span style={{color:"#3cff6e"}}>{turnCorrect} benar</span>
+              </div>
+            </div>
+
+            {/* Word display - rotated 180deg for forehead */}
+            <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 16px"}}>
+              <div className="play-word">{currentWord}</div>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{display:"flex",gap:12,padding:"16px"}}>
+              <button className="action-btn" style={{background:"#3cff6e",color:"#003a0a"}} onClick={handleCorrect}>
+                BENAR ✓
+              </button>
+              <button className="action-btn" style={{background:"#ffcc00",color:"#2a2200"}} onClick={handleSkip}>
+                LEWATI ➜
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── TURN RESULT ───────────────────────────────── */}
+        {phase === PH.TURN_RESULT && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:8}}>⏰</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:4}}>WAKTU HABIS!</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:34,letterSpacing:3,marginBottom:12}}>{names[currentPlayerIdx]}</div>
+
+            <div style={{display:"flex",justifyContent:"center",gap:24,marginBottom:16}}>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:48,color:"#3cff6e",letterSpacing:2}}>{turnCorrect}</div>
+                <div className="SUB" style={{color:"#3cff6e"}}>benar</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:48,color:"#ffcc00",letterSpacing:2}}>{turnSkipped}</div>
+                <div className="SUB" style={{color:"#ffcc00"}}>dilewati</div>
+              </div>
+            </div>
+
+            {/* Word list */}
+            {turnWords.length > 0 && (
+              <div style={{background:"#0e0e18",border:"1px solid #2a2a3a",borderRadius:6,padding:"10px 14px",marginBottom:16,maxHeight:200,overflowY:"auto",textAlign:"left"}}>
+                {turnWords.map((w,i) => (
+                  <div key={i} className="word-result">
+                    <span style={{color:w.result==="correct"?"#3cff6e":"#ffcc00"}}>{w.word}</span>
+                    <span style={{fontSize:14}}>{w.result==="correct"?"✓":"➜"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button className="btn" onClick={nextTurn}>
+              {(currentPlayerIdx + 1 < names.length || currentRound < roundsPerPlayer) ? "PEMAIN BERIKUTNYA" : "LIHAT HASIL"}
+            </button>
+          </div>
+        )}
+
+        {/* ─── FINAL RESULT ──────────────────────────────── */}
+        {phase === PH.RESULT && (
+          <div className="card fi">
+            <Confetti/>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:48,marginBottom:4}}>🏆</div>
+              <div className="rbig" style={{color:"#ffcc00"}}>HASIL AKHIR</div>
+              <div className="SUB" style={{marginTop:4}}>{roundsPerPlayer} ronde selesai</div>
+            </div>
+
+            {/* Leaderboard */}
+            <div>
+              {sortedScores.map(([name, pts], rank) => {
+                const w = maxScore > 0 ? Math.max(4, (pts/maxScore)*100) : 0;
+                const isExp = expanded === name;
+                return (
+                  <div key={name} style={{marginBottom:10}}>
+                    <div className="srow" style={{background:rank===0?"#1a1a10":"#0e0e18",border:"1px solid "+(rank===0?"#ffcc0033":"#2a2a3a")}}
+                      onClick={() => setExpanded(isExp ? null : name)}>
+                      <div style={{fontSize:18,width:28,textAlign:"center"}}>{rank < 3 ? MEDALS[rank] : "#"+(rank+1)}</div>
+                      <div style={{flex:1}}>
+                        <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:rank===0?"#ffcc00":"#f0ede8"}}>{name}</div>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <div className="pts" style={{color:rank===0?"#ffcc00":"#f0ede8"}}>{pts}</div>
+                        <div style={{color:"#555",fontSize:12,transition:"transform .2s",transform:isExp?"rotate(180deg)":"rotate(0)"}}>▼</div>
+                      </div>
+                    </div>
+                    <div className="lbw"><div className="lbb" style={{width:w+"%",background:rank===0?"#ffcc00":rank===1?"#aaa":rank===2?"#cd7f32":"#3a3a5a"}}/></div>
+                    {isExp && (
+                      <div className="bkd fi">
+                        {Array.from({length: roundsPerPlayer}, (_, ri) => {
+                          const key = `${name}-r${ri+1}`;
+                          const detail = roundDetails[key];
+                          if (!detail) return (
+                            <div key={ri} style={{color:"#555",fontSize:11,padding:"4px 0"}}>Ronde {ri+1}: —</div>
+                          );
+                          return (
+                            <div key={ri} style={{marginBottom:ri<roundsPerPlayer-1?8:0}}>
+                              <div style={{fontSize:11,color:"#888",marginBottom:4,letterSpacing:2}}>RONDE {ri+1}</div>
+                              <div style={{display:"flex",gap:12,marginBottom:6,fontSize:12}}>
+                                <span style={{color:"#3cff6e"}}>{detail.correct} benar</span>
+                                <span style={{color:"#ffcc00"}}>{detail.skipped} dilewati</span>
+                              </div>
+                              {detail.words.map((w,wi) => (
+                                <div key={wi} className="word-result">
+                                  <span style={{color:w.result==="correct"?"#3cff6e":"#ffcc00",fontSize:11}}>{w.word}</span>
+                                  <span style={{fontSize:12}}>{w.result==="correct"?"✓":"➜"}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              <div style={{fontSize:10,color:"#444",textAlign:"center",marginTop:8}}>tap nama untuk detail per ronde</div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:16}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={resetAll}>GANTI PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function clamp(min, max) {
+  return Math.min(Math.max(min, 0), max);
+}
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti() {
+  const pieces = useRef(Array.from({length:24}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*15,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:120,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>Game Keluarga - Koleksi Permainan Seru!</title>
+<meta name="description" content="13 permainan keluarga seru untuk dimainkan bersama!"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden}
+body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+.sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+
+.wrap{position:relative;z-index:1;max-width:600px;margin:0 auto;padding:24px 16px 56px;display:flex;flex-direction:column;gap:16px}
+
+.T{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,9vw,72px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1;text-align:center}
+.SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase;text-align:center}
+
+.cats{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0}
+.cat{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:5px 14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:#888;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.cat:hover,.cat.a{border-color:#ff3c3c;color:#f0ede8;background:#1f1f2e}
+.cat.a{color:#ff3c3c}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:400px){.grid{grid-template-columns:1fr}}
+
+.game{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:8px;-webkit-tap-highlight-color:transparent;animation:fi .4s cubic-bezier(.2,.8,.3,1) both}
+.game:hover{border-color:#ff3c3c;transform:translateY(-2px);box-shadow:0 4px 20px #ff3c3c22}
+.game:active{transform:scale(.97)}
+
+.game-emoji{font-size:36px;line-height:1}
+.game-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#f0ede8;line-height:1.1}
+.game-desc{font-size:10px;color:#666;line-height:1.5}
+.game-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;padding:2px 8px;border-radius:10px;text-transform:uppercase}
+
+.tag-word{background:#003a0a;color:#3cff6e;border:1px solid #3cff6e33}
+.tag-bluff{background:#3a0000;color:#ff3c3c;border:1px solid #ff3c3c33}
+.tag-trivia{background:#0a0a2a;color:#a0a0ff;border:1px solid #a0a0ff33}
+.tag-party{background:#2a2200;color:#ffcc00;border:1px solid #ffcc0033}
+.tag-speed{background:#2a0a00;color:#ff8c00;border:1px solid #ff8c0033}
+.tag-tool{background:#1a1a28;color:#888;border:1px solid #88888833}
+.tag-creative{background:#1a002a;color:#cc66ff;border:1px solid #cc66ff33}
+.tag-number{background:#002a2a;color:#00d4ff;border:1px solid #00d4ff33}
+
+.footer{text-align:center;padding:16px 0}
+.footer-text{font-family:'Space Mono',monospace;font-size:10px;color:#333;letter-spacing:2px}
+
+.count{font-family:'Bebas Neue',sans-serif;font-size:16px;color:#555;letter-spacing:2px;text-align:center}
+
+@keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="sl"></div>
+<div class="wrap">
+
+  <div>
+    <div class="T">GAME KELUARGA</div>
+    <div class="SUB">koleksi permainan seru untuk keluarga</div>
+    <div class="count" style="margin-top:8px">13 PERMAINAN</div>
+  </div>
+
+  <div class="cats" id="cats">
+    <span class="cat a" data-cat="all">Semua</span>
+    <span class="cat" data-cat="word">Kata</span>
+    <span class="cat" data-cat="bluff">Deduksi</span>
+    <span class="cat" data-cat="trivia">Trivia</span>
+    <span class="cat" data-cat="party">Pesta</span>
+    <span class="cat" data-cat="speed">Kecepatan</span>
+    <span class="cat" data-cat="number">Angka</span>
+    <span class="cat" data-cat="tool">Alat</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="footer">
+    <div class="footer-text">SELAMAT BERMAIN BERSAMA KELUARGA</div>
+  </div>
+
+</div>
+
+<script>
+const GAMES = [
+  {
+    emoji: "🔪", title: "IMPOSTOR", file: "index.html",
+    desc: "Temukan siapa yang punya kata berbeda! 4 peran unik dengan sistem skor.",
+    cats: ["word","bluff"], tags: [{l:"Kata",c:"word"},{l:"Deduksi",c:"bluff"}],
+    players: "3-8"
+  },
+  {
+    emoji: "🕵️", title: "SPY LOCATION", file: "spy-location.html",
+    desc: "Semua tahu lokasinya kecuali sang Spy! Tanya-tanya untuk temukan siapa.",
+    cats: ["bluff"], tags: [{l:"Deduksi",c:"bluff"},{l:"Pesta",c:"party"}],
+    players: "4-8"
+  },
+  {
+    emoji: "🤥", title: "DUA BOHONG SATU JUJUR", file: "dua-bohong.html",
+    desc: "Tulis 2 bohong dan 1 kebenaran. Bisa tebak mana yang jujur?",
+    cats: ["bluff","party"], tags: [{l:"Deduksi",c:"bluff"},{l:"Kreatif",c:"creative"}],
+    players: "3-8"
+  },
+  {
+    emoji: "💣", title: "BOM KATA", file: "bom-kata.html",
+    desc: "Ketik kata yang mengandung suku kata sebelum bom meledak!",
+    cats: ["word","speed"], tags: [{l:"Kata",c:"word"},{l:"Kecepatan",c:"speed"}],
+    players: "2-8"
+  },
+  {
+    emoji: "🔗", title: "SAMBUNG KATA", file: "sambung-kata.html",
+    desc: "Sambung kata dari huruf terakhir! MaKAN → KANtor → TORpedo...",
+    cats: ["word","speed"], tags: [{l:"Kata",c:"word"},{l:"Kecepatan",c:"speed"}],
+    players: "2-8"
+  },
+  {
+    emoji: "⚡", title: "KATEGORI KILAT", file: "kategori-kilat.html",
+    desc: "Kategori muncul, siapa tercepat menjawab? 100+ pertanyaan seru!",
+    cats: ["speed","trivia"], tags: [{l:"Kecepatan",c:"speed"},{l:"Trivia",c:"trivia"}],
+    players: "2-8"
+  },
+  {
+    emoji: "🤔", title: "SIAPA AKU?", file: "siapa-aku.html",
+    desc: "HP di dahi, teman kasih petunjuk, kamu tebak siapa dirimu!",
+    cats: ["party"], tags: [{l:"Pesta",c:"party"},{l:"Akting",c:"creative"}],
+    players: "2-8"
+  },
+  {
+    emoji: "😜", title: "TEBAK EMOJI", file: "tebak-emoji.html",
+    desc: "Tebak film, makanan, tempat dari kombinasi emoji! 150+ teka-teki.",
+    cats: ["trivia","speed"], tags: [{l:"Trivia",c:"trivia"},{l:"Kecepatan",c:"speed"}],
+    players: "2-8"
+  },
+  {
+    emoji: "💰", title: "TEBAK HARGA", file: "tebak-harga.html",
+    desc: "Tebak harga produk Indonesia! Dari Indomie sampai rumah di Jakarta.",
+    cats: ["number","trivia"], tags: [{l:"Angka",c:"number"},{l:"Trivia",c:"trivia"}],
+    players: "2-8"
+  },
+  {
+    emoji: "👑", title: "VOTING GAME", file: "voting-game.html",
+    desc: "Siapa yang paling mungkin...? Vote dan lihat siapa yang paling banyak dipilih!",
+    cats: ["party"], tags: [{l:"Pesta",c:"party"},{l:"Sosial",c:"creative"}],
+    players: "3-8"
+  },
+  {
+    emoji: "💡", title: "SIAPA PALING TAHU?", file: "siapa-paling-tahu.html",
+    desc: "Trivia personal! Isi fakta tentang dirimu, yang lain tebak jawabanmu.",
+    cats: ["trivia","party"], tags: [{l:"Trivia",c:"trivia"},{l:"Personal",c:"party"}],
+    players: "3-8"
+  },
+  {
+    emoji: "🏃", title: "TANTANGAN EXPRESS", file: "tantangan-express.html",
+    desc: "100+ tantangan acak! Fisik, otak, kocak, akting, dan kilat.",
+    cats: ["party","speed"], tags: [{l:"Pesta",c:"party"},{l:"Fisik",c:"speed"}],
+    players: "2-8"
+  },
+  {
+    emoji: "🎡", title: "ROULETTE", file: "roulette.html",
+    desc: "Roda putar custom! Bisa untuk game apa saja. Preset siap pakai.",
+    cats: ["tool"], tags: [{l:"Alat",c:"tool"}],
+    players: "1+"
+  },
+];
+
+let activeCat = "all";
+const grid = document.getElementById("grid");
+const cats = document.getElementById("cats");
+
+function render() {
+  const filtered = activeCat === "all" ? GAMES : GAMES.filter(g => g.cats.includes(activeCat));
+  grid.innerHTML = filtered.map((g, i) => `
+    <a href="${g.file}" class="game" style="animation-delay:${i * 0.05}s">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="game-emoji">${g.emoji}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#555;letter-spacing:1px">${g.players}</div>
+      </div>
+      <div class="game-title">${g.title}</div>
+      <div class="game-desc">${g.desc}</div>
+      <div class="game-tags">
+        ${g.tags.map(t => `<span class="tag tag-${t.c}">${t.l}</span>`).join("")}
+      </div>
+    </a>
+  `).join("");
+
+  document.querySelectorAll(".cat").forEach(el => {
+    el.classList.toggle("a", el.dataset.cat === activeCat);
+  });
+}
+
+cats.addEventListener("click", e => {
+  if (e.target.classList.contains("cat")) {
+    activeCat = e.target.dataset.cat;
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

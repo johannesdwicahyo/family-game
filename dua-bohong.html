@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>DUA BOHONG SATU JUJUR - Permainan Keluarga</title>
+<meta name="description" content="Permainan keluarga seru! Tulis 2 bohong dan 1 kebenaran, lalu tebak milik orang lain."/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎭</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef } = React;
+
+const MEDALS = ["🥇","🥈","🥉"];
+const PH = {
+  SETUP:"setup",
+  WRITE_PASS:"write_pass", WRITE:"write", WRITE_DONE:"write_done",
+  GUESS_INTRO:"guess_intro", GUESS_PASS:"guess_pass", GUESS:"guess", REVEAL:"reveal",
+  RESULT:"result"
+};
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:30}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*12,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:140,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [playerCount, setPlayerCount] = useState(4);
+  const [rounds, setRounds] = useState(1);
+
+  // Writing state
+  const [writeIdx, setWriteIdx] = useState(0); // which player is writing
+  const [currentRound, setCurrentRound] = useState(0); // current round (0-indexed)
+  const [statements, setStatements] = useState({}); // {playerIdx: [{text, isTruth}, ...]}
+  const [draftTexts, setDraftTexts] = useState(["","",""]);
+  const [draftTruth, setDraftTruth] = useState(-1);
+
+  // Guessing state
+  const [guessWriterIdx, setGuessWriterIdx] = useState(0); // whose statements are being guessed
+  const [guesserIdx, setGuesserIdx] = useState(0); // who is guessing now
+  const [guesses, setGuesses] = useState({}); // {writerIdx: {guesserIdx: chosenStatementIdx}}
+  const [revealStep, setRevealStep] = useState(0); // 0=waiting, 1=revealed
+
+  // Scoring
+  const [scores, setScores] = useState({}); // {playerName: points}
+  const [roundGuessCorrect, setRoundGuessCorrect] = useState({}); // {playerName: count}
+  const [roundFooled, setRoundFooled] = useState({}); // {playerName: count}
+  const [mostSurprising, setMostSurprising] = useState(null); // {text, fooled, writerName}
+
+  useEffect(() => {
+    const n = [...names];
+    while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+    setNames(n.slice(0, playerCount));
+  }, [playerCount]);
+
+  const adjCount = (d) => {
+    const next = playerCount + d;
+    if (next >= 3 && next <= 8) setPlayerCount(next);
+  };
+
+  const startGame = () => {
+    setStatements({});
+    setGuesses({});
+    setScores({});
+    setRoundGuessCorrect({});
+    setRoundFooled({});
+    setMostSurprising(null);
+    setCurrentRound(0);
+    startWritingRound(0);
+  };
+
+  const startWritingRound = (round) => {
+    setCurrentRound(round);
+    setWriteIdx(0);
+    setDraftTexts(["","",""]);
+    setDraftTruth(-1);
+    setPhase(PH.WRITE_PASS);
+  };
+
+  const saveStatements = () => {
+    const key = currentRound + "_" + writeIdx;
+    const stmts = draftTexts.map((text, i) => ({ text: text.trim(), isTruth: i === draftTruth }));
+    setStatements(prev => ({...prev, [key]: stmts}));
+    if (writeIdx + 1 < playerCount) {
+      setWriteIdx(writeIdx + 1);
+      setDraftTexts(["","",""]);
+      setDraftTruth(-1);
+      setPhase(PH.WRITE_PASS);
+    } else {
+      setPhase(PH.WRITE_DONE);
+    }
+  };
+
+  const canSave = draftTexts.every(t => t.trim().length > 0) && draftTruth >= 0;
+
+  const startGuessing = () => {
+    setGuessWriterIdx(0);
+    setGuesserIdx(findFirstGuesser(0));
+    setGuesses({});
+    setPhase(PH.GUESS_INTRO);
+  };
+
+  const findFirstGuesser = (writerIdx) => {
+    for (let i = 0; i < playerCount; i++) {
+      if (i !== writerIdx) return i;
+    }
+    return 0;
+  };
+
+  const findNextGuesser = (writerIdx, afterIdx) => {
+    for (let i = afterIdx + 1; i < playerCount; i++) {
+      if (i !== writerIdx) return i;
+    }
+    return -1; // no more guessers
+  };
+
+  const submitGuess = (chosenIdx) => {
+    const wKey = currentRound + "_" + guessWriterIdx;
+    setGuesses(prev => {
+      const writerGuesses = prev[wKey] || {};
+      return {...prev, [wKey]: {...writerGuesses, [guesserIdx]: chosenIdx}};
+    });
+    const nextGuesser = findNextGuesser(guessWriterIdx, guesserIdx);
+    if (nextGuesser >= 0) {
+      setGuesserIdx(nextGuesser);
+      setPhase(PH.GUESS_PASS);
+    } else {
+      setRevealStep(0);
+      setPhase(PH.REVEAL);
+    }
+  };
+
+  const getWriterStatements = (round, writerIdx) => {
+    return statements[round + "_" + writerIdx] || [];
+  };
+
+  const getWriterGuesses = (round, writerIdx) => {
+    return guesses[round + "_" + writerIdx] || {};
+  };
+
+  const proceedAfterReveal = () => {
+    // Calculate scores for this writer
+    const stmts = getWriterStatements(currentRound, guessWriterIdx);
+    const writerGuesses = getWriterGuesses(currentRound, guessWriterIdx);
+    const truthIdx = stmts.findIndex(s => s.isTruth);
+    const writerName = names[guessWriterIdx];
+
+    let fooledCount = 0;
+    const newScores = {...scores};
+    const newGuessCorrect = {...roundGuessCorrect};
+    const newFooled = {...roundFooled};
+
+    Object.entries(writerGuesses).forEach(([gIdx, chosen]) => {
+      const guesserName = names[parseInt(gIdx)];
+      if (chosen === truthIdx) {
+        newScores[guesserName] = (newScores[guesserName] || 0) + 2;
+        newGuessCorrect[guesserName] = (newGuessCorrect[guesserName] || 0) + 1;
+      } else {
+        fooledCount++;
+      }
+    });
+
+    newScores[writerName] = (newScores[writerName] || 0) + fooledCount;
+    newFooled[writerName] = (newFooled[writerName] || 0) + fooledCount;
+
+    // Track most surprising truth
+    if (!mostSurprising || fooledCount > mostSurprising.fooled) {
+      setMostSurprising({ text: stmts[truthIdx]?.text, fooled: fooledCount, writerName });
+    }
+
+    setScores(newScores);
+    setRoundGuessCorrect(newGuessCorrect);
+    setRoundFooled(newFooled);
+
+    // Move to next writer
+    if (guessWriterIdx + 1 < playerCount) {
+      const nextWriter = guessWriterIdx + 1;
+      setGuessWriterIdx(nextWriter);
+      setGuesserIdx(findFirstGuesser(nextWriter));
+      setPhase(PH.GUESS_INTRO);
+    } else {
+      // Check if more rounds
+      if (currentRound + 1 < rounds) {
+        startWritingRound(currentRound + 1);
+      } else {
+        setPhase(PH.RESULT);
+      }
+    }
+  };
+
+  // Computed values for reveal
+  const revealStmts = getWriterStatements(currentRound, guessWriterIdx);
+  const revealGuesses = getWriterGuesses(currentRound, guessWriterIdx);
+  const revealTruthIdx = revealStmts.findIndex(s => s.isTruth);
+  const revealFooled = Object.values(revealGuesses).filter(c => c !== revealTruthIdx).length;
+  const revealTotal = Object.keys(revealGuesses).length;
+
+  // Result computed
+  const scoreEntries = Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  const maxScore = scoreEntries.length ? scoreEntries[0][1] : 1;
+  const bestGuesser = Object.entries(roundGuessCorrect).sort((a,b) => b[1] - a[1])[0];
+  const bestFooler = Object.entries(roundFooled).sort((a,b) => b[1] - a[1])[0];
+
+  const PassScreen = ({nextName, onReady, label, sub, emoji}) => (
+    <div className="card fi" style={{textAlign:"center"}}>
+      <div style={{fontSize:48,marginBottom:12,opacity:.6}}>{emoji || "🙈"}</div>
+      <div className="SUB" style={{marginBottom:8}}>{label || "serahkan hp ke"}</div>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:16}}>{nextName}</div>
+      {sub && <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:sub}}/>}
+      {!sub && <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>
+        Pastikan hanya <b style={{color:"#f0ede8"}}>{nextName}</b> yang melihat layar
+      </div>}
+      <button className="btn" onClick={onReady}>AKU SIAP</button>
+    </div>
+  );
+
+  const totalWriters = playerCount;
+  const totalGuessersPerWriter = playerCount - 1;
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,64px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .T2{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,4vw,28px);letter-spacing:4px;color:#ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .bl{animation:bl 1s step-end infinite}
+        @keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(140px) rotate(360deg);opacity:0}}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin:0 3px;transition:all .3s}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .srow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;transition:background .15s}
+        .stmt-card{background:#1a1a28;border:2px solid #2a2a3a;padding:16px 18px;border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:14px;width:100%;text-align:left;color:#f0ede8;font-family:'Space Mono',monospace;font-size:13px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+        .stmt-card:hover{border-color:#ff3c3c55;background:#1f1f2e;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+        .stmt-card:active{transform:scale(.98)}
+        .stmt-card.sel{border-color:#ff3c3c;background:#2a0000;box-shadow:0 0 20px #ff3c3c22}
+        .stmt-card.truth{border-color:#3cff6e;background:#002a0a;box-shadow:0 0 30px #3cff6e33;animation:truthGlow .6s ease-out}
+        .stmt-card.lie{border-color:#ff3c3c55;background:#1a0000;opacity:.7}
+        .stmt-num{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#555;flex-shrink:0;width:28px;text-align:center}
+        .stmt-num.truth-num{color:#3cff6e}
+        .stmt-num.lie-num{color:#ff3c3c}
+        .write-truth{border:2px solid #3cff6e44;background:#002a0a22}
+        .write-truth-active{border-color:#3cff6e;background:#002a0a;box-shadow:0 0 20px #3cff6e22}
+        .truth-radio{width:20px;height:20px;border-radius:50%;border:2px solid #2a2a3a;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+        .truth-radio.active{border-color:#3cff6e;background:#3cff6e}
+        .truth-radio.active::after{content:"✓";color:#002a0a;font-size:12px;font-weight:bold}
+        @keyframes truthGlow{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+        @keyframes revealPause{0%{opacity:0}100%{opacity:1}}
+        .reveal-in{animation:revealIn .6s cubic-bezier(.2,.8,.3,1) forwards}
+        @keyframes revealIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">DUA BOHONG</div>
+          <div className="T2">SATU JUJUR</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:4}}>
+            <div className="SUB">permainan keluarga</div>
+          </div>
+          {phase !== PH.SETUP && phase !== PH.RESULT && rounds > 1 && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {currentRound + 1} dari {rounds}</div>
+          )}
+        </div>
+
+        {/* ─── SETUP ─── */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{marginBottom:20}}>
+              <div className="SUB" style={{marginBottom:16}}>jumlah pemain</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:16}}>
+                <button className="cbt" onClick={() => adjCount(-1)} disabled={playerCount<=3}>−</button>
+                <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:42,color:"#ff3c3c",minWidth:40,textAlign:"center"}}>{playerCount}</span>
+                <button className="cbt" onClick={() => adjCount(1)} disabled={playerCount>=8}>+</button>
+              </div>
+            </div>
+            <div className="hr"/>
+            <div style={{marginBottom:20}}>
+              <div className="SUB" style={{marginBottom:14}}>nama pemain</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {names.map((n,i) => (
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                    <input className="inp" value={n}
+                      onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                      placeholder={"Pemain " + (i+1)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="hr"/>
+            <div style={{marginBottom:20}}>
+              <div className="SUB" style={{marginBottom:14}}>ronde per pemain</div>
+              <div style={{display:"flex",gap:8}}>
+                {[1,2,3].map(r => (
+                  <button key={r} style={{
+                    flex:1,background:rounds===r?"#2a0000":"#1a1a28",
+                    border:"1px solid "+(rounds===r?"#ff3c3c":"#2a2a3a"),
+                    color:rounds===r?"#ff3c3c":"#666",
+                    padding:"12px",borderRadius:6,cursor:"pointer",
+                    fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2,
+                    transition:"all .15s"
+                  }} onClick={() => setRounds(r)}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <div style={{fontSize:10,color:"#555",textAlign:"center",marginTop:6}}>
+                Setiap ronde, pemain menulis 3 pernyataan baru
+              </div>
+            </div>
+            <button className="btn" onClick={startGame}>MULAI GAME</button>
+          </div>
+        )}
+
+        {/* ─── WRITE PASS SCREEN ─── */}
+        {phase === PH.WRITE_PASS && (
+          <PassScreen
+            nextName={names[writeIdx]}
+            onReady={() => setPhase(PH.WRITE)}
+            label="serahkan hp ke"
+            emoji="🙈"
+          />
+        )}
+
+        {/* ─── WRITING PHASE ─── */}
+        {phase === PH.WRITE && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:30,letterSpacing:4,color:"#ff3c3c",marginBottom:4}}>{names[writeIdx]}</div>
+              <div className="SUB" style={{marginBottom:6}}>Pemain {writeIdx + 1} dari {playerCount}</div>
+              <div style={{marginBottom:12}}>
+                {Array.from({length:playerCount}).map((_,i) => (
+                  <span key={i} className="dot" style={{background:i<writeIdx?"#3cff6e":i===writeIdx?"#ff3c3c":"#2a2a3a"}} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"10px 14px",marginBottom:16,textAlign:"center"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:3,color:"#f0ede8",marginBottom:4}}>
+                Tulis 2 BOHONG dan 1 yang JUJUR
+              </div>
+              <div style={{fontSize:10,color:"#888",lineHeight:1.5}}>
+                Tips: Buat bohongmu terdengar masuk akal, dan kebenaranmu terdengar mustahil!
+              </div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
+              {[0,1,2].map(i => (
+                <div key={i}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:draftTruth===i?"#3cff6e":"#555"}}>{i+1}</span>
+                    <div style={{flex:1,fontSize:10,color:draftTruth===i?"#3cff6e":"#666",letterSpacing:2,fontFamily:"'Space Mono',monospace"}}>
+                      {draftTruth===i?"✓ INI YANG JUJUR":"PERNYATAAN "+(i+1)}
+                    </div>
+                    <div className={"truth-radio"+(draftTruth===i?" active":"")}
+                      onClick={() => setDraftTruth(i)}
+                      title="Tandai sebagai kebenaran"
+                    />
+                  </div>
+                  <textarea
+                    className="inp"
+                    value={draftTexts[i]}
+                    onChange={e => {const u=[...draftTexts]; u[i]=e.target.value; setDraftTexts(u);}}
+                    placeholder={i===0?"Contoh: Saya pernah bertemu presiden...":i===1?"Contoh: Saya bisa bicara 3 bahasa...":"Contoh: Saya pernah patah tulang..."}
+                    rows={2}
+                    style={{
+                      resize:"none",lineHeight:1.5,
+                      borderColor:draftTruth===i?"#3cff6e44":"#2a2a3a",
+                      background:draftTruth===i?"#002a0a22":"#1a1a28"
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {draftTruth < 0 && draftTexts.some(t=>t.trim()) && (
+              <div style={{color:"#ff3c3c",fontSize:11,marginBottom:8,textAlign:"center"}}>
+                Jangan lupa tandai mana yang JUJUR (tap lingkaran di kanan)
+              </div>
+            )}
+
+            <button className="btn" disabled={!canSave} onClick={saveStatements}>SIMPAN</button>
+          </div>
+        )}
+
+        {/* ─── ALL WRITTEN ─── */}
+        {phase === PH.WRITE_DONE && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12}}>✍️</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,letterSpacing:4,color:"#3cff6e",marginBottom:8}}>SEMUA SUDAH MENULIS!</div>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:24}}>
+              Sekarang saatnya menebak pernyataan masing-masing pemain.<br/>
+              Siapa yang paling jeli?
+            </div>
+            <button className="btn" onClick={startGuessing}>MULAI TEBAK</button>
+          </div>
+        )}
+
+        {/* ─── GUESS INTRO ─── */}
+        {phase === PH.GUESS_INTRO && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12}}>🎭</div>
+            <div className="SUB" style={{marginBottom:8}}>pernyataan milik</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:42,letterSpacing:5,color:"#ff3c3c",marginBottom:8}}>{names[guessWriterIdx]}</div>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.6,marginBottom:8}}>
+              {names[guessWriterIdx]} duduk dan diam saja.<br/>
+              Pemain lain akan menebak satu per satu.
+            </div>
+            <div className="SUB" style={{marginBottom:24}}>Pemain {guessWriterIdx + 1} dari {playerCount}</div>
+            <button className="btn" onClick={() => {
+              setGuesserIdx(findFirstGuesser(guessWriterIdx));
+              setPhase(PH.GUESS_PASS);
+            }}>MULAI</button>
+          </div>
+        )}
+
+        {/* ─── GUESS PASS SCREEN ─── */}
+        {phase === PH.GUESS_PASS && (
+          <PassScreen
+            nextName={names[guesserIdx]}
+            onReady={() => setPhase(PH.GUESS)}
+            label={"giliran menebak"}
+            emoji="🤔"
+            sub={`Tebak pernyataan <b style="color:#ff3c3c">${names[guessWriterIdx]}</b>: mana yang <b style="color:#3cff6e">JUJUR</b>?`}
+          />
+        )}
+
+        {/* ─── GUESSING ─── */}
+        {phase === PH.GUESS && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div className="SUB" style={{marginBottom:4}}>pernyataan {names[guessWriterIdx]}</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:3,color:"#ff3c3c",marginBottom:2}}>
+                Giliran {names[guesserIdx]}
+              </div>
+              <div style={{fontSize:11,color:"#888"}}>Tap pernyataan yang menurutmu JUJUR</div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {getWriterStatements(currentRound, guessWriterIdx).map((stmt, i) => (
+                <button key={i} className="stmt-card" onClick={() => submitGuess(i)}>
+                  <div className="stmt-num">{i+1}</div>
+                  <div style={{flex:1}}>{stmt.text}</div>
+                </button>
+              ))}
+            </div>
+
+            <div className="hr"/>
+            <div style={{textAlign:"center"}}>
+              <div className="SUB">
+                {(() => {
+                  let done = 0;
+                  const wKey = currentRound + "_" + guessWriterIdx;
+                  const wg = guesses[wKey] || {};
+                  done = Object.keys(wg).length;
+                  return `Tebakan ${done + 1} dari ${totalGuessersPerWriter}`;
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── REVEAL ─── */}
+        {phase === PH.REVEAL && (
+          <div className="card fi">
+            {revealStep === 0 ? (
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:48,marginBottom:12}}>🥁</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#f0ede8",marginBottom:8}}>SEMUA SUDAH MENEBAK</div>
+                <div style={{fontSize:12,color:"#888",marginBottom:24}}>
+                  Pernyataan milik <b style={{color:"#ff3c3c"}}>{names[guessWriterIdx]}</b>
+                </div>
+                <button className="btn" onClick={() => setRevealStep(1)}>BUKA JAWABAN</button>
+              </div>
+            ) : (
+              <div className="reveal-in">
+                <div style={{textAlign:"center",marginBottom:16}}>
+                  <div className="SUB" style={{marginBottom:4}}>jawaban {names[guessWriterIdx]}</div>
+                </div>
+
+                <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+                  {revealStmts.map((stmt, i) => (
+                    <div key={i} className={"stmt-card " + (stmt.isTruth ? "truth" : "lie")} style={{cursor:"default"}}>
+                      <div className={"stmt-num " + (stmt.isTruth ? "truth-num" : "lie-num")}>
+                        {stmt.isTruth ? "✓" : "✗"}
+                      </div>
+                      <div style={{flex:1}}>
+                        <div style={{marginBottom:4}}>{stmt.text}</div>
+                        <div style={{fontSize:10,letterSpacing:2,color:stmt.isTruth?"#3cff6e":"#ff3c3c",fontFamily:"'Bebas Neue',sans-serif",fontSize:14}}>
+                          {stmt.isTruth ? "JUJUR" : "BOHONG"}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hr"/>
+
+                {/* Who guessed what */}
+                <div style={{marginBottom:16}}>
+                  <div className="SUB" style={{marginBottom:10}}>hasil tebakan</div>
+                  {Object.entries(revealGuesses).map(([gIdx, chosen]) => {
+                    const correct = chosen === revealTruthIdx;
+                    return (
+                      <div key={gIdx} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #1a1a28"}}>
+                        <span style={{fontFamily:"'Space Mono',monospace",fontSize:13}}>{names[parseInt(gIdx)]}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:11,color:"#888"}}>pilih #{chosen+1}</span>
+                          <span style={{fontSize:16}}>{correct ? "✅" : "❌"}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Scoring summary */}
+                <div style={{background:"#1a1a28",border:"1px solid #2a2a3a",borderRadius:6,padding:"12px 14px",marginBottom:16,textAlign:"center"}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:3,color:"#ff3c3c",marginBottom:4}}>
+                    {names[guessWriterIdx]} menipu {revealFooled} orang!
+                  </div>
+                  <div style={{fontSize:12,color:"#888"}}>
+                    +{revealFooled} poin untuk {names[guessWriterIdx]}
+                    {revealTotal - revealFooled > 0 && (<span> &bull; +{(revealTotal - revealFooled)*2} poin untuk penebak benar</span>)}
+                  </div>
+                </div>
+
+                <button className="btn" onClick={proceedAfterReveal}>LANJUT</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── RESULTS ─── */}
+        {phase === PH.RESULT && (
+          <div className="card fi">
+            <Confetti />
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:48,marginBottom:4}}>🏆</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:42,letterSpacing:6,color:"#ffcc00"}}>HASIL AKHIR</div>
+              <div className="SUB">{rounds} ronde selesai</div>
+            </div>
+
+            {/* Leaderboard */}
+            {scoreEntries.map(([name, pts], rank) => {
+              const w = maxScore > 0 ? Math.max(4, (pts/maxScore)*100) : 0;
+              return (
+                <div key={name} style={{marginBottom:12}}>
+                  <div className="srow" style={{background:rank===0?"#1a1a10":"#0e0e18",border:"1px solid "+(rank===0?"#ffcc0033":"#2a2a3a"),borderRadius:6}}>
+                    <div style={{fontSize:22,width:32,textAlign:"center"}}>{rank < 3 ? MEDALS[rank] : "#"+(rank+1)}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontFamily:"'Space Mono',monospace",fontSize:14,color:rank===0?"#ffcc00":"#f0ede8"}}>{name}</div>
+                    </div>
+                    <div className="pts" style={{color:rank===0?"#ffcc00":"#f0ede8"}}>{pts}</div>
+                  </div>
+                  <div style={{marginLeft:42}}>
+                    <div className="lbw"><div className="lbb" style={{width:w+"%",background:rank===0?"linear-gradient(90deg,#ffcc00,#ff9900)":rank===1?"#aaa":rank===2?"#cd7f32":"#3a3a5a"}}/></div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="hr"/>
+
+            {/* Awards */}
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+              {bestGuesser && (
+                <div style={{background:"#0a1a0a",border:"1px solid #3cff6e33",borderRadius:6,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,color:"#3cff6e",letterSpacing:2,fontFamily:"'Bebas Neue',sans-serif",fontSize:16,marginBottom:2}}>
+                    🎯 PALING JELI
+                  </div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#f0ede8"}}>{bestGuesser[0]}</div>
+                  <div style={{fontSize:10,color:"#888"}}>{bestGuesser[1]} tebakan benar</div>
+                </div>
+              )}
+              {bestFooler && (
+                <div style={{background:"#1a0a1a",border:"1px solid #ff3c3c33",borderRadius:6,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,color:"#ff3c3c",letterSpacing:2,fontFamily:"'Bebas Neue',sans-serif",fontSize:16,marginBottom:2}}>
+                    🎭 MASTER PENIPU
+                  </div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:"#f0ede8"}}>{bestFooler[0]}</div>
+                  <div style={{fontSize:10,color:"#888"}}>Menipu {bestFooler[1]} orang</div>
+                </div>
+              )}
+              {mostSurprising && mostSurprising.fooled > 0 && (
+                <div style={{background:"#1a1a0a",border:"1px solid #ffcc0033",borderRadius:6,padding:"10px 14px"}}>
+                  <div style={{fontSize:11,color:"#ffcc00",letterSpacing:2,fontFamily:"'Bebas Neue',sans-serif",fontSize:16,marginBottom:2}}>
+                    🤯 PALING MENGEJUTKAN
+                  </div>
+                  <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ede8",lineHeight:1.5,marginBottom:4}}>
+                    "{mostSurprising.text}"
+                  </div>
+                  <div style={{fontSize:10,color:"#888"}}>oleh {mostSurprising.writerName} — menipu {mostSurprising.fooled} orang</div>
+                </div>
+              )}
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={() => setPhase(PH.SETUP)}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+        <div style={{textAlign:"center",paddingBottom:8}}>
+          <div className="SUB bl">SELAMAT BERMAIN</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>

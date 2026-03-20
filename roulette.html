@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>ROULETTE - Roda Keberuntungan Keluarga</title>
+<meta name="description" content="Roda putar keluarga! Pilih pemain, tantangan, atau apapun secara acak."/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎰</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── CONSTANTS ──────────────────────────────────────────────
+const STORAGE_KEY = "roulette_keluarga";
+const SEGMENT_COLORS = [
+  "#ff3c3c","#3cff6e","#ffcc00","#a0a0ff","#ff8c00","#00d4ff",
+  "#ff69b4","#7b68ee","#00fa9a","#ffd700","#ff6347","#40e0d0"
+];
+
+const PRESETS = {
+  truth_or_dare: { label: "Truth or Dare", items: ["Truth","Dare","Truth","Dare","Double Dare","Free Pass"] },
+  hukuman: { label: "Hukuman", items: ["Push-up 10x","Joget 30 detik","Tirukan orang","Nyanyi satu lagu","Makan sesuatu pedas","Telepon seseorang","Story IG sekarang","Tahan ketawa 1 menit"] },
+  angka: { label: "Angka 1-10", items: ["1","2","3","4","5","6","7","8","9","10"] },
+  makanan: { label: "Pilihan Makanan", items: ["Nasi Goreng","Bakso","Sate","Pizza","Sushi","Mie Ayam","Martabak","Gado-gado"] },
+};
+
+// ─── HELPERS ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function saveState(title, items) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ title, items }));
+  } catch(e) {}
+}
+
+// ─── CONFETTI COMPONENT ─────────────────────────────────────
+function Confetti({ color }) {
+  const pieces = useRef(Array.from({ length: 40 }, (_, i) => ({
+    x: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    dur: 1.2 + Math.random() * 2,
+    size: 4 + Math.random() * 8,
+    drift: -40 + Math.random() * 80,
+    hue: i * 9,
+    shape: Math.random() > 0.5 ? "circle" : "rect",
+  }))).current;
+  return (
+    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", overflow: "hidden", pointerEvents: "none", zIndex: 2 }}>
+      {pieces.map((p, i) => (
+        <div key={i} style={{
+          position: "absolute", left: p.x + "%", top: -10,
+          width: p.size, height: p.shape === "circle" ? p.size : p.size * 1.6,
+          background: color || `hsl(${p.hue},85%,60%)`,
+          borderRadius: p.shape === "circle" ? "50%" : 2, opacity: 0.9,
+          animation: `confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform: `rotate(${p.drift}deg)`,
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── WHEEL CANVAS COMPONENT ────────────────────────────────
+function WheelCanvas({ items, angle, size }) {
+  const canvasRef = useRef(null);
+  const dpr = typeof window !== "undefined" ? (window.devicePixelRatio || 1) : 1;
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || items.length < 2) return;
+    const ctx = canvas.getContext("2d");
+    const w = size * dpr;
+    canvas.width = w;
+    canvas.height = w;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = size / 2 - 4;
+    const n = items.length;
+    const arc = (2 * Math.PI) / n;
+
+    ctx.clearRect(0, 0, size, size);
+
+    // Shadow behind wheel
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.fillStyle = "#12121a";
+    ctx.fill();
+    ctx.restore();
+
+    // Draw segments
+    for (let i = 0; i < n; i++) {
+      const startAngle = angle + i * arc;
+      const endAngle = startAngle + arc;
+      const color = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+
+      // Segment fill
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, startAngle, endAngle);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      // Segment border
+      ctx.strokeStyle = "rgba(0,0,0,0.3)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Text
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(startAngle + arc / 2);
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#ffffff";
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.shadowBlur = 3;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+
+      const maxTextLen = r * 0.7;
+      let fontSize = Math.min(16, Math.max(10, 160 / n));
+      ctx.font = `bold ${fontSize}px 'Space Mono', monospace`;
+
+      let text = items[i];
+      let measured = ctx.measureText(text).width;
+      if (measured > maxTextLen) {
+        while (ctx.measureText(text + "...").width > maxTextLen && text.length > 1) {
+          text = text.slice(0, -1);
+        }
+        text += "...";
+      }
+
+      ctx.fillText(text, r - 14, fontSize / 3);
+      ctx.restore();
+    }
+
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.12, 0, 2 * Math.PI);
+    ctx.fillStyle = "#0a0a0f";
+    ctx.strokeStyle = "#2a2a3a";
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+
+    // Inner ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.06, 0, 2 * Math.PI);
+    ctx.fillStyle = "#ff3c3c";
+    ctx.fill();
+
+  }, [items, angle, size, dpr]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ width: size, height: size, display: "block" }}
+    />
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const saved = useRef(loadState()).current;
+  const [title, setTitle] = useState(saved?.title || "Roulette Keluarga");
+  const [items, setItems] = useState(saved?.items || []);
+  const [newItem, setNewItem] = useState("");
+  const [angle, setAngle] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showEdit, setShowEdit] = useState(true);
+  const [flashSegment, setFlashSegment] = useState(-1);
+
+  const animRef = useRef(null);
+  const velocityRef = useRef(0);
+  const angleRef = useRef(0);
+  const inputRef = useRef(null);
+
+  // Persist
+  useEffect(() => {
+    saveState(title, items);
+  }, [title, items]);
+
+  // Calculate wheel size
+  const [wheelSize, setWheelSize] = useState(340);
+  useEffect(() => {
+    const calc = () => {
+      const w = Math.min(window.innerWidth - 40, 400);
+      setWheelSize(w);
+    };
+    calc();
+    window.addEventListener("resize", calc);
+    return () => window.removeEventListener("resize", calc);
+  }, []);
+
+  // Clean up animation on unmount
+  useEffect(() => {
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
+  }, []);
+
+  const addItem = () => {
+    const val = newItem.trim();
+    if (!val) return;
+    setItems(prev => [...prev, val]);
+    setNewItem("");
+    inputRef.current?.focus();
+  };
+
+  const removeItem = (idx) => {
+    setItems(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const loadPreset = (key) => {
+    if (key === "nama_pemain") {
+      const count = parseInt(prompt("Berapa pemain?", "4"));
+      if (!count || count < 2) return;
+      const names = [];
+      for (let i = 1; i <= count; i++) {
+        const name = prompt(`Nama pemain ${i}:`, `Pemain ${i}`);
+        if (name === null) return;
+        names.push(name || `Pemain ${i}`);
+      }
+      setItems(names);
+      setTitle("Pilih Pemain");
+      return;
+    }
+    const preset = PRESETS[key];
+    if (preset) {
+      setItems([...preset.items]);
+      setTitle(preset.label);
+    }
+  };
+
+  const getWinnerIndex = (finalAngle) => {
+    const n = items.length;
+    const arc = (2 * Math.PI) / n;
+    // The pointer is at the top (3 o'clock = 0 rad, so top = -PI/2)
+    // We need to figure out which segment is at the pointer position
+    // Pointer is at angle -PI/2 (top). The wheel is rotated by finalAngle.
+    // So the segment at the pointer is at angle (-PI/2 - finalAngle)
+    let pointerAngle = (-Math.PI / 2 - finalAngle) % (2 * Math.PI);
+    if (pointerAngle < 0) pointerAngle += 2 * Math.PI;
+    const idx = Math.floor(pointerAngle / arc);
+    return idx % n;
+  };
+
+  const spin = () => {
+    if (spinning || items.length < 2) return;
+    setSpinning(true);
+    setShowResult(false);
+    setResult(null);
+
+    // Random initial velocity (ensure at least several full rotations)
+    const baseVelocity = 0.25 + Math.random() * 0.15; // radians per frame
+    velocityRef.current = baseVelocity;
+    angleRef.current = angle;
+
+    const friction = 0.984 + Math.random() * 0.006; // 0.984-0.990
+    const minVelocity = 0.001;
+
+    let lastSegment = -1;
+
+    const animate = () => {
+      velocityRef.current *= friction;
+      angleRef.current += velocityRef.current;
+
+      // Normalize angle
+      angleRef.current = angleRef.current % (2 * Math.PI);
+
+      setAngle(angleRef.current);
+
+      // Flash effect: detect segment change at pointer
+      const currentSeg = getWinnerIndex(angleRef.current);
+      if (currentSeg !== lastSegment && velocityRef.current > 0.02) {
+        setFlashSegment(currentSeg);
+        setTimeout(() => setFlashSegment(-1), 60);
+        lastSegment = currentSeg;
+      }
+
+      if (velocityRef.current > minVelocity) {
+        animRef.current = requestAnimationFrame(animate);
+      } else {
+        // Stopped
+        setSpinning(false);
+        const winnerIdx = getWinnerIndex(angleRef.current);
+        const winnerItem = items[winnerIdx];
+        setResult({ item: winnerItem, index: winnerIdx, color: SEGMENT_COLORS[winnerIdx % SEGMENT_COLORS.length] });
+
+        // Brief pause before showing result
+        setTimeout(() => {
+          setShowResult(true);
+          setHistory(prev => {
+            const next = [{ item: winnerItem, time: new Date().toLocaleTimeString("id-ID") }, ...prev];
+            return next.slice(0, 10);
+          });
+        }, 400);
+      }
+    };
+
+    animRef.current = requestAnimationFrame(animate);
+  };
+
+  const canSpin = items.length >= 2;
+
+  return (
+    <div style={{ minHeight: "100dvh", background: "#0a0a0f", color: "#f0ede8", fontFamily: "'Courier New',monospace", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 16px 56px" }}>
+      <style>{`
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,10vw,88px);letter-spacing:8px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px;align-items:center}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(400px) rotate(720deg);opacity:0}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+        @keyframes glow{0%,100%{filter:drop-shadow(0 0 6px #ff3c3c88)}50%{filter:drop-shadow(0 0 16px #ff3c3ccc)}}
+        .preset-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:8px 14px;font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;border-radius:20px;transition:all .15s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+        .preset-btn:hover{border-color:#ff3c3c;color:#ff3c3c;background:#1f1f2e}
+        .preset-btn:active{transform:scale(.95)}
+        .item-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;transition:all .15s}
+        .item-row:hover{border-color:#333}
+        .del-btn{background:none;border:none;color:#555;font-size:16px;cursor:pointer;padding:4px 8px;transition:color .15s;font-family:monospace;-webkit-tap-highlight-color:transparent}
+        .del-btn:hover{color:#ff3c3c}
+        .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:100;animation:fi .3s ease}
+        .result-card{background:#12121a;border:2px solid;border-radius:16px;padding:40px 32px;text-align:center;max-width:360px;width:90%;position:relative;overflow:hidden}
+        .hist-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #1a1a28;font-size:12px}
+        .toggle-btn{background:none;border:none;color:#666;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;padding:8px;text-transform:uppercase;transition:color .15s;-webkit-tap-highlight-color:transparent}
+        .toggle-btn:hover{color:#ff3c3c}
+      `}</style>
+
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{ textAlign: "center", marginBottom: 4 }}>
+          <div className="T">ROULETTE</div>
+          <div className="SUB">roda keberuntungan keluarga</div>
+        </div>
+
+        {/* WHEEL SECTION */}
+        <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          {/* Pointer triangle */}
+          <div style={{
+            position: "relative", zIndex: 10, width: 0, height: 0,
+            borderLeft: "14px solid transparent", borderRight: "14px solid transparent",
+            borderTop: "24px solid #ff3c3c",
+            marginBottom: -6,
+            filter: "drop-shadow(0 0 8px #ff3c3c88)",
+            animation: spinning ? "glow 0.3s ease infinite" : "none",
+          }} />
+
+          {/* Wheel */}
+          <div style={{
+            position: "relative",
+            opacity: items.length < 2 ? 0.3 : 1,
+            transition: "opacity 0.3s",
+          }}>
+            {items.length >= 2 ? (
+              <WheelCanvas items={items} angle={angle} size={wheelSize} />
+            ) : (
+              <div style={{
+                width: wheelSize, height: wheelSize, borderRadius: "50%",
+                background: "#12121a", border: "2px solid #2a2a3a",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexDirection: "column", gap: 8,
+              }}>
+                <div style={{ fontSize: 48, opacity: 0.3 }}>🎰</div>
+                <div style={{ fontFamily: "'Space Mono',monospace", fontSize: 11, color: "#555", textAlign: "center", padding: "0 20px" }}>
+                  Tambahkan minimal 2 item untuk mulai
+                </div>
+              </div>
+            )}
+
+            {/* Flash overlay */}
+            {flashSegment >= 0 && (
+              <div style={{
+                position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                borderRadius: "50%", background: "rgba(255,255,255,0.06)",
+                pointerEvents: "none",
+              }} />
+            )}
+          </div>
+
+          {/* SPIN BUTTON */}
+          <button
+            className="btn"
+            onClick={spin}
+            disabled={!canSpin || spinning}
+            style={{
+              marginTop: 16, maxWidth: 300,
+              animation: spinning ? "pulse 0.4s ease infinite" : "none",
+              fontSize: 26, padding: "16px 24px", letterSpacing: 6,
+            }}
+          >
+            {spinning ? "BERPUTAR..." : "PUTAR!"}
+          </button>
+        </div>
+
+        {/* TITLE EDIT */}
+        <div className="card fi" style={{ width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showEdit ? 16 : 0 }}>
+            <input
+              className="inp"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Judul Roulette"
+              style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, background: "transparent", border: "none", padding: "4px 0", color: "#ff3c3c" }}
+            />
+            <button
+              className="toggle-btn"
+              onClick={() => setShowEdit(!showEdit)}
+              style={{ flexShrink: 0 }}
+            >
+              {showEdit ? "TUTUP" : "EDIT"}
+            </button>
+          </div>
+
+          {showEdit && (
+            <div className="fi">
+              {/* Quick Presets */}
+              <div style={{ marginBottom: 16 }}>
+                <div className="SUB" style={{ marginBottom: 8 }}>preset cepat</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <button className="preset-btn" onClick={() => loadPreset("nama_pemain")}>Nama Pemain</button>
+                  <button className="preset-btn" onClick={() => loadPreset("truth_or_dare")}>Truth or Dare</button>
+                  <button className="preset-btn" onClick={() => loadPreset("hukuman")}>Hukuman</button>
+                  <button className="preset-btn" onClick={() => loadPreset("angka")}>Angka 1-10</button>
+                  <button className="preset-btn" onClick={() => loadPreset("makanan")}>Pilihan Makanan</button>
+                </div>
+              </div>
+
+              {/* Add Item */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <input
+                  ref={inputRef}
+                  className="inp"
+                  value={newItem}
+                  onChange={e => setNewItem(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") addItem(); }}
+                  placeholder="Ketik item baru..."
+                  style={{ flex: 1 }}
+                />
+                <button
+                  onClick={addItem}
+                  disabled={!newItem.trim()}
+                  style={{
+                    background: newItem.trim() ? "#ff3c3c" : "#2a2a3a",
+                    color: "#fff", border: "none",
+                    padding: "10px 16px", fontFamily: "'Bebas Neue',sans-serif",
+                    fontSize: 16, letterSpacing: 2, borderRadius: 6,
+                    cursor: newItem.trim() ? "pointer" : "not-allowed",
+                    transition: "all .15s", whiteSpace: "nowrap", flexShrink: 0,
+                  }}
+                >
+                  TAMBAH
+                </button>
+              </div>
+
+              {/* Items List */}
+              {items.length > 0 && (
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                    <div className="SUB">{items.length} item</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button className="toggle-btn" onClick={() => setItems(shuffle(items))} style={{ fontSize: 10 }}>
+                        ACAK URUTAN
+                      </button>
+                      <button className="toggle-btn" onClick={() => { if (confirm("Hapus semua item?")) setItems([]); }} style={{ fontSize: 10, color: "#ff3c3c" }}>
+                        HAPUS SEMUA
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 240, overflowY: "auto" }}>
+                    {items.map((item, i) => (
+                      <div key={i} className="item-row">
+                        <div style={{
+                          width: 10, height: 10, borderRadius: 2, flexShrink: 0,
+                          background: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
+                        }} />
+                        <span style={{ flex: 1, fontFamily: "'Space Mono',monospace", fontSize: 13 }}>{item}</span>
+                        <button className="del-btn" onClick={() => removeItem(i)}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {items.length === 0 && (
+                <div style={{ textAlign: "center", padding: "20px 0", color: "#555", fontSize: 12 }}>
+                  Belum ada item. Tambahkan atau pilih preset di atas.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* HISTORY */}
+        {history.length > 0 && (
+          <div className="card fi" style={{ width: "100%" }}>
+            <button
+              className="toggle-btn"
+              onClick={() => setShowHistory(!showHistory)}
+              style={{ width: "100%", textAlign: "left", display: "flex", justifyContent: "space-between", padding: 0 }}
+            >
+              <span>RIWAYAT ({history.length})</span>
+              <span>{showHistory ? "▲" : "▼"}</span>
+            </button>
+            {showHistory && (
+              <div className="fi" style={{ marginTop: 12 }}>
+                {history.map((h, i) => (
+                  <div key={i} className="hist-item">
+                    <span style={{
+                      fontFamily: "'Bebas Neue',sans-serif", fontSize: 18,
+                      color: "#555", minWidth: 24, textAlign: "center",
+                    }}>
+                      {i + 1}
+                    </span>
+                    <span style={{ flex: 1, fontFamily: "'Space Mono',monospace" }}>{h.item}</span>
+                    <span style={{ color: "#444", fontSize: 10 }}>{h.time}</span>
+                  </div>
+                ))}
+                <button
+                  className="ghost"
+                  onClick={() => { setHistory([]); setShowHistory(false); }}
+                  style={{ marginTop: 10 }}
+                >
+                  HAPUS RIWAYAT
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* RESULT OVERLAY */}
+        {showResult && result && (
+          <div className="overlay" onClick={() => setShowResult(false)}>
+            <div
+              className="result-card fi"
+              style={{ borderColor: result.color }}
+              onClick={e => e.stopPropagation()}
+            >
+              <Confetti color={result.color} />
+
+              <button
+                onClick={() => setShowResult(false)}
+                style={{
+                  position: "absolute", top: 12, right: 14,
+                  background: "none", border: "none", color: "#555",
+                  fontSize: 22, cursor: "pointer", zIndex: 10,
+                  fontFamily: "monospace",
+                }}
+              >
+                ✕
+              </button>
+
+              <div style={{ position: "relative", zIndex: 5 }}>
+                <div className="SUB" style={{ marginBottom: 12, color: "#888" }}>hasilnya adalah...</div>
+                <div style={{
+                  fontFamily: "'Bebas Neue',sans-serif",
+                  fontSize: "clamp(42px, 12vw, 72px)",
+                  letterSpacing: 4,
+                  color: result.color,
+                  lineHeight: 1.1,
+                  marginBottom: 8,
+                  textShadow: `0 0 30px ${result.color}66`,
+                  wordBreak: "break-word",
+                }}>
+                  {result.item}
+                </div>
+                <div style={{ fontSize: 48, margin: "12px 0" }}>🎉</div>
+              </div>
+
+              <button
+                className="btn"
+                onClick={() => { setShowResult(false); setTimeout(spin, 300); }}
+                style={{ marginTop: 16, position: "relative", zIndex: 5 }}
+              >
+                PUTAR LAGI
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

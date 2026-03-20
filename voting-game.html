@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>SIAPA YANG PALING - Voting Party Game</title>
+<meta name="description" content="Siapa Yang Paling...? Voting party game seru untuk keluarga!"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👑</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── BUILT-IN QUESTIONS (60+) ───────────────────────────────
+const QUESTIONS_FUNNY = [
+  "Siapa yang paling mungkin lupa bawa kunci?",
+  "Siapa yang paling mungkin tertidur di bioskop?",
+  "Siapa yang paling mungkin nyasar di mall?",
+  "Siapa yang paling lama di kamar mandi?",
+  "Siapa yang paling sering cek handphone?",
+  "Siapa yang paling mungkin bicara sendiri?",
+  "Siapa yang paling berantakan kamarnya?",
+  "Siapa yang paling sering kentut diam-diam?",
+  "Siapa yang paling mungkin makan tengah malam?",
+  "Siapa yang paling drama kalau sakit?",
+  "Siapa yang paling susah bangun pagi?",
+  "Siapa yang paling sering selfie?",
+  "Siapa yang paling mungkin lupa ulang tahun orang?",
+  "Siapa yang paling suka gosip?",
+  "Siapa yang paling mungkin nangis nonton film?",
+  "Siapa yang paling lama milih makanan?",
+  "Siapa yang paling sering salah kirim chat?",
+  "Siapa yang paling mungkin beli barang nggak perlu?",
+  "Siapa yang paling suka rebahan?",
+  "Siapa yang paling sering ngomong 'bentar ya' tapi lama?",
+];
+
+const QUESTIONS_POSITIVE = [
+  "Siapa yang paling bisa dipercaya menyimpan rahasia?",
+  "Siapa yang paling jago masak?",
+  "Siapa yang paling sabar?",
+  "Siapa yang paling bisa bikin orang ketawa?",
+  "Siapa yang paling pintar menghemat uang?",
+  "Siapa yang paling berani?",
+  "Siapa yang paling kreatif?",
+  "Siapa yang paling mungkin jadi presiden?",
+  "Siapa yang paling setia menemani?",
+  "Siapa yang paling jago olahraga?",
+  "Siapa yang paling mungkin jadi terkenal?",
+  "Siapa yang paling enak diajak curhat?",
+  "Siapa yang paling rajin?",
+  "Siapa yang paling jago negosiasi?",
+  "Siapa yang paling mungkin menang lomba makan?",
+];
+
+const QUESTIONS_HYPOTHETICAL = [
+  "Siapa yang paling mungkin selamat di zombie apocalypse?",
+  "Siapa yang pertama kali dieliminasi di reality show?",
+  "Siapa yang paling mungkin jadi astronot?",
+  "Siapa yang paling mungkin menang MasterChef?",
+  "Siapa yang paling mungkin ketahuan bohong?",
+  "Siapa yang paling mungkin tinggal di luar negeri?",
+  "Siapa yang paling mungkin nulis buku?",
+  "Siapa yang paling mungkin viral di TikTok?",
+  "Siapa yang paling mungkin jadi guru?",
+  "Siapa yang paling mungkin adopt 10 kucing?",
+  "Siapa yang paling mungkin menang Nobel?",
+  "Siapa yang paling mungkin jadi detektif?",
+  "Siapa yang paling lama bertahan tanpa WiFi?",
+  "Siapa yang paling mungkin ke bulan?",
+  "Siapa yang paling mungkin bikin startup?",
+];
+
+const QUESTIONS_DAILY = [
+  "Siapa yang paling lama siap-siap keluar rumah?",
+  "Siapa yang paling boros?",
+  "Siapa yang paling sering telat?",
+  "Siapa yang paling suka ngemil?",
+  "Siapa yang paling mungkin lupa makan?",
+  "Siapa yang paling suka karaoke?",
+  "Siapa yang paling jago parkir?",
+  "Siapa yang paling sering minta tolong?",
+  "Siapa yang paling sering bilang 'terserah'?",
+  "Siapa yang paling banyak akal?",
+];
+
+const ALL_BUILTIN = [...QUESTIONS_FUNNY, ...QUESTIONS_POSITIVE, ...QUESTIONS_HYPOTHETICAL, ...QUESTIONS_DAILY];
+
+// ─── SHUFFLE ────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── BAR COLORS ─────────────────────────────────────────────
+const BAR_COLORS = ["#ff3c3c","#3cff6e","#ffcc00","#a0a0ff","#ff8c3c","#3cffff","#ff3cff","#8cff3c"];
+
+// ─── CONFETTI ───────────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:30}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*12,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:140,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── PHASES ─────────────────────────────────────────────────
+const PH = {SETUP:"setup",QUESTION:"question",VOTE_PASS:"vote_pass",VOTE:"vote",REVEAL:"reveal",RESULTS:"results"};
+
+// ─── MAIN APP ───────────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [playerCount, setPlayerCount] = useState(4);
+  const [totalRounds, setTotalRounds] = useState(10);
+  const [mode, setMode] = useState("bawaan"); // bawaan, custom, campur
+  const [customQs, setCustomQs] = useState([]);
+  const [customInput, setCustomInput] = useState("");
+  const [showVotes, setShowVotes] = useState(false); // transparency toggle
+  const [tab, setTab] = useState("pemain");
+
+  // Game state
+  const [currentRound, setCurrentRound] = useState(0);
+  const [questions, setQuestions] = useState([]);
+  const [voterIdx, setVoterIdx] = useState(0);
+  const [roundVotes, setRoundVotes] = useState({}); // { voterIdx: votedPlayerIdx }
+  const [titleCounts, setTitleCounts] = useState({}); // { playerName: count }
+  const [voteHistory, setVoteHistory] = useState([]); // per-round: { question, votes, winners }
+  const [allVoteDetails, setAllVoteDetails] = useState([]); // per-round: full vote map for transparency
+
+  // Stats tracking
+  const [majorityMatches, setMajorityMatches] = useState({}); // { playerName: count }
+  const [uniqueVotes, setUniqueVotes] = useState({}); // { playerName: count }
+
+  // Adjust names when player count changes
+  useEffect(() => {
+    const n = [...names];
+    while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+    setNames(n.slice(0, playerCount));
+  }, [playerCount]);
+
+  const adjPlayers = (d) => {
+    const next = playerCount + d;
+    if (next >= 3 && next <= 8) setPlayerCount(next);
+  };
+
+  const addCustomQ = () => {
+    const q = customInput.trim();
+    if (q && !customQs.includes(q)) {
+      setCustomQs([...customQs, q]);
+      setCustomInput("");
+    }
+  };
+
+  const removeCustomQ = (idx) => {
+    setCustomQs(customQs.filter((_, i) => i !== idx));
+  };
+
+  const canStart = () => {
+    if (playerCount < 3) return false;
+    if (mode === "custom" && customQs.length < totalRounds) return false;
+    if (mode === "campur" && (customQs.length + ALL_BUILTIN.length) < totalRounds) return false;
+    return true;
+  };
+
+  const startGame = () => {
+    let pool = [];
+    if (mode === "bawaan") pool = shuffle(ALL_BUILTIN);
+    else if (mode === "custom") pool = shuffle(customQs);
+    else pool = shuffle([...ALL_BUILTIN, ...customQs]);
+    setQuestions(pool.slice(0, totalRounds));
+    setCurrentRound(0);
+    setVoterIdx(0);
+    setRoundVotes({});
+    setTitleCounts({});
+    setVoteHistory([]);
+    setAllVoteDetails([]);
+    setMajorityMatches({});
+    setUniqueVotes({});
+    setPhase(PH.QUESTION);
+  };
+
+  const startVoting = () => {
+    setVoterIdx(0);
+    setRoundVotes({});
+    setPhase(PH.VOTE_PASS);
+  };
+
+  const submitVote = (targetIdx) => {
+    const nv = {...roundVotes, [voterIdx]: targetIdx};
+    setRoundVotes(nv);
+    if (voterIdx + 1 < names.length) {
+      setVoterIdx(voterIdx + 1);
+      setPhase(PH.VOTE_PASS);
+    } else {
+      // Tally
+      const tally = {};
+      names.forEach((_, i) => { tally[i] = 0; });
+      Object.values(nv).forEach(v => { tally[v] = (tally[v] || 0) + 1; });
+      const maxV = Math.max(...Object.values(tally));
+      const winners = Object.keys(tally).filter(k => tally[k] === maxV).map(Number);
+
+      // Update title counts
+      const newTC = {...titleCounts};
+      winners.forEach(w => { newTC[names[w]] = (newTC[names[w]] || 0) + 1; });
+      setTitleCounts(newTC);
+
+      // Track stats
+      const newMM = {...majorityMatches};
+      const newUV = {...uniqueVotes};
+      names.forEach((name, i) => {
+        const myVote = nv[i];
+        if (winners.includes(myVote)) {
+          newMM[name] = (newMM[name] || 0) + 1;
+        }
+        // Check if unique: no one else voted the same
+        const othersVotes = Object.entries(nv).filter(([k]) => Number(k) !== i).map(([,v]) => v);
+        if (!othersVotes.includes(myVote)) {
+          newUV[name] = (newUV[name] || 0) + 1;
+        }
+      });
+      setMajorityMatches(newMM);
+      setUniqueVotes(newUV);
+
+      // Vote detail for transparency
+      const voteMap = {};
+      Object.entries(nv).forEach(([voter, target]) => {
+        voteMap[names[Number(voter)]] = names[target];
+      });
+
+      setVoteHistory([...voteHistory, {
+        question: questions[currentRound],
+        tally,
+        winners: winners.map(w => names[w]),
+        maxVotes: maxV,
+      }]);
+      setAllVoteDetails([...allVoteDetails, voteMap]);
+
+      setPhase(PH.REVEAL);
+    }
+  };
+
+  const nextRound = () => {
+    if (currentRound + 1 >= totalRounds) {
+      setPhase(PH.RESULTS);
+    } else {
+      setCurrentRound(currentRound + 1);
+      setVoterIdx(0);
+      setRoundVotes({});
+      setPhase(PH.QUESTION);
+    }
+  };
+
+  const resetGame = () => {
+    setPhase(PH.SETUP);
+    setCurrentRound(0);
+    setQuestions([]);
+    setRoundVotes({});
+    setTitleCounts({});
+    setVoteHistory([]);
+    setAllVoteDetails([]);
+    setMajorityMatches({});
+    setUniqueVotes({});
+  };
+
+  const playAgain = () => {
+    startGame();
+  };
+
+  // Current reveal data
+  const currentReveal = voteHistory[currentRound];
+
+  // Final stats
+  const sortedLeaderboard = useMemo(() => {
+    return names.map(n => ({ name: n, titles: titleCounts[n] || 0 }))
+      .sort((a, b) => b.titles - a.titles);
+  }, [titleCounts, names, phase]);
+
+  const topTitles = sortedLeaderboard.length ? sortedLeaderboard[0].titles : 0;
+
+  // "Selalu Kompak" — most majority matches
+  const kompakPlayer = useMemo(() => {
+    let max = 0, winner = "";
+    Object.entries(majorityMatches).forEach(([name, count]) => {
+      if (count > max) { max = count; winner = name; }
+    });
+    return winner;
+  }, [majorityMatches, phase]);
+
+  // "Paling Unik" — most unique votes
+  const uniquePlayer = useMemo(() => {
+    let max = 0, winner = "";
+    Object.entries(uniqueVotes).forEach(([name, count]) => {
+      if (count > max) { max = count; winner = name; }
+    });
+    return winner;
+  }, [uniqueVotes, phase]);
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,8vw,64px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .T2{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,5vw,36px);letter-spacing:4px;color:#ffcc00;line-height:1;margin-top:2px}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .vbtn{background:#1a1a28;border:1px solid #2a2a3a;padding:14px 16px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;justify-content:center;align-items:center;width:100%;-webkit-tap-highlight-color:transparent;font-family:'Space Mono',monospace;font-size:14px;color:#f0ede8}
+        .vbtn:hover:not(:disabled){border-color:#ff3c3c;background:#1f1f2e}
+        .vbtn:active:not(:disabled){transform:scale(.98)}
+        .vbtn.sel{border-color:#ff3c3c;background:#2a0000}
+        .vbtn:disabled{cursor:not-allowed;opacity:.6}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(160px) rotate(360deg);opacity:0}}
+        @keyframes barGrow{from{width:0}to{width:var(--bar-w)}}
+        @keyframes crownBounce{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+        .bar-anim{animation:barGrow .6s cubic-bezier(.4,0,.2,1) forwards;animation-delay:var(--bar-delay,0s)}
+        .crown-anim{animation:crownBounce .5s cubic-bezier(.2,.8,.3,1) forwards;animation-delay:.7s;transform:scale(0)}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .q-text{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,7vw,48px);letter-spacing:3px;color:#f0ede8;text-align:center;line-height:1.15;padding:16px 0}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .mode-btn{background:#1a1a28;border:1px solid #2a2a3a;color:#888;padding:10px 14px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace;font-size:12px;text-align:left;-webkit-tap-highlight-color:transparent;width:100%}
+        .mode-btn:hover{border-color:#ff3c3c55}
+        .mode-btn.active{border-color:#ff3c3c;background:#1f1f2e;color:#f0ede8}
+        .custom-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;font-size:12px;color:#ccc}
+        .custom-del{background:none;border:none;color:#ff3c3c;cursor:pointer;font-size:16px;padding:0 4px;flex-shrink:0;opacity:.6;transition:opacity .15s}
+        .custom-del:hover{opacity:1}
+        .stat-card{background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;padding:14px;text-align:center}
+        .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;cursor:pointer}
+        .toggle-track{width:42px;height:24px;border-radius:12px;background:#2a2a3a;position:relative;transition:background .2s;flex-shrink:0}
+        .toggle-track.on{background:#ff3c3c}
+        .toggle-knob{width:18px;height:18px;border-radius:50%;background:#f0ede8;position:absolute;top:3px;left:3px;transition:left .2s}
+        .toggle-track.on .toggle-knob{left:21px}
+        .recap-item{padding:10px 12px;border-bottom:1px solid #1a1a28}
+        .recap-q{font-size:12px;color:#888;margin-bottom:4px;line-height:1.4}
+        .recap-w{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#ffcc00}
+      `}</style>
+      <div className="sl" />
+      <div className="wrap">
+
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">SIAPA YANG</div>
+          <div className="T2">PALING...?</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:12,marginTop:6}}>
+            <div className="SUB">voting party game</div>
+          </div>
+          {phase !== PH.SETUP && phase !== PH.RESULTS && (
+            <div className="round-badge" style={{marginTop:8}}>{currentRound + 1} / {totalRounds}</div>
+          )}
+        </div>
+
+        {/* ─── SETUP ─── */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["pemain","Pemain"],["mode","Mode"],["opsi","Opsi"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "pemain" && (
+              <div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:16}}>
+                  <button className="cbt" onClick={() => adjPlayers(-1)} disabled={playerCount<=3}>−</button>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:42,color:"#ff3c3c",letterSpacing:4}}>{playerCount}</div>
+                    <div className="SUB">pemain</div>
+                  </div>
+                  <button className="cbt" onClick={() => adjPlayers(1)} disabled={playerCount>=8}>+</button>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {names.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "mode" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>pilih mode pertanyaan</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+                  {[
+                    ["bawaan","Bawaan",`${ALL_BUILTIN.length} pertanyaan siap pakai`],
+                    ["custom","Custom","Buat pertanyaan sendiri"],
+                    ["campur","Campur","Gabungan bawaan + custom"],
+                  ].map(([key,label,desc]) => (
+                    <button key={key} className={"mode-btn" + (mode===key?" active":"")} onClick={() => setMode(key)}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:3,color:mode===key?"#ff3c3c":"#888",marginBottom:2}}>{label}</div>
+                      <div style={{fontSize:10,color:"#555"}}>{desc}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {(mode === "custom" || mode === "campur") && (
+                  <div>
+                    <div className="hr"/>
+                    <div className="SUB" style={{marginBottom:8}}>pertanyaan custom ({customQs.length})</div>
+                    <div style={{display:"flex",gap:8,marginBottom:10}}>
+                      <input className="inp" value={customInput}
+                        onChange={e => setCustomInput(e.target.value)}
+                        placeholder="Siapa yang paling..."
+                        onKeyDown={e => { if (e.key === "Enter") addCustomQ(); }}
+                        style={{flex:1}}
+                      />
+                      <button className="btn" style={{width:"auto",padding:"10px 16px",fontSize:16}} onClick={addCustomQ}>TAMBAH</button>
+                    </div>
+                    {customQs.length > 0 && (
+                      <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:200,overflowY:"auto"}}>
+                        {customQs.map((q,i) => (
+                          <div key={i} className="custom-item">
+                            <span style={{flex:1}}>{q}</span>
+                            <button className="custom-del" onClick={() => removeCustomQ(i)}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {mode === "custom" && customQs.length < totalRounds && (
+                      <div style={{color:"#ff3c3c",fontSize:11,marginTop:8}}>
+                        Butuh minimal {totalRounds} pertanyaan (kurang {totalRounds - customQs.length})
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === "opsi" && (
+              <div>
+                <div className="SUB" style={{marginBottom:12}}>jumlah ronde</div>
+                <div style={{display:"flex",gap:8,marginBottom:20}}>
+                  {[5,10,15,20].map(n => (
+                    <button key={n} className={"mode-btn" + (totalRounds===n?" active":"")}
+                      onClick={() => setTotalRounds(n)}
+                      style={{textAlign:"center",padding:"12px 0"}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,color:totalRounds===n?"#ff3c3c":"#888"}}>{n}</div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="hr"/>
+
+                <div className="toggle-row" onClick={() => setShowVotes(!showVotes)}>
+                  <div>
+                    <div style={{fontFamily:"'Space Mono',monospace",fontSize:12,color:"#f0ede8",marginBottom:2}}>Tampilkan siapa yang vote siapa</div>
+                    <div style={{fontSize:10,color:"#555"}}>Untuk drama ekstra!</div>
+                  </div>
+                  <div className={"toggle-track" + (showVotes?" on":"")}>
+                    <div className="toggle-knob"/>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" disabled={!canStart()} onClick={startGame}>MULAI GAME</button>
+            </div>
+          </div>
+        )}
+
+        {/* ─── QUESTION DISPLAY ─── */}
+        {phase === PH.QUESTION && questions[currentRound] && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:8,opacity:.8}}>🤔</div>
+            <div className="SUB" style={{marginBottom:4}}>pertanyaan {currentRound + 1} dari {totalRounds}</div>
+            <div className="q-text">{questions[currentRound]}</div>
+            <div style={{fontSize:12,color:"#555",marginBottom:20,lineHeight:1.6}}>
+              Baca pertanyaan ini bersama-sama, lalu mulai voting!
+            </div>
+            <button className="btn" onClick={startVoting}>MULAI VOTING</button>
+          </div>
+        )}
+
+        {/* ─── VOTE PASS SCREEN ─── */}
+        {phase === PH.VOTE_PASS && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:12,opacity:.6}}>🙈</div>
+            <div className="SUB" style={{marginBottom:8}}>giliran memilih</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:38,letterSpacing:5,color:"#ff3c3c",marginBottom:8}}>{names[voterIdx]}</div>
+            <div className="SUB" style={{marginBottom:6}}>voting {voterIdx + 1} dari {names.length}</div>
+            <div style={{fontSize:12,color:"#555",marginBottom:24,lineHeight:1.6}}>
+              Pastikan hanya <b style={{color:"#f0ede8"}}>{names[voterIdx]}</b> yang melihat layar
+            </div>
+            <button className="btn" onClick={() => setPhase(PH.VOTE)}>AKU SIAP</button>
+          </div>
+        )}
+
+        {/* ─── VOTE ─── */}
+        {phase === PH.VOTE && (
+          <div className="card fi">
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div className="SUB" style={{marginBottom:4}}>pilihan</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:3,color:"#ff3c3c",marginBottom:8}}>{names[voterIdx]}</div>
+              <div style={{fontSize:12,color:"#888",lineHeight:1.5,padding:"0 8px",marginBottom:4}}>
+                {questions[currentRound]}
+              </div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {names.map((name, idx) => {
+                const selected = roundVotes[voterIdx] === idx;
+                return (
+                  <button key={idx} className={"vbtn" + (selected?" sel":"")}
+                    onClick={() => { if (roundVotes[voterIdx] === undefined) submitVote(idx); }}
+                    disabled={roundVotes[voterIdx] !== undefined}>
+                    <span>{name}</span>
+                    {selected && <span style={{color:"#ff3c3c",fontSize:16,marginLeft:8}}>✓</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="hr"/>
+            <div style={{textAlign:"center"}}>
+              <div style={{background:"#1a1a28",borderRadius:20,height:4,overflow:"hidden",marginBottom:8}}>
+                <div style={{height:4,background:"#ff3c3c",borderRadius:20,transition:"width .4s",width:((voterIdx+1)/names.length*100)+"%"}}/>
+              </div>
+              <div className="SUB">{voterIdx + 1} / {names.length}</div>
+            </div>
+          </div>
+        )}
+
+        {/* ─── REVEAL ─── */}
+        {phase === PH.REVEAL && currentReveal && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div style={{fontSize:12,color:"#888",lineHeight:1.5,padding:"0 8px",marginBottom:12}}>
+              {currentReveal.question}
+            </div>
+
+            {/* Bar chart */}
+            <div style={{padding:"8px 0",marginBottom:16}}>
+              {names.map((name, idx) => {
+                const votes = currentReveal.tally[idx] || 0;
+                const isWinner = currentReveal.winners.includes(name);
+                const barWidth = currentReveal.maxVotes > 0 ? (votes / names.length * 100) : 0;
+                const color = BAR_COLORS[idx % BAR_COLORS.length];
+                return (
+                  <div key={idx} style={{marginBottom:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        {isWinner && <span className="crown-anim" style={{display:"inline-block"}}>👑</span>}
+                        <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:isWinner?"#ffcc00":"#f0ede8",fontWeight:isWinner?"bold":"normal"}}>{name}</span>
+                      </div>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:isWinner?"#ffcc00":"#888"}}>{votes}</span>
+                    </div>
+                    <div style={{height:8,background:"#1a1a28",borderRadius:4,overflow:"hidden"}}>
+                      <div className="bar-anim" style={{
+                        "--bar-w": barWidth+"%",
+                        "--bar-delay": (idx*0.1)+"s",
+                        height:8,background:color,borderRadius:4,width:0
+                      }}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Winner announcement */}
+            <div style={{background:"#1a1a10",border:"1px solid #ffcc0033",borderRadius:6,padding:"12px",marginBottom:12}}>
+              <div style={{fontSize:10,color:"#888",letterSpacing:2,marginBottom:4,textTransform:"uppercase"}}>
+                {currentReveal.winners.length > 1 ? "Seri!" : "Pemenang"}
+              </div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:3,color:"#ffcc00"}}>
+                👑 {currentReveal.winners.join(" & ")}
+              </div>
+            </div>
+
+            {/* Vote transparency */}
+            {showVotes && allVoteDetails[currentRound] && (
+              <div style={{marginBottom:12}}>
+                <div className="SUB" style={{marginBottom:8}}>siapa vote siapa</div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {Object.entries(allVoteDetails[currentRound]).map(([voter, target]) => (
+                    <div key={voter} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",background:"#0e0e18",borderRadius:4,fontSize:11}}>
+                      <span style={{color:"#888"}}>{voter}</span>
+                      <span style={{color:"#f0ede8"}}>→ {target}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button className="btn" onClick={nextRound}>
+              {currentRound + 1 >= totalRounds ? "LIHAT HASIL" : "LANJUT"}
+            </button>
+          </div>
+        )}
+
+        {/* ─── RESULTS ─── */}
+        {phase === PH.RESULTS && (
+          <>
+            <div className="card fi" style={{textAlign:"center",position:"relative"}}>
+              <Confetti />
+              <div style={{fontSize:48,marginBottom:8}}>🏆</div>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(32,8,56),letterSpacing:4,color:"#ffcc00",marginBottom:4}}>
+                HASIL AKHIR
+              </div>
+              <div className="SUB" style={{marginBottom:20}}>{totalRounds} ronde selesai</div>
+
+              {/* Leaderboard */}
+              <div style={{marginBottom:16}}>
+                {sortedLeaderboard.map((entry, rank) => {
+                  const barW = topTitles > 0 ? (entry.titles / topTitles * 100) : 0;
+                  const medals = ["🥇","🥈","🥉"];
+                  const isTop = rank === 0 && entry.titles > 0;
+                  return (
+                    <div key={entry.name} style={{marginBottom:10,textAlign:"left"}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:18,width:28,textAlign:"center"}}>{rank < 3 ? medals[rank] : <span style={{color:"#555"}}>{rank+1}</span>}</span>
+                          <span style={{fontFamily:"'Space Mono',monospace",fontSize:13,color:isTop?"#ffcc00":"#f0ede8"}}>{entry.name}</span>
+                        </div>
+                        <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:2,color:isTop?"#ffcc00":"#888"}}>{entry.titles} 👑</span>
+                      </div>
+                      <div style={{height:6,background:"#1a1a28",borderRadius:3,overflow:"hidden",marginLeft:34}}>
+                        <div style={{height:6,background:isTop?"#ffcc00":"#ff3c3c",borderRadius:3,transition:"width .8s cubic-bezier(.4,0,.2,1)",width:barW+"%"}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Fun Stats */}
+            <div className="card fi">
+              <div className="SUB" style={{marginBottom:12,textAlign:"center"}}>penghargaan khusus</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <div className="stat-card">
+                  <div style={{fontSize:28,marginBottom:4}}>👑</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:3,color:"#888",marginBottom:2}}>Raja/Ratu Voting</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:3,color:"#ffcc00"}}>
+                    {sortedLeaderboard[0]?.titles > 0 ? sortedLeaderboard[0].name : "-"}
+                  </div>
+                  <div style={{fontSize:10,color:"#555"}}>Paling sering terpilih</div>
+                </div>
+                <div className="stat-card">
+                  <div style={{fontSize:28,marginBottom:4}}>🎯</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:3,color:"#888",marginBottom:2}}>Selalu Kompak</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:3,color:"#3cff6e"}}>
+                    {kompakPlayer || "-"}
+                  </div>
+                  <div style={{fontSize:10,color:"#555"}}>Vote-nya paling sering cocok mayoritas</div>
+                </div>
+                <div className="stat-card">
+                  <div style={{fontSize:28,marginBottom:4}}>🤷</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:3,color:"#888",marginBottom:2}}>Paling Unik</div>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:3,color:"#a0a0ff"}}>
+                    {uniquePlayer || "-"}
+                  </div>
+                  <div style={{fontSize:10,color:"#555"}}>Paling sering beda sendiri</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recap */}
+            <div className="card fi">
+              <div className="SUB" style={{marginBottom:12,textAlign:"center"}}>rekap semua ronde</div>
+              <div style={{maxHeight:300,overflowY:"auto"}}>
+                {voteHistory.map((h, i) => (
+                  <div key={i} className="recap-item">
+                    <div className="recap-q">{i+1}. {h.question}</div>
+                    <div className="recap-w">👑 {h.winners.join(" & ")}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="card fi" style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={playAgain}>MAIN LAGI</button>
+              <button className="ghost" onClick={resetGame}>PENGATURAN</button>
+            </div>
+          </>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function clamp(min, vw, max) {
+  return `clamp(${min}px, ${vw}vw, ${max}px)`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>TANTANGAN EXPRESS - Quick Challenges Keluarga</title>
+<meta name="description" content="Tantangan Express — permainan tantangan cepat untuk keluarga!"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{overflow-x:hidden}
+  body{background:#0a0a0f;color:#f0ede8;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+  #root{min-height:100dvh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 56px}
+</style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+// ─── RANDOM ANIMALS (for [HEWAN RANDOM] substitution) ───
+const ANIMALS = [
+  "Kucing","Anjing","Singa","Gajah","Monyet","Ayam","Bebek","Ular","Katak","Ikan",
+  "Burung","Kelinci","Kuda","Kambing","Sapi","Buaya","Gorila","Pinguin","Kangguru","Jerapah",
+  "Harimau","Beruang","Lumba-lumba","Kura-kura","Cumi-cumi","Lebah","Kupu-kupu","Semut"
+];
+
+// ─── CHALLENGE DATABASE ─────────────────────────────────
+const CHALLENGES = [
+  // 🏃 FISIK (Physical) — 20
+  {text:"Yang pertama menyentuh sesuatu berwarna BIRU!",type:"fisik",mode:"race",timer:10},
+  {text:"Yang pertama menyentuh sesuatu berwarna MERAH!",type:"fisik",mode:"race",timer:10},
+  {text:"Yang pertama menyentuh sesuatu dari KAYU!",type:"fisik",mode:"race",timer:10},
+  {text:"Push-up 5 kali! Yang pertama selesai menang!",type:"fisik",mode:"race",timer:30},
+  {text:"Lompat di tempat 10 kali! Tercepat menang!",type:"fisik",mode:"race",timer:20},
+  {text:"Berdiri satu kaki! Yang paling lama bertahan menang!",type:"fisik",mode:"all",timer:30},
+  {text:"Sentuh jempol kakimu tanpa menekuk lutut!",type:"fisik",mode:"race",timer:10},
+  {text:"Yang terakhir duduk... KALAH!",type:"fisik",mode:"all",timer:5},
+  {text:"Lari ke pintu terdekat dan balik! Yang pertama menang!",type:"fisik",mode:"race",timer:15},
+  {text:"Plank position! Yang paling lama bertahan menang!",type:"fisik",mode:"all",timer:30},
+  {text:"Tepuk tangan 20 kali secepat mungkin!",type:"fisik",mode:"race",timer:10},
+  {text:"Jalan jongkok ke dinding terdekat dan balik!",type:"fisik",mode:"race",timer:20},
+  {text:"Angkat satu tangan dan satu kaki berlawanan! Tahan 15 detik!",type:"fisik",mode:"all",timer:15},
+  {text:"Yang pertama bisa menyentuh siku dengan lidah... atau menyerah!",type:"fisik",mode:"race",timer:10},
+  {text:"Sit-up 5 kali! Tercepat menang!",type:"fisik",mode:"race",timer:30},
+  {text:"Putar badan 5 kali lalu jalan lurus! Yang paling lurus menang!",type:"fisik",mode:"vote",timer:20},
+  {text:"Loncat setinggi mungkin! Yang tertinggi menang!",type:"fisik",mode:"vote",timer:10},
+  {text:"Yang pertama membawa benda berwarna HIJAU ke sini!",type:"fisik",mode:"race",timer:15},
+  {text:"Tahan napas! Yang paling lama menang! (jangan dipaksakan ya!)",type:"fisik",mode:"all",timer:30},
+  {text:"Yang pertama bisa membuat bunyi 'klik' dengan jari!",type:"fisik",mode:"race",timer:10},
+
+  // 🧠 OTAK (Mental) — 20
+  {text:"Sebutkan 5 nama negara dalam 10 detik!",type:"otak",mode:"target",timer:10},
+  {text:"Sebutkan 5 nama buah dalam 10 detik!",type:"otak",mode:"target",timer:10},
+  {text:"Hitung mundur dari 30 ke 0 secepat mungkin!",type:"otak",mode:"target",timer:15},
+  {text:"Sebutkan 3 presiden Indonesia dalam 5 detik!",type:"otak",mode:"target",timer:5},
+  {text:"7 x 8 = ? Yang pertama teriak jawabannya!",type:"otak",mode:"race",timer:5},
+  {text:"Sebutkan 5 ibukota negara dalam 15 detik!",type:"otak",mode:"target",timer:15},
+  {text:"Sebutkan nama lengkap semua pemain di ruangan!",type:"otak",mode:"target",timer:15},
+  {text:"Ejakan kata 'OTORHINOLARINGOLOGI'!",type:"otak",mode:"target",timer:20},
+  {text:"Sebutkan 7 warna pelangi dalam 10 detik!",type:"otak",mode:"target",timer:10},
+  {text:"12 x 12 = ? Yang pertama jawab benar!",type:"otak",mode:"race",timer:5},
+  {text:"Sebutkan 5 hewan yang dimulai huruf K!",type:"otak",mode:"target",timer:15},
+  {text:"Sebutkan hari dalam seminggu... TERBALIK!",type:"otak",mode:"target",timer:10},
+  {text:"Sebutkan bulan dalam setahun... TERBALIK!",type:"otak",mode:"target",timer:20},
+  {text:"256 ÷ 4 = ? Yang pertama jawab benar!",type:"otak",mode:"race",timer:10},
+  {text:"Sebutkan 5 makanan khas Indonesia dalam 10 detik!",type:"otak",mode:"target",timer:10},
+  {text:"Sebutkan 3 planet terdekat dari matahari!",type:"otak",mode:"target",timer:10},
+  {text:"Siapa penemu lampu listrik? Yang pertama jawab!",type:"otak",mode:"race",timer:5},
+  {text:"Sebutkan 5 provinsi di Pulau Jawa!",type:"otak",mode:"target",timer:10},
+  {text:"Berapa hasil 15 + 27 + 38? Yang pertama jawab!",type:"otak",mode:"race",timer:10},
+  {text:"Sebutkan 5 merk mobil dalam 10 detik!",type:"otak",mode:"target",timer:10},
+
+  // 🤪 KOCAK (Silly) — 25
+  {text:"Buat suara hewan terlucu! Yang paling lucu menang!",type:"kocak",mode:"vote",timer:15},
+  {text:"Buat muka paling jelek! Yang paling jelek menang!",type:"kocak",mode:"vote",timer:10},
+  {text:"Tertawa palsu selama 10 detik tanpa berhenti!",type:"kocak",mode:"target",timer:10},
+  {text:"Bicara seperti robot selama 15 detik!",type:"kocak",mode:"target",timer:15},
+  {text:"Nyanyi 'Happy Birthday' dengan suara paling tinggi!",type:"kocak",mode:"vote",timer:15},
+  {text:"Jalan seperti penguin ke dinding dan balik!",type:"kocak",mode:"target",timer:15},
+  {text:"Buat semua orang tertawa dalam 10 detik! Tanpa menyentuh siapapun!",type:"kocak",mode:"target",timer:10},
+  {text:"Tirukan suara motor yang mogok!",type:"kocak",mode:"vote",timer:10},
+  {text:"Bilang 'pisang goreng' 10 kali secepat mungkin tanpa salah!",type:"kocak",mode:"target",timer:15},
+  {text:"Joget tanpa musik selama 10 detik!",type:"kocak",mode:"target",timer:10},
+  {text:"Buat wajah terkejut paling dramatis!",type:"kocak",mode:"vote",timer:5},
+  {text:"Bicara tanpa menunjukkan gigi selama 15 detik!",type:"kocak",mode:"target",timer:15},
+  {text:"Tirukan cara berjalan orang tua!",type:"kocak",mode:"vote",timer:10},
+  {text:"Berkedip satu mata bergantian secepat mungkin!",type:"kocak",mode:"target",timer:10},
+  {text:"Ceritakan harimu tapi setiap kata harus dimulai huruf yang sama!",type:"kocak",mode:"target",timer:20},
+  {text:"Tahan tawa! Yang pertama ketawa kalah! Lakukan hal kocak!",type:"kocak",mode:"all",timer:20},
+  {text:"Buat suara kentut paling realistis dengan mulut!",type:"kocak",mode:"vote",timer:10},
+  {text:"Bilang 'Aku cinta kamu' ke pemain di sebelahmu dengan gaya paling dramatis!",type:"kocak",mode:"target",timer:10},
+  {text:"Nyanyi lagu anak-anak dengan gaya opera!",type:"kocak",mode:"vote",timer:15},
+  {text:"Buat ekspresi wajah: sedih, marah, senang, terkejut, bingung dalam 5 detik!",type:"kocak",mode:"target",timer:5},
+  {text:"Puji pemain di sebelahmu selama 15 detik tanpa berhenti!",type:"kocak",mode:"target",timer:15},
+  {text:"Tirukan iklan TV yang terkenal!",type:"kocak",mode:"vote",timer:15},
+  {text:"Bilang huruf alfabet tapi skip semua huruf vokal!",type:"kocak",mode:"target",timer:15},
+  {text:"Coba jilat siku sendiri selama 5 detik!",type:"kocak",mode:"all",timer:5},
+  {text:"Gaya slow motion selama 10 detik!",type:"kocak",mode:"target",timer:10},
+
+  // 🎭 AKTING (Acting) — 20
+  {text:"Peragakan [HEWAN RANDOM] tanpa suara! Yang lain tebak!",type:"akting",mode:"target",timer:15},
+  {text:"Akting jadi bayi selama 10 detik!",type:"akting",mode:"target",timer:10},
+  {text:"Peragakan sedang makan sesuatu sangat pedas!",type:"akting",mode:"target",timer:10},
+  {text:"Akting jadi penjahat dalam film action!",type:"akting",mode:"vote",timer:15},
+  {text:"Tirukan guru yang marah!",type:"akting",mode:"vote",timer:10},
+  {text:"Peragakan sedang di toilet dan kertas habis!",type:"akting",mode:"target",timer:10},
+  {text:"Akting jadi presenter berita membaca berita aneh!",type:"akting",mode:"target",timer:15},
+  {text:"Tirukan cara salah satu pemain lain tertawa! Yang lain tebak siapa!",type:"akting",mode:"target",timer:10},
+  {text:"Akting proposal pernikahan ke bantal/benda terdekat!",type:"akting",mode:"target",timer:15},
+  {text:"Peragakan reaksimu kalau menang lotre 100 milyar!",type:"akting",mode:"vote",timer:10},
+  {text:"Tirukan 3 hewan berbeda dalam 10 detik!",type:"akting",mode:"target",timer:10},
+  {text:"Akting jadi orang yang ketahuan bohong!",type:"akting",mode:"vote",timer:10},
+  {text:"Peragakan sedang stuck di lift!",type:"akting",mode:"target",timer:15},
+  {text:"Akting jadi YouTuber yang baru dapat 1 juta subscriber!",type:"akting",mode:"target",timer:10},
+  {text:"Tirukan cara jalan model di catwalk!",type:"akting",mode:"vote",timer:10},
+  {text:"Akting sedang ditakuti hantu!",type:"akting",mode:"vote",timer:10},
+  {text:"Peragakan reaksi makan durian pertama kali!",type:"akting",mode:"target",timer:10},
+  {text:"Akting jadi komentator sepak bola saat gol!",type:"akting",mode:"target",timer:10},
+  {text:"Tirukan gaya superhero favorit!",type:"akting",mode:"vote",timer:10},
+  {text:"Akting sedang interview kerja yang sangat nervous!",type:"akting",mode:"target",timer:15},
+
+  // ⚡ KILAT (Speed) — 15
+  {text:"TANGAN DI KEPALA! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"PEGANG HIDUNG! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"BERDIRI! Yang terakhir berdiri kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"ANGKAT TANGAN KANAN! Yang salah angkat kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"TEPUK 3 KALI! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"Yang pertama bilang nama pemain paling tua!",type:"kilat",mode:"race",timer:5},
+  {text:"Yang pertama bilang nama pemain paling muda!",type:"kilat",mode:"race",timer:5},
+  {text:"SENTUH LANTAI! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"Yang pertama menunjuk ke UTARA!",type:"kilat",mode:"race",timer:5},
+  {text:"TUTUP MATA! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"Yang pertama membuat bentuk hati dengan tangan!",type:"kilat",mode:"race",timer:5},
+  {text:"SILANGKAN TANGAN! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"Yang pertama bilang warna baju pemain di sebelahnya!",type:"kilat",mode:"race",timer:5},
+  {text:"PEGANG TELINGA! Yang terakhir kalah!",type:"kilat",mode:"all",timer:3},
+  {text:"Yang pertama bisa bersiul!",type:"kilat",mode:"race",timer:5},
+];
+
+const TYPE_INFO = {
+  fisik: {emoji:"🏃",label:"Fisik",color:"#3cff6e"},
+  otak:  {emoji:"🧠",label:"Otak",color:"#60a0ff"},
+  kocak: {emoji:"🤪",label:"Kocak",color:"#ffcc00"},
+  akting:{emoji:"🎭",label:"Akting",color:"#ff80ff"},
+  kilat: {emoji:"⚡",label:"Kilat",color:"#ff3c3c"},
+};
+
+const MODE_INFO = {
+  race:  {emoji:"🏁",label:"Race",color:"#ff3c3c",bg:"#3a0000",desc:"Yang pertama selesai menang!"},
+  vote:  {emoji:"🗳️",label:"Vote",color:"#b060ff",bg:"#1a0030",desc:"Voting siapa yang terbaik!"},
+  target:{emoji:"🎯",label:"Target",color:"#ff8c00",bg:"#2a1500",desc:"Satu pemain ditantang!"},
+  all:   {emoji:"👥",label:"Semua",color:"#40a0ff",bg:"#001a3a",desc:"Semua ikut! Yang terakhir kalah!"},
+};
+
+const MEDALS = ["🥇","🥈","🥉"];
+const PH = {SETUP:"setup",CHALLENGE:"challenge",SCORING:"scoring",RESULT:"result"};
+
+// ─── SHUFFLE ────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── CONFETTI ───────────────────────────────────────────
+function Confetti({color}) {
+  const pieces = useRef(Array.from({length:24}, (_,i) => ({
+    x: Math.random()*100, delay: Math.random()*2, dur: 1.5+Math.random()*2,
+    size: 4+Math.random()*6, drift: -30+Math.random()*60, hue: i*15,
+  }))).current;
+  return (
+    <div style={{position:"absolute",top:0,left:0,right:0,height:120,overflow:"hidden",pointerEvents:"none",zIndex:2}}>
+      {pieces.map((p,i)=>(
+        <div key={i} style={{
+          position:"absolute",left:p.x+"%",top:-10,width:p.size,height:p.size*1.4,
+          background:color||`hsl(${p.hue},80%,60%)`,borderRadius:1,opacity:.85,
+          animation:`confDrop ${p.dur}s ${p.delay}s ease-in forwards`,
+          transform:`rotate(${p.drift}deg)`,
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ─── MAIN APP ───────────────────────────────────────────
+function App() {
+  const [phase, setPhase] = useState(PH.SETUP);
+  const [names, setNames] = useState(["Pemain 1","Pemain 2","Pemain 3","Pemain 4"]);
+  const [playerCount, setPlayerCount] = useState(4);
+  const [totalRounds, setTotalRounds] = useState(15);
+  const [enabledTypes, setEnabledTypes] = useState({fisik:true,otak:true,kocak:true,akting:true,kilat:true});
+  const [tab, setTab] = useState("pemain");
+
+  // Game state
+  const [currentRound, setCurrentRound] = useState(0);
+  const [challenge, setChallenge] = useState(null);
+  const [targetPlayer, setTargetPlayer] = useState(null);
+  const [timerVal, setTimerVal] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerDone, setTimerDone] = useState(false);
+  const [scores, setScores] = useState({});
+  const [usedChallenges, setUsedChallenges] = useState([]);
+  const [targetCounts, setTargetCounts] = useState({});
+  const [challengeVisible, setChallengeVisible] = useState(false);
+  const [isKilatFlash, setIsKilatFlash] = useState(false);
+  const [categoryWins, setCategoryWins] = useState({});
+  const timerRef = useRef(null);
+
+  // Track category wins per player: {playerName: {fisik:0, otak:0, ...}}
+  // Track mode wins: {playerName: {race:0, vote:0, ...}}
+  const [modeWins, setModeWins] = useState({});
+
+  const enabledCount = Object.values(enabledTypes).filter(Boolean).length;
+
+  useEffect(() => {
+    const n = [...names];
+    while (n.length < playerCount) n.push("Pemain " + (n.length + 1));
+    setNames(n.slice(0, playerCount));
+  }, [playerCount]);
+
+  // Timer effect
+  useEffect(() => {
+    if (timerRunning && timerVal > 0) {
+      timerRef.current = setTimeout(() => setTimerVal(v => v - 1), 1000);
+      return () => clearTimeout(timerRef.current);
+    }
+    if (timerRunning && timerVal <= 0) {
+      setTimerRunning(false);
+      setTimerDone(true);
+    }
+  }, [timerRunning, timerVal]);
+
+  const toggleType = (t) => {
+    const next = {...enabledTypes, [t]: !enabledTypes[t]};
+    if (Object.values(next).filter(Boolean).length < 2) return;
+    setEnabledTypes(next);
+  };
+
+  const substituteText = (text) => {
+    return text.replace("[HEWAN RANDOM]", ANIMALS[Math.floor(Math.random()*ANIMALS.length)]);
+  };
+
+  const pickTarget = () => {
+    const minCount = Math.min(...names.map(n => targetCounts[n] || 0));
+    const candidates = names.filter(n => (targetCounts[n] || 0) === minCount);
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    setTargetCounts(prev => ({...prev, [chosen]: (prev[chosen] || 0) + 1}));
+    return chosen;
+  };
+
+  const pickChallenge = () => {
+    const enabledList = Object.entries(enabledTypes).filter(([,v]) => v).map(([k]) => k);
+    let available = CHALLENGES.filter((c, i) => enabledList.includes(c.type) && !usedChallenges.includes(i));
+    if (available.length === 0) {
+      setUsedChallenges([]);
+      available = CHALLENGES.filter(c => enabledList.includes(c.type));
+    }
+    const picked = available[Math.floor(Math.random() * available.length)];
+    const idx = CHALLENGES.indexOf(picked);
+    setUsedChallenges(prev => [...prev, idx]);
+    return {...picked, text: substituteText(picked.text)};
+  };
+
+  const startGame = () => {
+    const initScores = {};
+    const initCatWins = {};
+    const initModeWins = {};
+    names.forEach(n => {
+      initScores[n] = 0;
+      initCatWins[n] = {fisik:0,otak:0,kocak:0,akting:0,kilat:0};
+      initModeWins[n] = {race:0,vote:0,target:0,all:0};
+    });
+    setScores(initScores);
+    setCategoryWins(initCatWins);
+    setModeWins(initModeWins);
+    setTargetCounts({});
+    setUsedChallenges([]);
+    setCurrentRound(0);
+    nextChallenge(0);
+  };
+
+  const nextChallenge = (round) => {
+    const r = round !== undefined ? round : currentRound;
+    if (r >= totalRounds) {
+      setPhase(PH.RESULT);
+      return;
+    }
+    const c = pickChallenge();
+    setChallenge(c);
+    setCurrentRound(r + 1);
+    setTimerVal(c.timer);
+    setTimerRunning(false);
+    setTimerDone(false);
+    setChallengeVisible(false);
+
+    let tp = null;
+    if (c.mode === "target") {
+      tp = pickTarget();
+    }
+    setTargetPlayer(tp);
+
+    // Kilat flash effect
+    if (c.type === "kilat") {
+      setIsKilatFlash(true);
+      setTimeout(() => setIsKilatFlash(false), 600);
+    } else {
+      setIsKilatFlash(false);
+    }
+
+    setPhase(PH.CHALLENGE);
+    setTimeout(() => setChallengeVisible(true), 50);
+  };
+
+  const startTimer = () => {
+    setTimerRunning(true);
+  };
+
+  const skipTimer = () => {
+    setTimerRunning(false);
+    setTimerDone(true);
+    setTimerVal(0);
+    clearTimeout(timerRef.current);
+  };
+
+  const goToScoring = () => {
+    setPhase(PH.SCORING);
+  };
+
+  const awardWinner = (playerName) => {
+    if (!challenge) return;
+    setScores(prev => ({...prev, [playerName]: (prev[playerName]||0) + 2}));
+    setCategoryWins(prev => {
+      const next = {...prev};
+      if (next[playerName]) next[playerName] = {...next[playerName], [challenge.type]: (next[playerName][challenge.type]||0)+1};
+      return next;
+    });
+    setModeWins(prev => {
+      const next = {...prev};
+      if (next[playerName]) next[playerName] = {...next[playerName], [challenge.mode]: (next[playerName][challenge.mode]||0)+1};
+      return next;
+    });
+    nextChallenge();
+  };
+
+  const awardTargetPass = () => {
+    if (!challenge || !targetPlayer) return;
+    setScores(prev => ({...prev, [targetPlayer]: (prev[targetPlayer]||0) + 2}));
+    setCategoryWins(prev => {
+      const next = {...prev};
+      if (next[targetPlayer]) next[targetPlayer] = {...next[targetPlayer], [challenge.type]: (next[targetPlayer][challenge.type]||0)+1};
+      return next;
+    });
+    setModeWins(prev => {
+      const next = {...prev};
+      if (next[targetPlayer]) next[targetPlayer] = {...next[targetPlayer], [challenge.mode]: (next[targetPlayer][challenge.mode]||0)+1};
+      return next;
+    });
+    nextChallenge();
+  };
+
+  const awardTargetFail = () => {
+    nextChallenge();
+  };
+
+  const awardLoser = (playerName) => {
+    if (!challenge) return;
+    setScores(prev => ({...prev, [playerName]: (prev[playerName]||0) - 1}));
+    nextChallenge();
+  };
+
+  const awardNoLoser = () => {
+    nextChallenge();
+  };
+
+  const resetAll = () => {
+    setPhase(PH.SETUP);
+    setCurrentRound(0);
+    setChallenge(null);
+    setScores({});
+    setCategoryWins({});
+    setModeWins({});
+    setTargetCounts({});
+    setUsedChallenges([]);
+    setTimerRunning(false);
+    setTimerDone(false);
+  };
+
+  const goToSetup = () => {
+    setPhase(PH.SETUP);
+  };
+
+  // Sorted leaderboard
+  const leaderboard = useMemo(() => {
+    return Object.entries(scores).sort((a,b) => b[1] - a[1]);
+  }, [scores]);
+  const maxScore = leaderboard.length ? Math.max(leaderboard[0][1], 1) : 1;
+
+  // Fun awards
+  const funAwards = useMemo(() => {
+    const awards = [];
+    // Si Kilat — most kilat type wins
+    let bestKilat = {name:"",count:0};
+    Object.entries(categoryWins).forEach(([name,cats]) => {
+      if ((cats.kilat||0) > bestKilat.count) bestKilat = {name, count:cats.kilat};
+    });
+    if (bestKilat.count > 0) awards.push({emoji:"⚡",title:"Si Kilat",name:bestKilat.name,desc:"Menang "+bestKilat.count+" tantangan kilat"});
+
+    // Aktor Terbaik — most vote wins
+    let bestActor = {name:"",count:0};
+    Object.entries(modeWins).forEach(([name,modes]) => {
+      if ((modes.vote||0) > bestActor.count) bestActor = {name, count:modes.vote};
+    });
+    if (bestActor.count > 0) awards.push({emoji:"🎭",title:"Aktor Terbaik",name:bestActor.name,desc:"Menang "+bestActor.count+" tantangan vote"});
+
+    // Si Kuat — most fisik wins
+    let bestPhys = {name:"",count:0};
+    Object.entries(categoryWins).forEach(([name,cats]) => {
+      if ((cats.fisik||0) > bestPhys.count) bestPhys = {name, count:cats.fisik};
+    });
+    if (bestPhys.count > 0) awards.push({emoji:"💪",title:"Si Kuat",name:bestPhys.name,desc:"Menang "+bestPhys.count+" tantangan fisik"});
+
+    // Si Pintar — most otak wins
+    let bestBrain = {name:"",count:0};
+    Object.entries(categoryWins).forEach(([name,cats]) => {
+      if ((cats.otak||0) > bestBrain.count) bestBrain = {name, count:cats.otak};
+    });
+    if (bestBrain.count > 0) awards.push({emoji:"🧠",title:"Si Pintar",name:bestBrain.name,desc:"Menang "+bestBrain.count+" tantangan otak"});
+
+    return awards;
+  }, [categoryWins, modeWins]);
+
+  const timerPct = challenge ? timerVal / challenge.timer : 1;
+  const timerColor = timerPct > 0.5 ? "#3cff6e" : timerPct > 0.25 ? "#ffcc00" : "#ff3c3c";
+  const timerUrgent = timerPct <= 0.25 && timerRunning;
+
+  return (
+    <div style={{minHeight:"100dvh",background:"#0a0a0f",color:"#f0ede8",fontFamily:"'Courier New',monospace",display:"flex",flexDirection:"column",alignItems:"center",padding:"24px 16px 56px"}}>
+      <style>{`
+        *{box-sizing:border-box;margin:0;padding:0}
+        .T{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,8vw,72px);letter-spacing:6px;color:#ff3c3c;text-shadow:4px 4px 0 #7a0000,0 0 40px #ff3c3c88;line-height:1}
+        .SUB{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:4px;color:#666;text-transform:uppercase}
+        .card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:20px;width:100%;max-width:460px;position:relative;overflow:hidden}
+        .btn{background:#ff3c3c;color:#fff;border:none;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;cursor:pointer;width:100%;border-radius:6px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:hover:not(:disabled){background:#ff5555;transform:translateY(-1px);box-shadow:0 4px 20px #ff3c3c55}
+        .btn:active:not(:disabled){transform:scale(.98)}
+        .btn:disabled{opacity:.35;cursor:not-allowed}
+        .ghost{background:transparent;color:#888;border:1px solid #2a2a3a;padding:10px;font-family:'Space Mono',monospace;font-size:12px;cursor:pointer;border-radius:6px;transition:all .15s;width:100%;-webkit-tap-highlight-color:transparent}
+        .ghost:hover{border-color:#ff3c3c;color:#ff3c3c}
+        .ghost:active{transform:scale(.98)}
+        .inp{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;border-radius:6px;width:100%;outline:none;transition:border-color .2s}
+        .inp:focus{border-color:#ff3c3c;box-shadow:0 0 0 3px #ff3c3c22}
+        .cbt{background:#1a1a28;border:1px solid #2a2a3a;color:#f0ede8;width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:monospace;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .cbt:hover:not(:disabled){border-color:#ff3c3c;color:#ff3c3c}
+        .cbt:active:not(:disabled){transform:scale(.92)}
+        .cbt:disabled{opacity:.25;cursor:not-allowed}
+        .tab{flex:1;background:transparent;border:1px solid #2a2a3a;color:#666;padding:10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;cursor:pointer;transition:all .15s;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+        .tab:first-child{border-radius:6px 0 0 6px}
+        .tab:last-child{border-radius:0 6px 6px 0}
+        .tab.a{background:#1a1a28;border-color:#ff3c3c;color:#f0ede8}
+        .fi{animation:fi .4s cubic-bezier(.2,.8,.3,1)}
+        @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes confDrop{0%{transform:translateY(0) rotate(0deg);opacity:.9}100%{transform:translateY(140px) rotate(360deg);opacity:0}}
+        @keyframes bounce{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.95)}100%{transform:scale(1);opacity:1}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+        @keyframes urgentPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.12)}}
+        @keyframes kilatFlash{0%{opacity:0}10%{opacity:1}20%{opacity:0}30%{opacity:1}50%{opacity:0}100%{opacity:0}}
+        @keyframes slideIn{from{opacity:0;transform:translateY(30px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .challenge-enter{animation:slideIn .5s cubic-bezier(.2,.8,.3,1)}
+        .timer-urgent{animation:urgentPulse .5s ease-in-out infinite}
+        .kilat-flash{animation:kilatFlash .6s ease-out}
+        .sl{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px);pointer-events:none;z-index:0}
+        .wrap{position:relative;z-index:1;width:100%;max-width:460px;display:flex;flex-direction:column;gap:16px}
+        .lbw{height:6px;background:#1a1a28;border-radius:3px;margin-top:4px;overflow:hidden}
+        .lbb{height:6px;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+        .pts{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;min-width:56px;text-align:right;flex-shrink:0}
+        .pbtn{background:#1a1a28;border:1px solid #2a2a3a;padding:14px 16px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;width:100%;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#f0ede8;-webkit-tap-highlight-color:transparent}
+        .pbtn:hover{border-color:#ff3c3c;background:#1f1f2e}
+        .pbtn:active{transform:scale(.98);background:#2a0000}
+        .mode-badge{display:inline-flex;align-items:center;gap:6px;border-radius:4px;padding:6px 14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px}
+        .type-badge{display:inline-flex;align-items:center;gap:4px;border-radius:4px;padding:4px 10px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px}
+        .round-badge{background:#1a1a28;border:1px solid #2a2a3a;border-radius:20px;padding:4px 14px;font-family:'Space Mono',monospace;font-size:10px;color:#888;letter-spacing:2px;display:inline-block}
+        .toggle-btn{background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;padding:10px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent}
+        .toggle-btn:hover{border-color:#555}
+        .toggle-btn.on{border-color:#ff3c3c;background:#1f1020}
+        .toggle-btn.on .toggle-dot{background:#ff3c3c}
+        .toggle-dot{width:10px;height:10px;border-radius:50%;background:#333;transition:all .2s;flex-shrink:0}
+        .timer-ring{width:100px;height:100px;position:relative;margin:0 auto}
+        .timer-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px}
+        .award-card{background:#12121a;border:1px solid #2a2a3a;border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+        .hr{border:none;border-top:1px solid #1e1e2e;margin:12px 0}
+        .round-opt{background:#1a1a28;border:1px solid #2a2a3a;border-radius:6px;padding:10px 16px;cursor:pointer;transition:all .15s;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;text-align:center;-webkit-tap-highlight-color:transparent;color:#888}
+        .round-opt:hover{border-color:#555}
+        .round-opt.sel{border-color:#ff3c3c;color:#f0ede8;background:#1f1020}
+      `}</style>
+      <div className="sl" />
+
+      {/* Kilat flash overlay */}
+      {isKilatFlash && (
+        <div className="kilat-flash" style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#ff3c3c",zIndex:100,pointerEvents:"none"}} />
+      )}
+
+      <div className="wrap">
+        {/* HEADER */}
+        <div style={{textAlign:"center"}}>
+          <div className="T">TANTANGAN</div>
+          <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:8,marginTop:2}}>
+            <div className="SUB">express</div>
+          </div>
+          {phase !== PH.SETUP && phase !== PH.RESULT && (
+            <div className="round-badge" style={{marginTop:8}}>Ronde {currentRound} / {totalRounds}</div>
+          )}
+        </div>
+
+        {/* ═══ SETUP ═══ */}
+        {phase === PH.SETUP && (
+          <div className="card fi">
+            <div style={{display:"flex",marginBottom:20}}>
+              {[["pemain","Pemain"],["ronde","Ronde"],["tipe","Tipe"]].map(([k,l]) => (
+                <button key={k} className={"tab" + (tab===k?" a":"")} onClick={() => setTab(k)}>{l}</button>
+              ))}
+            </div>
+
+            {tab === "pemain" && (
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+                  <div className="SUB" style={{flex:1}}>jumlah pemain</div>
+                  <button className="cbt" onClick={() => setPlayerCount(Math.max(2, playerCount-1))} disabled={playerCount<=2}>−</button>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,minWidth:26,textAlign:"center",color:"#ff3c3c"}}>{playerCount}</span>
+                  <button className="cbt" onClick={() => setPlayerCount(Math.min(8, playerCount+1))} disabled={playerCount>=8}>+</button>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {names.map((n,i) => (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,color:"#555",minWidth:20}}>{i+1}</span>
+                      <input className="inp" value={n}
+                        onChange={e => {const u=[...names]; u[i]=e.target.value; setNames(u);}}
+                        placeholder={"Pemain " + (i+1)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {tab === "ronde" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>jumlah ronde</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  {[10,15,20,30].map(n => (
+                    <button key={n} className={"round-opt" + (totalRounds===n?" sel":"")} onClick={() => setTotalRounds(n)}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <div style={{fontSize:11,color:"#555",marginTop:12,textAlign:"center",lineHeight:1.6}}>
+                  Estimasi waktu: <b style={{color:"#f0ede8"}}>{Math.round(totalRounds * 0.7)}-{Math.round(totalRounds * 1.2)} menit</b>
+                </div>
+              </div>
+            )}
+
+            {tab === "tipe" && (
+              <div>
+                <div className="SUB" style={{marginBottom:14}}>tipe tantangan (min. 2)</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {Object.entries(TYPE_INFO).map(([key,info]) => (
+                    <button key={key} className={"toggle-btn" + (enabledTypes[key]?" on":"")} onClick={() => toggleType(key)}>
+                      <div className="toggle-dot" />
+                      <span style={{fontSize:18}}>{info.emoji}</span>
+                      <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:enabledTypes[key]?info.color:"#555"}}>{info.label}</span>
+                      <span style={{flex:1}} />
+                      <span style={{fontSize:10,color:"#555",fontFamily:"'Space Mono',monospace"}}>
+                        {CHALLENGES.filter(c => c.type===key).length} tantangan
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div style={{marginTop:12,textAlign:"center"}}>
+                  <span style={{fontSize:11,color:"#555"}}>Total: </span>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:"#ff3c3c"}}>
+                    {CHALLENGES.filter(c => enabledTypes[c.type]).length}
+                  </span>
+                  <span style={{fontSize:11,color:"#555"}}> tantangan tersedia</span>
+                </div>
+              </div>
+            )}
+
+            <div style={{marginTop:20}}>
+              <button className="btn" disabled={enabledCount < 2} onClick={startGame}>
+                MULAI GAME
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ CHALLENGE ═══ */}
+        {phase === PH.CHALLENGE && challenge && (
+          <div className={challengeVisible ? "card challenge-enter" : "card"} style={{textAlign:"center",opacity:challengeVisible?1:0,transition:"opacity .2s"}}>
+            {/* Type + Mode badges */}
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+              <div className="type-badge" style={{background:TYPE_INFO[challenge.type]?.color+"18",border:"1px solid "+TYPE_INFO[challenge.type]?.color+"44"}}>
+                <span>{TYPE_INFO[challenge.type]?.emoji}</span>
+                <span style={{color:TYPE_INFO[challenge.type]?.color}}>{TYPE_INFO[challenge.type]?.label}</span>
+              </div>
+              <div className="mode-badge" style={{background:MODE_INFO[challenge.mode]?.bg,border:"1px solid "+MODE_INFO[challenge.mode]?.color+"44"}}>
+                <span>{MODE_INFO[challenge.mode]?.emoji}</span>
+                <span style={{color:MODE_INFO[challenge.mode]?.color}}>{MODE_INFO[challenge.mode]?.label}</span>
+              </div>
+            </div>
+
+            {/* Target player highlight */}
+            {challenge.mode === "target" && targetPlayer && (
+              <div style={{marginBottom:16}}>
+                <div className="SUB" style={{marginBottom:4,color:MODE_INFO.target.color}}>tantangan untuk</div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:clamp(36,8),letterSpacing:4,color:MODE_INFO.target.color,textShadow:"0 0 20px "+MODE_INFO.target.color+"66"}}>
+                  {targetPlayer}!
+                </div>
+              </div>
+            )}
+
+            {/* Challenge text */}
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:"clamp(24px, 6vw, 42px)",letterSpacing:2,lineHeight:1.2,color:"#f0ede8",margin:"12px 0 24px",padding:"0 8px"}}>
+              {challenge.text}
+            </div>
+
+            {/* Timer */}
+            <div style={{marginBottom:20}}>
+              <div className={timerUrgent?"timer-urgent":""} style={{position:"relative",margin:"0 auto",width:100,height:100}}>
+                <svg viewBox="0 0 100 100" style={{transform:"rotate(-90deg)",width:100,height:100}}>
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="#1a1a28" strokeWidth="6" />
+                  <circle cx="50" cy="50" r="42" fill="none" stroke={timerColor} strokeWidth="6"
+                    strokeDasharray={2*Math.PI*42} strokeDashoffset={2*Math.PI*42*(1-timerPct)}
+                    strokeLinecap="round" style={{transition:timerRunning?"stroke-dashoffset 1s linear":"none"}} />
+                </svg>
+                <div className="timer-text" style={{color:timerColor}}>{timerVal}</div>
+              </div>
+              <div style={{fontSize:10,color:"#555",marginTop:6,letterSpacing:2,fontFamily:"'Space Mono',monospace"}}>DETIK</div>
+            </div>
+
+            {/* Timer controls */}
+            {!timerRunning && !timerDone && (
+              <button className="btn" onClick={startTimer} style={{background:MODE_INFO[challenge.mode]?.color||"#ff3c3c"}}>
+                MULAI TIMER
+              </button>
+            )}
+            {timerRunning && (
+              <button className="ghost" onClick={skipTimer}>SKIP TIMER</button>
+            )}
+            {timerDone && (
+              <div>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ff3c3c",marginBottom:16}}>WAKTU HABIS!</div>
+                <button className="btn" onClick={goToScoring}>NILAI</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ SCORING ═══ */}
+        {phase === PH.SCORING && challenge && (
+          <div className="card fi" style={{textAlign:"center"}}>
+            <div className="SUB" style={{marginBottom:6}}>
+              {challenge.mode === "race" && "Siapa yang MENANG?"}
+              {challenge.mode === "vote" && "Siapa yang TERBAIK?"}
+              {challenge.mode === "target" && (targetPlayer + " berhasil?")}
+              {challenge.mode === "all" && "Siapa yang KALAH? (terakhir)"}
+            </div>
+
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:"#555",marginBottom:16}}>
+              {challenge.mode === "race" && "+2 poin untuk pemenang"}
+              {challenge.mode === "vote" && "+2 poin untuk terbaik"}
+              {challenge.mode === "target" && "Berhasil = +2 poin"}
+              {challenge.mode === "all" && "-1 poin untuk yang kalah"}
+            </div>
+
+            <hr className="hr" />
+
+            {/* Race / Vote: pick a winner */}
+            {(challenge.mode === "race" || challenge.mode === "vote") && (
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:12}}>
+                {names.map((n,i) => (
+                  <button key={i} className="pbtn" onClick={() => awardWinner(n)}>
+                    <span>{n}</span>
+                    <span style={{color:"#3cff6e",fontSize:14}}>+2</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Target: pass/fail */}
+            {challenge.mode === "target" && (
+              <div style={{display:"flex",gap:10,marginTop:16}}>
+                <button className="btn" style={{background:"#3cff6e",color:"#000",flex:1}} onClick={awardTargetPass}>
+                  BERHASIL ✓
+                </button>
+                <button className="btn" style={{background:"#ff3c3c",flex:1}} onClick={awardTargetFail}>
+                  GAGAL ✗
+                </button>
+              </div>
+            )}
+
+            {/* All: pick loser */}
+            {challenge.mode === "all" && (
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:12}}>
+                {names.map((n,i) => (
+                  <button key={i} className="pbtn" onClick={() => awardLoser(n)}>
+                    <span>{n}</span>
+                    <span style={{color:"#ff3c3c",fontSize:14}}>-1</span>
+                  </button>
+                ))}
+                <button className="ghost" style={{marginTop:4}} onClick={awardNoLoser}>
+                  TIDAK ADA YANG KALAH
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══ RESULT ═══ */}
+        {phase === PH.RESULT && (
+          <div className="fi" style={{width:"100%",display:"flex",flexDirection:"column",gap:16}}>
+            <div className="card" style={{textAlign:"center",position:"relative",overflow:"hidden"}}>
+              <Confetti />
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:4,color:"#ffcc00",marginBottom:4}}>
+                SELESAI!
+              </div>
+              <div style={{fontSize:11,color:"#666",letterSpacing:2,fontFamily:"'Space Mono',monospace",marginBottom:20}}>
+                {totalRounds} RONDE SELESAI
+              </div>
+
+              {/* Leaderboard */}
+              <div style={{textAlign:"left"}}>
+                {leaderboard.map(([name, pts], i) => (
+                  <div key={name} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:"1px solid #1a1a28"}}>
+                    <span style={{fontSize:20,width:28,textAlign:"center"}}>{i < 3 ? MEDALS[i] : (i+1)}</span>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:i===0?"#ffcc00":"#f0ede8"}}>{name}</div>
+                      <div className="lbw">
+                        <div className="lbb" style={{width:Math.max(0,(pts/maxScore)*100)+"%",background:i===0?"#ffcc00":i===1?"#c0c0c0":i===2?"#cd7f32":"#ff3c3c"}} />
+                      </div>
+                    </div>
+                    <div className="pts" style={{color:i===0?"#ffcc00":"#f0ede8"}}>{pts}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Fun Awards */}
+            {funAwards.length > 0 && (
+              <div className="card">
+                <div className="SUB" style={{marginBottom:12}}>penghargaan khusus</div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {funAwards.map((a,i) => (
+                    <div key={i} className="award-card">
+                      <span style={{fontSize:28}}>{a.emoji}</span>
+                      <div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:"#ffcc00"}}>{a.title}</div>
+                        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:"#f0ede8"}}>{a.name}</div>
+                        <div style={{fontSize:10,color:"#555"}}>{a.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button className="btn" onClick={startGame}>MAIN LAGI</button>
+              <button className="ghost" onClick={goToSetup}>PENGATURAN</button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{textAlign:"center",marginTop:16}}>
+          <div style={{fontSize:10,color:"#333",letterSpacing:2,fontFamily:"'Space Mono',monospace"}}>
+            {CHALLENGES.length} TANTANGAN TERSEDIA
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function clamp(px, vw) {
+  return `clamp(${px*0.7}px, ${vw}vw, ${px*1.3}px)`;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
