@@ -27,9 +27,11 @@ struct ImpostorRevealView: View {
                 .foregroundColor(HuddleColors.textPrimary)
 
             if game.showWord {
-                // Word / Role reveal
+                // Word reveal — NO role shown for civilian/impostor
+                // They look identical so nobody knows who is the impostor
                 VStack(spacing: 16) {
                     if currentPlayer.role == .mrWhite {
+                        // Mr. White MUST know their role (no word, special mechanic)
                         roleBadge(role: .mrWhite)
                         Text("You have NO word.")
                             .font(HuddleFont.body())
@@ -40,6 +42,7 @@ struct ImpostorRevealView: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 32)
                     } else if currentPlayer.role == .joker {
+                        // Joker MUST know their role (goal: get eliminated)
                         roleBadge(role: .joker)
                         Text("Your word is:")
                             .font(HuddleFont.caption(11))
@@ -47,21 +50,23 @@ struct ImpostorRevealView: View {
                             .foregroundColor(HuddleColors.textMuted)
                         Text(currentPlayer.word ?? "")
                             .font(HuddleFont.display(40))
-                            .foregroundColor(HuddleColors.mostLikelyTo)
-                        Text("You WIN if you get eliminated!")
+                            .foregroundColor(HuddleColors.textPrimary)
+                        Text("You WIN if you get eliminated first!")
                             .font(HuddleFont.caption())
                             .foregroundColor(HuddleColors.textMuted)
                     } else {
-                        if currentPlayer.role == .impostor {
-                            roleBadge(role: .impostor)
-                        }
+                        // Civilian AND Impostor look IDENTICAL
+                        // Both just see "YOUR WORD" with same styling
                         Text("YOUR WORD")
                             .font(HuddleFont.caption(11))
                             .tracking(3)
                             .foregroundColor(HuddleColors.textMuted)
                         Text(currentPlayer.word ?? "")
-                            .font(HuddleFont.display(40))
-                            .foregroundColor(currentPlayer.role == .impostor ? HuddleColors.impostor : HuddleColors.whoAmI)
+                            .font(HuddleFont.display(44))
+                            .foregroundColor(HuddleColors.textPrimary)
+                        Text("Don't show this to anyone!")
+                            .font(HuddleFont.caption())
+                            .foregroundColor(HuddleColors.textMuted)
                     }
                 }
                 .transition(.scale.combined(with: .opacity))
