@@ -2,9 +2,12 @@ import SwiftUI
 
 @main
 struct HuddleApp: App {
+    @State private var appState = AppState()
+
     var body: some Scene {
         WindowGroup {
-            Text("Huddle")
+            ContentView()
+                .environment(appState)
         }
     }
 }
