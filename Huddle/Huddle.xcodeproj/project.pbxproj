@@ -7,71 +7,113 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0477D02CC61C969BEACF71B6 /* ImpostorVoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EFF12CE41ED96B538E4A93 /* ImpostorVoteView.swift */; };
+		0551644BD8BD9DDD31D4471B /* WordBombCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E0D44900EFB6A9A25FA7516 /* WordBombCoordinator.swift */; };
 		092D66A26164A51249895123 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70CFB486F0376C3C5CAABAB1 /* AppState.swift */; };
+		11BFCF26338119DF2F23310A /* WordBombData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57570D26DA5FBF1624A4959 /* WordBombData.swift */; };
 		15AE4CA01EE2D586DCB6EE10 /* GameDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AAA83CEF2397FE0B65649E /* GameDefinition.swift */; };
+		25B60ABF587E71425CAD29C0 /* ImpostorRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D37DAC3B0760C2F92BC84360 /* ImpostorRevealView.swift */; };
 		27E8A92FE449504A9BF31F30 /* TimerRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5314861184126B5BC43C3B2 /* TimerRing.swift */; };
 		2FD61F0C2E1B294AEA4863ED /* PassScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */; };
+		3F198E19DA29964928D821A1 /* ImpostorSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933A19223F6587440912A2D8 /* ImpostorSetupView.swift */; };
 		43F803B089FC18B0E211AF73 /* GlowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DDF90CC922854E86F61D19 /* GlowButton.swift */; };
+		4EDC1D8408781F03586A8501 /* WordBombPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43BFA3E7A53F6392EDA9D69 /* WordBombPassView.swift */; };
 		66BE36348884B2E45776E929 /* NeonCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */; };
+		6CB128BCCDCECCF638B9303B /* ImpostorGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDCE1F6A6F3ED4C9747835E /* ImpostorGame.swift */; };
+		6E1FB5D9D9B63E524CDE911B /* ImpostorGuessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D19019135109F2745AD2FAB /* ImpostorGuessView.swift */; };
 		778C41E6C8A4FF45FD11E0E4 /* PlayerSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71E90C55BBA87BE93BA91F61 /* PlayerSetupView.swift */; };
+		799B634C180D9AD0CFD5C323 /* WordBombBoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18E9209B55773F1CB775BC4F /* WordBombBoomView.swift */; };
 		7F215C5CE52ABEB4051C92E4 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB32DC836F593148CDB2E6A3 /* Player.swift */; };
 		879BE9181CADE54B0798DA32 /* HuddleTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46B546F7FCF36F8EE67136C /* HuddleTypography.swift */; };
 		8823549135B4A3424FBA9F16 /* GameResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A6856907591899552682B /* GameResult.swift */; };
 		8993E97075C31376EA96DFDD /* HuddleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41006EB5E0CF2CA7A2865B38 /* HuddleApp.swift */; };
+		987B354A8CDF20A7B1123B28 /* WordBombSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EA069E102D10DE6F91E07DA /* WordBombSetupView.swift */; };
 		9988C971321A6BA727134F94 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3584AA35AB0D5894ABE121 /* ContentView.swift */; };
 		9A5D900B82628930FD8AA576 /* HubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7813F47380AAFBA571BD21E2 /* HubView.swift */; };
+		A0ECBA5412115F08BEF5E1F1 /* wordbomb_id.json in Resources */ = {isa = PBXBuildFile; fileRef = 5C30C94D68E88472266820A9 /* wordbomb_id.json */; };
+		A35FFB61E0584A19788E7E37 /* impostor_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 53A12A46C3D592472B541844 /* impostor_en.json */; };
+		AF88446C55A4C173512D0D7E /* ImpostorDiscussView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A330CFE468E16B96E400E2A5 /* ImpostorDiscussView.swift */; };
+		C3FC280C8612BB9F7EBA5E4F /* WordBombResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBD3B3E1B3E9BF7EA7412346 /* WordBombResultView.swift */; };
+		C822E21DB353BA1AD0D40534 /* ImpostorElimRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F486A970AA466FF1F61302CB /* ImpostorElimRevealView.swift */; };
+		CC0CE2D6DFD9325AE026B3EA /* WordBombPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA6146552B466A7E2159B51 /* WordBombPlayView.swift */; };
+		D01281624BC1618C58BA65AA /* ImpostorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B259196AE82673BAA8880D6 /* ImpostorResultView.swift */; };
+		D04DF841789B2B60593BEC04 /* ImpostorCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5915361CE2021473978E102C /* ImpostorCoordinator.swift */; };
+		D0EC5C1BD56377FCEF1CDDBA /* impostor_id.json in Resources */ = {isa = PBXBuildFile; fileRef = B69E28D2A9EE5E8EF099D986 /* impostor_id.json */; };
 		E4CD196A9C5282F940059EAF /* PlayerBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */; };
 		EC538E85FA95AF52690EC231 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5E1621D6CB4208527AD5F1 /* HapticManager.swift */; };
 		EE58F803910E05D236195717 /* HuddleColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A66745AD122A84ED6569F0 /* HuddleColors.swift */; };
 		EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594E979C34752A9BB80AE258 /* PlayLimitManager.swift */; };
-		AA1000010000000000000001 /* ImpostorData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000001 /* ImpostorData.swift */; };
-		AA1000010000000000000002 /* ImpostorGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000002 /* ImpostorGame.swift */; };
-		AA1000010000000000000003 /* ImpostorCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000003 /* ImpostorCoordinator.swift */; };
-		AA1000010000000000000004 /* ImpostorSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000004 /* ImpostorSetupView.swift */; };
-		AA1000010000000000000005 /* ImpostorRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000005 /* ImpostorRevealView.swift */; };
-		AA1000010000000000000006 /* ImpostorDiscussView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000006 /* ImpostorDiscussView.swift */; };
-		AA1000010000000000000007 /* ImpostorVoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000007 /* ImpostorVoteView.swift */; };
-		AA1000010000000000000008 /* ImpostorElimRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000008 /* ImpostorElimRevealView.swift */; };
-		AA1000010000000000000009 /* ImpostorGuessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000009 /* ImpostorGuessView.swift */; };
-		AA100001000000000000000A /* ImpostorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB100001000000000000000A /* ImpostorResultView.swift */; };
-		AA100001000000000000000B /* impostor_en.json in Resources */ = {isa = PBXBuildFile; fileRef = BB100001000000000000000B /* impostor_en.json */; };
-		AA100001000000000000000C /* impostor_id.json in Resources */ = {isa = PBXBuildFile; fileRef = BB100001000000000000000C /* impostor_id.json */; };
+		F6541B6A373EB290C72B29B3 /* wordbomb_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 7E48C9760266642CA4574E31 /* wordbomb_en.json */; };
+		F9DE2B3EB690F333D2CC8ABB /* ImpostorData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDD8C66D2BDFAC99722703F6 /* ImpostorData.swift */; };
+		FCB7225147EBF712539D568A /* WordBombGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B35016BCB401BEA5122BB9 /* WordBombGame.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0C5E1621D6CB4208527AD5F1 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		18E9209B55773F1CB775BC4F /* WordBombBoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombBoomView.swift; sourceTree = "<group>"; };
 		1F3584AA35AB0D5894ABE121 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2D19019135109F2745AD2FAB /* ImpostorGuessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGuessView.swift; sourceTree = "<group>"; };
+		2EA069E102D10DE6F91E07DA /* WordBombSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombSetupView.swift; sourceTree = "<group>"; };
 		37AAA83CEF2397FE0B65649E /* GameDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDefinition.swift; sourceTree = "<group>"; };
+		3B259196AE82673BAA8880D6 /* ImpostorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorResultView.swift; sourceTree = "<group>"; };
 		3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassScreen.swift; sourceTree = "<group>"; };
+		3E0D44900EFB6A9A25FA7516 /* WordBombCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombCoordinator.swift; sourceTree = "<group>"; };
 		41006EB5E0CF2CA7A2865B38 /* HuddleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleApp.swift; sourceTree = "<group>"; };
+		53A12A46C3D592472B541844 /* impostor_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = impostor_en.json; sourceTree = "<group>"; };
+		5915361CE2021473978E102C /* ImpostorCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorCoordinator.swift; sourceTree = "<group>"; };
 		594E979C34752A9BB80AE258 /* PlayLimitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLimitManager.swift; sourceTree = "<group>"; };
+		5C30C94D68E88472266820A9 /* wordbomb_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = wordbomb_id.json; sourceTree = "<group>"; };
 		703A6856907591899552682B /* GameResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameResult.swift; sourceTree = "<group>"; };
 		70CFB486F0376C3C5CAABAB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		71E90C55BBA87BE93BA91F61 /* PlayerSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSetupView.swift; sourceTree = "<group>"; };
 		74A66745AD122A84ED6569F0 /* HuddleColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleColors.swift; sourceTree = "<group>"; };
 		7813F47380AAFBA571BD21E2 /* HubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubView.swift; sourceTree = "<group>"; };
+		7E48C9760266642CA4574E31 /* wordbomb_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = wordbomb_en.json; sourceTree = "<group>"; };
+		8CA6146552B466A7E2159B51 /* WordBombPlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombPlayView.swift; sourceTree = "<group>"; };
+		8EDCE1F6A6F3ED4C9747835E /* ImpostorGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGame.swift; sourceTree = "<group>"; };
 		8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeonCard.swift; sourceTree = "<group>"; };
+		933A19223F6587440912A2D8 /* ImpostorSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorSetupView.swift; sourceTree = "<group>"; };
+		A330CFE468E16B96E400E2A5 /* ImpostorDiscussView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorDiscussView.swift; sourceTree = "<group>"; };
+		A3EFF12CE41ED96B538E4A93 /* ImpostorVoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorVoteView.swift; sourceTree = "<group>"; };
+		A43BFA3E7A53F6392EDA9D69 /* WordBombPassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombPassView.swift; sourceTree = "<group>"; };
+		B3B35016BCB401BEA5122BB9 /* WordBombGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombGame.swift; sourceTree = "<group>"; };
 		B4DDF90CC922854E86F61D19 /* GlowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlowButton.swift; sourceTree = "<group>"; };
 		B5314861184126B5BC43C3B2 /* TimerRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRing.swift; sourceTree = "<group>"; };
+		B57570D26DA5FBF1624A4959 /* WordBombData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombData.swift; sourceTree = "<group>"; };
+		B69E28D2A9EE5E8EF099D986 /* impostor_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = impostor_id.json; sourceTree = "<group>"; };
 		BB32DC836F593148CDB2E6A3 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		C74D50C85F3C50F0B37E6ABD /* Huddle.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Huddle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D37DAC3B0760C2F92BC84360 /* ImpostorRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorRevealView.swift; sourceTree = "<group>"; };
 		D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerBadge.swift; sourceTree = "<group>"; };
 		E46B546F7FCF36F8EE67136C /* HuddleTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleTypography.swift; sourceTree = "<group>"; };
-		BB1000010000000000000001 /* ImpostorData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorData.swift; sourceTree = "<group>"; };
-		BB1000010000000000000002 /* ImpostorGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGame.swift; sourceTree = "<group>"; };
-		BB1000010000000000000003 /* ImpostorCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorCoordinator.swift; sourceTree = "<group>"; };
-		BB1000010000000000000004 /* ImpostorSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorSetupView.swift; sourceTree = "<group>"; };
-		BB1000010000000000000005 /* ImpostorRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorRevealView.swift; sourceTree = "<group>"; };
-		BB1000010000000000000006 /* ImpostorDiscussView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorDiscussView.swift; sourceTree = "<group>"; };
-		BB1000010000000000000007 /* ImpostorVoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorVoteView.swift; sourceTree = "<group>"; };
-		BB1000010000000000000008 /* ImpostorElimRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorElimRevealView.swift; sourceTree = "<group>"; };
-		BB1000010000000000000009 /* ImpostorGuessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGuessView.swift; sourceTree = "<group>"; };
-		BB100001000000000000000A /* ImpostorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorResultView.swift; sourceTree = "<group>"; };
-		BB100001000000000000000B /* impostor_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = impostor_en.json; sourceTree = "<group>"; };
-		BB100001000000000000000C /* impostor_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = impostor_id.json; sourceTree = "<group>"; };
+		EDD8C66D2BDFAC99722703F6 /* ImpostorData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorData.swift; sourceTree = "<group>"; };
+		F486A970AA466FF1F61302CB /* ImpostorElimRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorElimRevealView.swift; sourceTree = "<group>"; };
+		FBD3B3E1B3E9BF7EA7412346 /* WordBombResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombResultView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		044EC3420A0E166AA3890BC4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BB897337E058940E87E0E48A /* WordData */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		0456C5E228EE2D5F2D8C672C /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A330CFE468E16B96E400E2A5 /* ImpostorDiscussView.swift */,
+				F486A970AA466FF1F61302CB /* ImpostorElimRevealView.swift */,
+				2D19019135109F2745AD2FAB /* ImpostorGuessView.swift */,
+				3B259196AE82673BAA8880D6 /* ImpostorResultView.swift */,
+				D37DAC3B0760C2F92BC84360 /* ImpostorRevealView.swift */,
+				933A19223F6587440912A2D8 /* ImpostorSetupView.swift */,
+				A3EFF12CE41ED96B538E4A93 /* ImpostorVoteView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		1E560515E4713ABE5A981FA5 /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
@@ -90,12 +132,24 @@
 			path = PlayerSetup;
 			sourceTree = "<group>";
 		};
+		3AC476D8AD3C2001961D3150 /* Impostor */ = {
+			isa = PBXGroup;
+			children = (
+				5915361CE2021473978E102C /* ImpostorCoordinator.swift */,
+				EDD8C66D2BDFAC99722703F6 /* ImpostorData.swift */,
+				8EDCE1F6A6F3ED4C9747835E /* ImpostorGame.swift */,
+				0456C5E228EE2D5F2D8C672C /* Views */,
+			);
+			path = Impostor;
+			sourceTree = "<group>";
+		};
 		503399F40534E28C6ED35BEE /* Features */ = {
 			isa = PBXGroup;
 			children = (
 				AB7CD03FBDCC472B9B424306 /* Hub */,
-				"TEMP_5F4A87B8-0A4F-4A27-AD28-024631BAFAB6" /* Impostor */,
+				3AC476D8AD3C2001961D3150 /* Impostor */,
 				37CC26ED76478AB6BF5EF2C9 /* PlayerSetup */,
+				8746038DC1D91ECD047BA1C9 /* WordBomb */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -116,6 +170,17 @@
 				C74D50C85F3C50F0B37E6ABD /* Huddle.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8746038DC1D91ECD047BA1C9 /* WordBomb */ = {
+			isa = PBXGroup;
+			children = (
+				3E0D44900EFB6A9A25FA7516 /* WordBombCoordinator.swift */,
+				B57570D26DA5FBF1624A4959 /* WordBombData.swift */,
+				B3B35016BCB401BEA5122BB9 /* WordBombGame.swift */,
+				D5FDB6ECC7FC2187AAE114CA /* Views */,
+			);
+			path = WordBomb;
 			sourceTree = "<group>";
 		};
 		8835D02DF737CCC4612F3A33 /* Services */ = {
@@ -163,7 +228,7 @@
 				B1AD5F6F4BA4C62BFB0BD9C7 /* App */,
 				9DFB967326B8DD01574D44B1 /* Core */,
 				503399F40534E28C6ED35BEE /* Features */,
-				"TEMP_209E654A-B44A-4D8E-8BF4-63894F8DAA79" /* Resources */,
+				044EC3420A0E166AA3890BC4 /* Resources */,
 			);
 			path = Huddle;
 			sourceTree = "<group>";
@@ -186,74 +251,48 @@
 			path = App;
 			sourceTree = "<group>";
 		};
-		"TEMP_209E654A-B44A-4D8E-8BF4-63894F8DAA79" /* Resources */ = {
+		BB897337E058940E87E0E48A /* WordData */ = {
 			isa = PBXGroup;
 			children = (
-				CC1000010000000000000002 /* WordData */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
-		CC1000010000000000000002 /* WordData */ = {
-			isa = PBXGroup;
-			children = (
-				BB100001000000000000000B /* impostor_en.json */,
-				BB100001000000000000000C /* impostor_id.json */,
+				53A12A46C3D592472B541844 /* impostor_en.json */,
+				B69E28D2A9EE5E8EF099D986 /* impostor_id.json */,
+				7E48C9760266642CA4574E31 /* wordbomb_en.json */,
+				5C30C94D68E88472266820A9 /* wordbomb_id.json */,
 			);
 			path = WordData;
 			sourceTree = "<group>";
 		};
-		"TEMP_34831D2E-D169-43C8-B0A0-AA3E7C3B0676" /* WordBomb */ = {
+		D5FDB6ECC7FC2187AAE114CA /* Views */ = {
 			isa = PBXGroup;
 			children = (
-			);
-			path = WordBomb;
-			sourceTree = "<group>";
-		};
-		"TEMP_5466BCCF-3687-431D-9D15-D81D96A0A510" /* MostLikelyTo */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = MostLikelyTo;
-			sourceTree = "<group>";
-		};
-		"TEMP_5F4A87B8-0A4F-4A27-AD28-024631BAFAB6" /* Impostor */ = {
-			isa = PBXGroup;
-			children = (
-				BB1000010000000000000001 /* ImpostorData.swift */,
-				BB1000010000000000000002 /* ImpostorGame.swift */,
-				BB1000010000000000000003 /* ImpostorCoordinator.swift */,
-				CC1000010000000000000001 /* Views */,
-			);
-			path = Impostor;
-			sourceTree = "<group>";
-		};
-		CC1000010000000000000001 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				BB1000010000000000000004 /* ImpostorSetupView.swift */,
-				BB1000010000000000000005 /* ImpostorRevealView.swift */,
-				BB1000010000000000000006 /* ImpostorDiscussView.swift */,
-				BB1000010000000000000007 /* ImpostorVoteView.swift */,
-				BB1000010000000000000008 /* ImpostorElimRevealView.swift */,
-				BB1000010000000000000009 /* ImpostorGuessView.swift */,
-				BB100001000000000000000A /* ImpostorResultView.swift */,
+				18E9209B55773F1CB775BC4F /* WordBombBoomView.swift */,
+				A43BFA3E7A53F6392EDA9D69 /* WordBombPassView.swift */,
+				8CA6146552B466A7E2159B51 /* WordBombPlayView.swift */,
+				FBD3B3E1B3E9BF7EA7412346 /* WordBombResultView.swift */,
+				2EA069E102D10DE6F91E07DA /* WordBombSetupView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
 		};
-		"TEMP_875A93A1-2EC3-4B20-B8C7-B99BF7EC041F" /* Roulette */ = {
+		"TEMP_5F6A758F-5645-4B8E-8CD9-131DEFCF7843" /* WhoAmI */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = WhoAmI;
+			sourceTree = "<group>";
+		};
+		"TEMP_6E956402-E9AF-4A23-9E08-6FCDCAF678D0" /* Roulette */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			path = Roulette;
 			sourceTree = "<group>";
 		};
-		"TEMP_9AEC0E94-FA24-4DFF-9243-B9B3784E9286" /* WhoAmI */ = {
+		"TEMP_A76E2701-A7AE-4017-9414-B551DAF9CA10" /* MostLikelyTo */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			path = WhoAmI;
+			path = MostLikelyTo;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -264,7 +303,7 @@
 			buildConfigurationList = BC56CAE6EF2115A1FB2EC101 /* Build configuration list for PBXNativeTarget "Huddle" */;
 			buildPhases = (
 				E98ECB2CDE0A7405C62AB6E1 /* Sources */,
-				DD1000010000000000000001 /* Resources */,
+				7EC6469C848120E9F3C5B94C /* Resources */,
 			);
 			buildRules = (
 			);
@@ -305,6 +344,20 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		7EC6469C848120E9F3C5B94C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A35FFB61E0584A19788E7E37 /* impostor_en.json in Resources */,
+				D0EC5C1BD56377FCEF1CDDBA /* impostor_id.json in Resources */,
+				F6541B6A373EB290C72B29B3 /* wordbomb_en.json in Resources */,
+				A0ECBA5412115F08BEF5E1F1 /* wordbomb_id.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		E98ECB2CDE0A7405C62AB6E1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -320,6 +373,16 @@
 				8993E97075C31376EA96DFDD /* HuddleApp.swift in Sources */,
 				EE58F803910E05D236195717 /* HuddleColors.swift in Sources */,
 				879BE9181CADE54B0798DA32 /* HuddleTypography.swift in Sources */,
+				D04DF841789B2B60593BEC04 /* ImpostorCoordinator.swift in Sources */,
+				F9DE2B3EB690F333D2CC8ABB /* ImpostorData.swift in Sources */,
+				AF88446C55A4C173512D0D7E /* ImpostorDiscussView.swift in Sources */,
+				C822E21DB353BA1AD0D40534 /* ImpostorElimRevealView.swift in Sources */,
+				6CB128BCCDCECCF638B9303B /* ImpostorGame.swift in Sources */,
+				6E1FB5D9D9B63E524CDE911B /* ImpostorGuessView.swift in Sources */,
+				D01281624BC1618C58BA65AA /* ImpostorResultView.swift in Sources */,
+				25B60ABF587E71425CAD29C0 /* ImpostorRevealView.swift in Sources */,
+				3F198E19DA29964928D821A1 /* ImpostorSetupView.swift in Sources */,
+				0477D02CC61C969BEACF71B6 /* ImpostorVoteView.swift in Sources */,
 				66BE36348884B2E45776E929 /* NeonCard.swift in Sources */,
 				2FD61F0C2E1B294AEA4863ED /* PassScreen.swift in Sources */,
 				EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */,
@@ -327,32 +390,18 @@
 				E4CD196A9C5282F940059EAF /* PlayerBadge.swift in Sources */,
 				778C41E6C8A4FF45FD11E0E4 /* PlayerSetupView.swift in Sources */,
 				27E8A92FE449504A9BF31F30 /* TimerRing.swift in Sources */,
-				AA1000010000000000000001 /* ImpostorData.swift in Sources */,
-				AA1000010000000000000002 /* ImpostorGame.swift in Sources */,
-				AA1000010000000000000003 /* ImpostorCoordinator.swift in Sources */,
-				AA1000010000000000000004 /* ImpostorSetupView.swift in Sources */,
-				AA1000010000000000000005 /* ImpostorRevealView.swift in Sources */,
-				AA1000010000000000000006 /* ImpostorDiscussView.swift in Sources */,
-				AA1000010000000000000007 /* ImpostorVoteView.swift in Sources */,
-				AA1000010000000000000008 /* ImpostorElimRevealView.swift in Sources */,
-				AA1000010000000000000009 /* ImpostorGuessView.swift in Sources */,
-				AA100001000000000000000A /* ImpostorResultView.swift in Sources */,
+				799B634C180D9AD0CFD5C323 /* WordBombBoomView.swift in Sources */,
+				0551644BD8BD9DDD31D4471B /* WordBombCoordinator.swift in Sources */,
+				11BFCF26338119DF2F23310A /* WordBombData.swift in Sources */,
+				FCB7225147EBF712539D568A /* WordBombGame.swift in Sources */,
+				4EDC1D8408781F03586A8501 /* WordBombPassView.swift in Sources */,
+				CC0CE2D6DFD9325AE026B3EA /* WordBombPlayView.swift in Sources */,
+				C3FC280C8612BB9F7EBA5E4F /* WordBombResultView.swift in Sources */,
+				987B354A8CDF20A7B1123B28 /* WordBombSetupView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXResourcesBuildPhase section */
-		DD1000010000000000000001 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AA100001000000000000000B /* impostor_en.json in Resources */,
-				AA100001000000000000000C /* impostor_id.json in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		11345479E9CD4D92E6CFF0DE /* Release */ = {

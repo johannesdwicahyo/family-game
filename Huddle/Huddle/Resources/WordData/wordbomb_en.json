@@ -1,0 +1,5 @@
+{
+  "easy": ["MA", "KA", "RI", "AN", "IN", "TA", "LA", "BA", "SA", "PA", "RA", "DA", "NA", "TI", "SI", "DI", "KU", "BU", "MI", "SE", "TE", "BE", "KE", "PE", "ME", "GU", "JA", "SU", "MU", "TU"],
+  "medium": ["GAR", "BAN", "MAN", "TAN", "PER", "KAN", "TER", "LAN", "RAN", "BER", "SAN", "PAN", "DAN", "GAN", "KER", "JAN", "WAR", "TAR", "BAR", "LAR", "MAR", "PIN", "TIN", "BIN", "LIN", "MIN", "SIN", "KIN", "DIN", "RIN"],
+  "hard": ["NYA", "NGA", "NGE", "NGI", "NGU", "MPU", "NDA", "MBA", "NCA", "NJA", "KSA", "KSI", "SWA", "DWI", "TRA", "PRI", "GRA", "KRI", "BLO", "GLO", "SKA", "STA", "STI", "STR", "SPE", "SPO"]
+}

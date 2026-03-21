@@ -60,6 +60,8 @@ struct HubView: View {
                 switch gameId {
                 case "impostor":
                     ImpostorCoordinator()
+                case "wordbomb":
+                    WordBombCoordinator()
                 default:
                     Text("Coming soon")
                         .foregroundColor(.white)
