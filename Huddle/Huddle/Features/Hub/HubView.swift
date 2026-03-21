@@ -62,6 +62,8 @@ struct HubView: View {
                     ImpostorCoordinator()
                 case "wordbomb":
                     WordBombCoordinator()
+                case "whoami":
+                    WhoAmICoordinator()
                 default:
                     Text("Coming soon")
                         .foregroundColor(.white)

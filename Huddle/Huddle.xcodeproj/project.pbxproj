@@ -46,6 +46,16 @@
 		F6541B6A373EB290C72B29B3 /* wordbomb_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 7E48C9760266642CA4574E31 /* wordbomb_en.json */; };
 		F9DE2B3EB690F333D2CC8ABB /* ImpostorData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDD8C66D2BDFAC99722703F6 /* ImpostorData.swift */; };
 		FCB7225147EBF712539D568A /* WordBombGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B35016BCB401BEA5122BB9 /* WordBombGame.swift */; };
+		AA0001010000000000000001 /* WhoAmICoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000001 /* WhoAmICoordinator.swift */; };
+		AA0001010000000000000002 /* WhoAmIData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000002 /* WhoAmIData.swift */; };
+		AA0001010000000000000003 /* WhoAmIGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000003 /* WhoAmIGame.swift */; };
+		AA0001010000000000000004 /* WhoAmISetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000004 /* WhoAmISetupView.swift */; };
+		AA0001010000000000000005 /* WhoAmIPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000005 /* WhoAmIPassView.swift */; };
+		AA0001010000000000000006 /* WhoAmIPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000006 /* WhoAmIPlayView.swift */; };
+		AA0001010000000000000007 /* WhoAmITurnResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000007 /* WhoAmITurnResultView.swift */; };
+		AA0001010000000000000008 /* WhoAmIResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000008 /* WhoAmIResultView.swift */; };
+		AA0001010000000000000009 /* whoami_en.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000009 /* whoami_en.json */; };
+		AA000101000000000000000A /* whoami_id.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000A /* whoami_id.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -89,6 +99,16 @@
 		EDD8C66D2BDFAC99722703F6 /* ImpostorData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorData.swift; sourceTree = "<group>"; };
 		F486A970AA466FF1F61302CB /* ImpostorElimRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorElimRevealView.swift; sourceTree = "<group>"; };
 		FBD3B3E1B3E9BF7EA7412346 /* WordBombResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombResultView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000001 /* WhoAmICoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmICoordinator.swift; sourceTree = "<group>"; };
+		AA0002010000000000000002 /* WhoAmIData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmIData.swift; sourceTree = "<group>"; };
+		AA0002010000000000000003 /* WhoAmIGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmIGame.swift; sourceTree = "<group>"; };
+		AA0002010000000000000004 /* WhoAmISetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmISetupView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000005 /* WhoAmIPassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmIPassView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000006 /* WhoAmIPlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmIPlayView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000007 /* WhoAmITurnResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmITurnResultView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000008 /* WhoAmIResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmIResultView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000009 /* whoami_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = whoami_en.json; sourceTree = "<group>"; };
+		AA000201000000000000000A /* whoami_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = whoami_id.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -149,6 +169,7 @@
 				AB7CD03FBDCC472B9B424306 /* Hub */,
 				3AC476D8AD3C2001961D3150 /* Impostor */,
 				37CC26ED76478AB6BF5EF2C9 /* PlayerSetup */,
+				"TEMP_5F6A758F-5645-4B8E-8CD9-131DEFCF7843" /* WhoAmI */,
 				8746038DC1D91ECD047BA1C9 /* WordBomb */,
 			);
 			path = Features;
@@ -256,6 +277,8 @@
 			children = (
 				53A12A46C3D592472B541844 /* impostor_en.json */,
 				B69E28D2A9EE5E8EF099D986 /* impostor_id.json */,
+				AA0002010000000000000009 /* whoami_en.json */,
+				AA000201000000000000000A /* whoami_id.json */,
 				7E48C9760266642CA4574E31 /* wordbomb_en.json */,
 				5C30C94D68E88472266820A9 /* wordbomb_id.json */,
 			);
@@ -277,8 +300,24 @@
 		"TEMP_5F6A758F-5645-4B8E-8CD9-131DEFCF7843" /* WhoAmI */ = {
 			isa = PBXGroup;
 			children = (
+				AA0002010000000000000001 /* WhoAmICoordinator.swift */,
+				AA0002010000000000000002 /* WhoAmIData.swift */,
+				AA0002010000000000000003 /* WhoAmIGame.swift */,
+				AA00030100000000000000FF /* Views */,
 			);
 			path = WhoAmI;
+			sourceTree = "<group>";
+		};
+		AA00030100000000000000FF /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA0002010000000000000004 /* WhoAmISetupView.swift */,
+				AA0002010000000000000005 /* WhoAmIPassView.swift */,
+				AA0002010000000000000006 /* WhoAmIPlayView.swift */,
+				AA0002010000000000000007 /* WhoAmITurnResultView.swift */,
+				AA0002010000000000000008 /* WhoAmIResultView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		"TEMP_6E956402-E9AF-4A23-9E08-6FCDCAF678D0" /* Roulette */ = {
@@ -353,6 +392,8 @@
 				D0EC5C1BD56377FCEF1CDDBA /* impostor_id.json in Resources */,
 				F6541B6A373EB290C72B29B3 /* wordbomb_en.json in Resources */,
 				A0ECBA5412115F08BEF5E1F1 /* wordbomb_id.json in Resources */,
+				AA0001010000000000000009 /* whoami_en.json in Resources */,
+				AA000101000000000000000A /* whoami_id.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -398,6 +439,14 @@
 				CC0CE2D6DFD9325AE026B3EA /* WordBombPlayView.swift in Sources */,
 				C3FC280C8612BB9F7EBA5E4F /* WordBombResultView.swift in Sources */,
 				987B354A8CDF20A7B1123B28 /* WordBombSetupView.swift in Sources */,
+				AA0001010000000000000001 /* WhoAmICoordinator.swift in Sources */,
+				AA0001010000000000000002 /* WhoAmIData.swift in Sources */,
+				AA0001010000000000000003 /* WhoAmIGame.swift in Sources */,
+				AA0001010000000000000004 /* WhoAmISetupView.swift in Sources */,
+				AA0001010000000000000005 /* WhoAmIPassView.swift in Sources */,
+				AA0001010000000000000006 /* WhoAmIPlayView.swift in Sources */,
+				AA0001010000000000000007 /* WhoAmITurnResultView.swift in Sources */,
+				AA0001010000000000000008 /* WhoAmIResultView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

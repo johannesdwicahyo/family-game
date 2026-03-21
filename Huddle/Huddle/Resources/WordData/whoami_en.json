@@ -1,0 +1,9 @@
+{
+  "categories": {
+    "Characters": ["SpongeBob", "Batman", "Elsa", "Pikachu", "Shrek", "Mario", "Harry Potter", "Doraemon", "Spider-Man", "Iron Man", "Mickey Mouse", "Naruto", "Goku", "Sonic", "Buzz Lightyear", "Simba", "Moana", "Thanos", "Darth Vader", "Gandalf", "Yoda", "Rapunzel", "Minion", "Olaf", "Groot", "Deadpool", "Wolverine", "Captain America", "Hulk", "Thor"],
+    "Animals": ["Cat", "Elephant", "Dolphin", "Penguin", "Giraffe", "Octopus", "Panda", "Eagle", "Shark", "Turtle", "Butterfly", "Kangaroo", "Koala", "Chameleon", "Flamingo", "Owl", "Wolf", "Gorilla", "Crocodile", "Seahorse", "Peacock", "Hedgehog", "Sloth", "Jellyfish", "Parrot", "Fox", "Bear", "Snake", "Lion", "Tiger"],
+    "Professions": ["Doctor", "Astronaut", "Chef", "Firefighter", "Pilot", "Detective", "Magician", "Photographer", "Teacher", "Scientist", "Dentist", "Architect", "Farmer", "Lawyer", "Singer", "Painter", "YouTuber", "Programmer", "Athlete", "Barber", "Judge", "Nurse", "Soldier", "Captain", "Clown", "Mechanic", "Baker", "Librarian", "Sailor", "Referee"],
+    "Food & Drinks": ["Pizza", "Sushi", "Ice Cream", "Hamburger", "Chocolate", "Popcorn", "Pancake", "Donut", "Taco", "Pasta", "Coffee", "Bubble Tea", "Watermelon", "Avocado", "Cheese", "Bacon", "Cupcake", "Pretzel", "Smoothie", "Croissant", "Waffle", "Burrito", "Mango", "Coconut", "Noodles", "Dumpling", "Macaron", "Hotdog", "Milkshake", "Brownie"],
+    "Famous Places": ["Eiffel Tower", "Great Wall of China", "Pyramids of Egypt", "Statue of Liberty", "Colosseum", "Taj Mahal", "Big Ben", "Mount Everest", "Disneyland", "Times Square", "Amazon Rainforest", "Niagara Falls", "Grand Canyon", "Machu Picchu", "Sydney Opera House", "Stonehenge", "Sahara Desert", "Venice", "Hollywood", "Mount Fuji", "Buckingham Palace", "Easter Island", "Antarctica", "Mars", "Bermuda Triangle", "Atlantis", "Hogwarts", "Narnia", "Wakanda", "Gotham City"]
+  }
+}
