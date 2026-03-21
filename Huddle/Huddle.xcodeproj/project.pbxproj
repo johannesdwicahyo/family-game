@@ -24,6 +24,18 @@
 		EC538E85FA95AF52690EC231 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5E1621D6CB4208527AD5F1 /* HapticManager.swift */; };
 		EE58F803910E05D236195717 /* HuddleColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A66745AD122A84ED6569F0 /* HuddleColors.swift */; };
 		EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594E979C34752A9BB80AE258 /* PlayLimitManager.swift */; };
+		AA1000010000000000000001 /* ImpostorData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000001 /* ImpostorData.swift */; };
+		AA1000010000000000000002 /* ImpostorGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000002 /* ImpostorGame.swift */; };
+		AA1000010000000000000003 /* ImpostorCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000003 /* ImpostorCoordinator.swift */; };
+		AA1000010000000000000004 /* ImpostorSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000004 /* ImpostorSetupView.swift */; };
+		AA1000010000000000000005 /* ImpostorRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000005 /* ImpostorRevealView.swift */; };
+		AA1000010000000000000006 /* ImpostorDiscussView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000006 /* ImpostorDiscussView.swift */; };
+		AA1000010000000000000007 /* ImpostorVoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000007 /* ImpostorVoteView.swift */; };
+		AA1000010000000000000008 /* ImpostorElimRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000008 /* ImpostorElimRevealView.swift */; };
+		AA1000010000000000000009 /* ImpostorGuessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB1000010000000000000009 /* ImpostorGuessView.swift */; };
+		AA100001000000000000000A /* ImpostorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB100001000000000000000A /* ImpostorResultView.swift */; };
+		AA100001000000000000000B /* impostor_en.json in Resources */ = {isa = PBXBuildFile; fileRef = BB100001000000000000000B /* impostor_en.json */; };
+		AA100001000000000000000C /* impostor_id.json in Resources */ = {isa = PBXBuildFile; fileRef = BB100001000000000000000C /* impostor_id.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +57,18 @@
 		C74D50C85F3C50F0B37E6ABD /* Huddle.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Huddle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerBadge.swift; sourceTree = "<group>"; };
 		E46B546F7FCF36F8EE67136C /* HuddleTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleTypography.swift; sourceTree = "<group>"; };
+		BB1000010000000000000001 /* ImpostorData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorData.swift; sourceTree = "<group>"; };
+		BB1000010000000000000002 /* ImpostorGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGame.swift; sourceTree = "<group>"; };
+		BB1000010000000000000003 /* ImpostorCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorCoordinator.swift; sourceTree = "<group>"; };
+		BB1000010000000000000004 /* ImpostorSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorSetupView.swift; sourceTree = "<group>"; };
+		BB1000010000000000000005 /* ImpostorRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorRevealView.swift; sourceTree = "<group>"; };
+		BB1000010000000000000006 /* ImpostorDiscussView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorDiscussView.swift; sourceTree = "<group>"; };
+		BB1000010000000000000007 /* ImpostorVoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorVoteView.swift; sourceTree = "<group>"; };
+		BB1000010000000000000008 /* ImpostorElimRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorElimRevealView.swift; sourceTree = "<group>"; };
+		BB1000010000000000000009 /* ImpostorGuessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGuessView.swift; sourceTree = "<group>"; };
+		BB100001000000000000000A /* ImpostorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorResultView.swift; sourceTree = "<group>"; };
+		BB100001000000000000000B /* impostor_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = impostor_en.json; sourceTree = "<group>"; };
+		BB100001000000000000000C /* impostor_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = impostor_id.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -70,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				AB7CD03FBDCC472B9B424306 /* Hub */,
+				"TEMP_5F4A87B8-0A4F-4A27-AD28-024631BAFAB6" /* Impostor */,
 				37CC26ED76478AB6BF5EF2C9 /* PlayerSetup */,
 			);
 			path = Features;
@@ -138,6 +163,7 @@
 				B1AD5F6F4BA4C62BFB0BD9C7 /* App */,
 				9DFB967326B8DD01574D44B1 /* Core */,
 				503399F40534E28C6ED35BEE /* Features */,
+				"TEMP_209E654A-B44A-4D8E-8BF4-63894F8DAA79" /* Resources */,
 			);
 			path = Huddle;
 			sourceTree = "<group>";
@@ -163,8 +189,18 @@
 		"TEMP_209E654A-B44A-4D8E-8BF4-63894F8DAA79" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				CC1000010000000000000002 /* WordData */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		CC1000010000000000000002 /* WordData */ = {
+			isa = PBXGroup;
+			children = (
+				BB100001000000000000000B /* impostor_en.json */,
+				BB100001000000000000000C /* impostor_id.json */,
+			);
+			path = WordData;
 			sourceTree = "<group>";
 		};
 		"TEMP_34831D2E-D169-43C8-B0A0-AA3E7C3B0676" /* WordBomb */ = {
@@ -184,8 +220,26 @@
 		"TEMP_5F4A87B8-0A4F-4A27-AD28-024631BAFAB6" /* Impostor */ = {
 			isa = PBXGroup;
 			children = (
+				BB1000010000000000000001 /* ImpostorData.swift */,
+				BB1000010000000000000002 /* ImpostorGame.swift */,
+				BB1000010000000000000003 /* ImpostorCoordinator.swift */,
+				CC1000010000000000000001 /* Views */,
 			);
 			path = Impostor;
+			sourceTree = "<group>";
+		};
+		CC1000010000000000000001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				BB1000010000000000000004 /* ImpostorSetupView.swift */,
+				BB1000010000000000000005 /* ImpostorRevealView.swift */,
+				BB1000010000000000000006 /* ImpostorDiscussView.swift */,
+				BB1000010000000000000007 /* ImpostorVoteView.swift */,
+				BB1000010000000000000008 /* ImpostorElimRevealView.swift */,
+				BB1000010000000000000009 /* ImpostorGuessView.swift */,
+				BB100001000000000000000A /* ImpostorResultView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 		"TEMP_875A93A1-2EC3-4B20-B8C7-B99BF7EC041F" /* Roulette */ = {
@@ -210,6 +264,7 @@
 			buildConfigurationList = BC56CAE6EF2115A1FB2EC101 /* Build configuration list for PBXNativeTarget "Huddle" */;
 			buildPhases = (
 				E98ECB2CDE0A7405C62AB6E1 /* Sources */,
+				DD1000010000000000000001 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -272,10 +327,32 @@
 				E4CD196A9C5282F940059EAF /* PlayerBadge.swift in Sources */,
 				778C41E6C8A4FF45FD11E0E4 /* PlayerSetupView.swift in Sources */,
 				27E8A92FE449504A9BF31F30 /* TimerRing.swift in Sources */,
+				AA1000010000000000000001 /* ImpostorData.swift in Sources */,
+				AA1000010000000000000002 /* ImpostorGame.swift in Sources */,
+				AA1000010000000000000003 /* ImpostorCoordinator.swift in Sources */,
+				AA1000010000000000000004 /* ImpostorSetupView.swift in Sources */,
+				AA1000010000000000000005 /* ImpostorRevealView.swift in Sources */,
+				AA1000010000000000000006 /* ImpostorDiscussView.swift in Sources */,
+				AA1000010000000000000007 /* ImpostorVoteView.swift in Sources */,
+				AA1000010000000000000008 /* ImpostorElimRevealView.swift in Sources */,
+				AA1000010000000000000009 /* ImpostorGuessView.swift in Sources */,
+				AA100001000000000000000A /* ImpostorResultView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DD1000010000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA100001000000000000000B /* impostor_en.json in Resources */,
+				AA100001000000000000000C /* impostor_id.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		11345479E9CD4D92E6CFF0DE /* Release */ = {

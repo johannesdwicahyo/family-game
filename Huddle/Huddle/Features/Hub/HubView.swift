@@ -57,10 +57,15 @@ struct HubView: View {
                 }
             }
             .navigationDestination(for: String.self) { gameId in
-                Text("Game: \(gameId)")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(HuddleColors.background)
+                switch gameId {
+                case "impostor":
+                    ImpostorCoordinator()
+                default:
+                    Text("Coming soon")
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(HuddleColors.background)
+                }
             }
             .sheet(isPresented: $showSettings) {
                 Text("Settings")
