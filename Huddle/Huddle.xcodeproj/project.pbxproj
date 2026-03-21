@@ -7,23 +7,90 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		092D66A26164A51249895123 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70CFB486F0376C3C5CAABAB1 /* AppState.swift */; };
+		15AE4CA01EE2D586DCB6EE10 /* GameDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AAA83CEF2397FE0B65649E /* GameDefinition.swift */; };
+		27E8A92FE449504A9BF31F30 /* TimerRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5314861184126B5BC43C3B2 /* TimerRing.swift */; };
+		2FD61F0C2E1B294AEA4863ED /* PassScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */; };
+		43F803B089FC18B0E211AF73 /* GlowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DDF90CC922854E86F61D19 /* GlowButton.swift */; };
+		66BE36348884B2E45776E929 /* NeonCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */; };
+		7F215C5CE52ABEB4051C92E4 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB32DC836F593148CDB2E6A3 /* Player.swift */; };
+		879BE9181CADE54B0798DA32 /* HuddleTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46B546F7FCF36F8EE67136C /* HuddleTypography.swift */; };
+		8823549135B4A3424FBA9F16 /* GameResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703A6856907591899552682B /* GameResult.swift */; };
 		8993E97075C31376EA96DFDD /* HuddleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41006EB5E0CF2CA7A2865B38 /* HuddleApp.swift */; };
 		9988C971321A6BA727134F94 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3584AA35AB0D5894ABE121 /* ContentView.swift */; };
+		E4CD196A9C5282F940059EAF /* PlayerBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */; };
+		EC538E85FA95AF52690EC231 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5E1621D6CB4208527AD5F1 /* HapticManager.swift */; };
+		EE58F803910E05D236195717 /* HuddleColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A66745AD122A84ED6569F0 /* HuddleColors.swift */; };
+		EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594E979C34752A9BB80AE258 /* PlayLimitManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0C5E1621D6CB4208527AD5F1 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		1F3584AA35AB0D5894ABE121 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		37AAA83CEF2397FE0B65649E /* GameDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDefinition.swift; sourceTree = "<group>"; };
+		3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PassScreen.swift; sourceTree = "<group>"; };
 		41006EB5E0CF2CA7A2865B38 /* HuddleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleApp.swift; sourceTree = "<group>"; };
+		594E979C34752A9BB80AE258 /* PlayLimitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayLimitManager.swift; sourceTree = "<group>"; };
+		703A6856907591899552682B /* GameResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameResult.swift; sourceTree = "<group>"; };
+		70CFB486F0376C3C5CAABAB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		74A66745AD122A84ED6569F0 /* HuddleColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleColors.swift; sourceTree = "<group>"; };
+		8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NeonCard.swift; sourceTree = "<group>"; };
+		B4DDF90CC922854E86F61D19 /* GlowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlowButton.swift; sourceTree = "<group>"; };
+		B5314861184126B5BC43C3B2 /* TimerRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerRing.swift; sourceTree = "<group>"; };
+		BB32DC836F593148CDB2E6A3 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		C74D50C85F3C50F0B37E6ABD /* Huddle.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Huddle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerBadge.swift; sourceTree = "<group>"; };
+		E46B546F7FCF36F8EE67136C /* HuddleTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleTypography.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		1E560515E4713ABE5A981FA5 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				74A66745AD122A84ED6569F0 /* HuddleColors.swift */,
+				E46B546F7FCF36F8EE67136C /* HuddleTypography.swift */,
+				891454D4169CB727E43F2131 /* Components */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		5A56088FA0FF3C736EC5CF9C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				37AAA83CEF2397FE0B65649E /* GameDefinition.swift */,
+				703A6856907591899552682B /* GameResult.swift */,
+				BB32DC836F593148CDB2E6A3 /* Player.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 		66D24B705523B6166D34658C /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				C74D50C85F3C50F0B37E6ABD /* Huddle.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8835D02DF737CCC4612F3A33 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				0C5E1621D6CB4208527AD5F1 /* HapticManager.swift */,
+				594E979C34752A9BB80AE258 /* PlayLimitManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		891454D4169CB727E43F2131 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				B4DDF90CC922854E86F61D19 /* GlowButton.swift */,
+				8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */,
+				3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */,
+				D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */,
+				B5314861184126B5BC43C3B2 /* TimerRing.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		90B81F83A7BACBF2C83A5AFC = {
@@ -34,10 +101,21 @@
 			);
 			sourceTree = "<group>";
 		};
+		9DFB967326B8DD01574D44B1 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				1E560515E4713ABE5A981FA5 /* DesignSystem */,
+				5A56088FA0FF3C736EC5CF9C /* Models */,
+				8835D02DF737CCC4612F3A33 /* Services */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
 		A3225D5FBB0420D6B78D2731 /* Huddle */ = {
 			isa = PBXGroup;
 			children = (
 				B1AD5F6F4BA4C62BFB0BD9C7 /* App */,
+				9DFB967326B8DD01574D44B1 /* Core */,
 			);
 			path = Huddle;
 			sourceTree = "<group>";
@@ -45,73 +123,60 @@
 		B1AD5F6F4BA4C62BFB0BD9C7 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				70CFB486F0376C3C5CAABAB1 /* AppState.swift */,
 				1F3584AA35AB0D5894ABE121 /* ContentView.swift */,
 				41006EB5E0CF2CA7A2865B38 /* HuddleApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
 		};
-		"TEMP_254F17D0-96B3-4A11-9B41-676FB31C7FDF" /* Roulette */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Roulette;
-			sourceTree = "<group>";
-		};
-		"TEMP_2D46A0DA-13C9-4D15-A058-FAB3530D6E20" /* WhoAmI */ = {
+		"TEMP_24893482-C5D4-420C-8CFF-EC7C1546811C" /* WhoAmI */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			path = WhoAmI;
 			sourceTree = "<group>";
 		};
-		"TEMP_44B3DFC8-7405-4F31-B96D-ED1BD5135019" /* Resources */ = {
+		"TEMP_39AFE3C1-9769-4B87-844D-835310B58677" /* Roulette */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Roulette;
+			sourceTree = "<group>";
+		};
+		"TEMP_605E1C42-C232-4EE2-A69F-6B923236E38E" /* Features */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		"TEMP_D2F988C4-CC99-4F1A-B852-419EE5BFC601" /* Resources */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		"TEMP_4579C73B-8690-4FFF-A990-638FF6E4ED6F" /* WordBomb */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = WordBomb;
-			sourceTree = "<group>";
-		};
-		"TEMP_4C7143A8-6FB5-4A8D-B929-13686F184C80" /* MostLikelyTo */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = MostLikelyTo;
-			sourceTree = "<group>";
-		};
-		"TEMP_7B0D88AD-B758-448E-8ACE-AD68C871660B" /* Impostor */ = {
+		"TEMP_F089BF25-E22C-44E8-A5B5-B196F783B551" /* Impostor */ = {
 			isa = PBXGroup;
 			children = (
 			);
 			path = Impostor;
 			sourceTree = "<group>";
 		};
-		"TEMP_AC19C8EF-D4C0-42BA-A15F-B99060062C55" /* DesignSystem */ = {
+		"TEMP_F2937E41-BFDE-4458-A81A-532FDBA7D152" /* MostLikelyTo */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			path = DesignSystem;
+			path = MostLikelyTo;
 			sourceTree = "<group>";
 		};
-		"TEMP_BCB908A5-25C6-4253-8FB8-935BF6A3127B" /* Core */ = {
+		"TEMP_FA493D27-2067-4105-9AC4-CD5384D86DB3" /* WordBomb */ = {
 			isa = PBXGroup;
 			children = (
 			);
-			path = Core;
-			sourceTree = "<group>";
-		};
-		"TEMP_DE9DCC2D-1CEB-4405-872C-60AF57D6023F" /* Features */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Features;
+			path = WordBomb;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -167,8 +232,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				092D66A26164A51249895123 /* AppState.swift in Sources */,
 				9988C971321A6BA727134F94 /* ContentView.swift in Sources */,
+				15AE4CA01EE2D586DCB6EE10 /* GameDefinition.swift in Sources */,
+				8823549135B4A3424FBA9F16 /* GameResult.swift in Sources */,
+				43F803B089FC18B0E211AF73 /* GlowButton.swift in Sources */,
+				EC538E85FA95AF52690EC231 /* HapticManager.swift in Sources */,
 				8993E97075C31376EA96DFDD /* HuddleApp.swift in Sources */,
+				EE58F803910E05D236195717 /* HuddleColors.swift in Sources */,
+				879BE9181CADE54B0798DA32 /* HuddleTypography.swift in Sources */,
+				66BE36348884B2E45776E929 /* NeonCard.swift in Sources */,
+				2FD61F0C2E1B294AEA4863ED /* PassScreen.swift in Sources */,
+				EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */,
+				7F215C5CE52ABEB4051C92E4 /* Player.swift in Sources */,
+				E4CD196A9C5282F940059EAF /* PlayerBadge.swift in Sources */,
+				27E8A92FE449504A9BF31F30 /* TimerRing.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
