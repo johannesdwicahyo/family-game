@@ -49,6 +49,7 @@
 		A2D333BB1D4DF994E154B67C /* RouletteResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80E3C04D668184CBCF66605A /* RouletteResultView.swift */; };
 		A35FFB61E0584A19788E7E37 /* impostor_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 53A12A46C3D592472B541844 /* impostor_en.json */; };
 		A6D1B09938FA23240F3DC3EB /* WhoAmIGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 707CE280CBD8E5609C585E9D /* WhoAmIGame.swift */; };
+		A87009960715B2CB12452024 /* LocaleManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D3878E7ADFFF40236DFA15F /* LocaleManager.swift */; };
 		AF88446C55A4C173512D0D7E /* ImpostorDiscussView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A330CFE468E16B96E400E2A5 /* ImpostorDiscussView.swift */; };
 		B0FFC44153C49AC9AEEB1DE5 /* WhoAmIResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016745EEB53B8399B8A646AD /* WhoAmIResultView.swift */; };
 		B4867DE9737473E6A9E05571 /* RouletteGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 554F195BF9CD931B71AD4FFA /* RouletteGame.swift */; };
@@ -58,6 +59,7 @@
 		CC0CE2D6DFD9325AE026B3EA /* WordBombPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CA6146552B466A7E2159B51 /* WordBombPlayView.swift */; };
 		D01281624BC1618C58BA65AA /* ImpostorResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B259196AE82673BAA8880D6 /* ImpostorResultView.swift */; };
 		D04DF841789B2B60593BEC04 /* ImpostorCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5915361CE2021473978E102C /* ImpostorCoordinator.swift */; };
+		D0E92F6685A03C7E72196B9D /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 226C305E950D426D83051812 /* PaywallView.swift */; };
 		D0EC5C1BD56377FCEF1CDDBA /* impostor_id.json in Resources */ = {isa = PBXBuildFile; fileRef = B69E28D2A9EE5E8EF099D986 /* impostor_id.json */; };
 		DB07DBAA03485C26152B70C9 /* MostLikelyToGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DA544751B20A064219ACD5E /* MostLikelyToGame.swift */; };
 		DE7D39274E9E958238B88631 /* MostLikelyToCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C62838CB86DB176DCCC5D8E /* MostLikelyToCoordinator.swift */; };
@@ -70,6 +72,7 @@
 		EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 594E979C34752A9BB80AE258 /* PlayLimitManager.swift */; };
 		F6541B6A373EB290C72B29B3 /* wordbomb_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 7E48C9760266642CA4574E31 /* wordbomb_en.json */; };
 		F9DE2B3EB690F333D2CC8ABB /* ImpostorData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDD8C66D2BDFAC99722703F6 /* ImpostorData.swift */; };
+		FCA0437CC31B00B095601213 /* ConfettiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77FFB17FD4A07CBDFF99388C /* ConfettiView.swift */; };
 		FCB7225147EBF712539D568A /* WordBombGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3B35016BCB401BEA5122BB9 /* WordBombGame.swift */; };
 		FE09C61BF075927104C6A246 /* mostlikelyto_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 92D92429F4E5DB666B9DC37B /* mostlikelyto_en.json */; };
 /* End PBXBuildFile section */
@@ -83,7 +86,9 @@
 		1B3E939BD0CB71C16DB6FC88 /* WhoAmITurnResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmITurnResultView.swift; sourceTree = "<group>"; };
 		1DA544751B20A064219ACD5E /* MostLikelyToGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MostLikelyToGame.swift; sourceTree = "<group>"; };
 		1F3584AA35AB0D5894ABE121 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		226C305E950D426D83051812 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		2D19019135109F2745AD2FAB /* ImpostorGuessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGuessView.swift; sourceTree = "<group>"; };
+		2D3878E7ADFFF40236DFA15F /* LocaleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleManager.swift; sourceTree = "<group>"; };
 		2EA069E102D10DE6F91E07DA /* WordBombSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordBombSetupView.swift; sourceTree = "<group>"; };
 		37AAA83CEF2397FE0B65649E /* GameDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDefinition.swift; sourceTree = "<group>"; };
 		3B259196AE82673BAA8880D6 /* ImpostorResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorResultView.swift; sourceTree = "<group>"; };
@@ -106,6 +111,7 @@
 		70CFB486F0376C3C5CAABAB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		71E90C55BBA87BE93BA91F61 /* PlayerSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSetupView.swift; sourceTree = "<group>"; };
 		74A66745AD122A84ED6569F0 /* HuddleColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuddleColors.swift; sourceTree = "<group>"; };
+		77FFB17FD4A07CBDFF99388C /* ConfettiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfettiView.swift; sourceTree = "<group>"; };
 		7809CC538C27030D73501527 /* mostlikelyto_id.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = mostlikelyto_id.json; sourceTree = "<group>"; };
 		7813F47380AAFBA571BD21E2 /* HubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HubView.swift; sourceTree = "<group>"; };
 		7E48C9760266642CA4574E31 /* wordbomb_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = wordbomb_en.json; sourceTree = "<group>"; };
@@ -174,6 +180,14 @@
 				891454D4169CB727E43F2131 /* Components */,
 			);
 			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		2DF37CD540B395996A4B9D6E /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				2D3878E7ADFFF40236DFA15F /* LocaleManager.swift */,
+			);
+			path = Localization;
 			sourceTree = "<group>";
 		};
 		37CC26ED76478AB6BF5EF2C9 /* PlayerSetup */ = {
@@ -272,9 +286,11 @@
 		891454D4169CB727E43F2131 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				77FFB17FD4A07CBDFF99388C /* ConfettiView.swift */,
 				B4DDF90CC922854E86F61D19 /* GlowButton.swift */,
 				8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */,
 				3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */,
+				226C305E950D426D83051812 /* PaywallView.swift */,
 				D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */,
 				B5314861184126B5BC43C3B2 /* TimerRing.swift */,
 			);
@@ -293,6 +309,7 @@
 			isa = PBXGroup;
 			children = (
 				1E560515E4713ABE5A981FA5 /* DesignSystem */,
+				2DF37CD540B395996A4B9D6E /* Localization */,
 				5A56088FA0FF3C736EC5CF9C /* Models */,
 				8835D02DF737CCC4612F3A33 /* Services */,
 			);
@@ -481,6 +498,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				092D66A26164A51249895123 /* AppState.swift in Sources */,
+				FCA0437CC31B00B095601213 /* ConfettiView.swift in Sources */,
 				9988C971321A6BA727134F94 /* ContentView.swift in Sources */,
 				15AE4CA01EE2D586DCB6EE10 /* GameDefinition.swift in Sources */,
 				8823549135B4A3424FBA9F16 /* GameResult.swift in Sources */,
@@ -500,6 +518,7 @@
 				25B60ABF587E71425CAD29C0 /* ImpostorRevealView.swift in Sources */,
 				3F198E19DA29964928D821A1 /* ImpostorSetupView.swift in Sources */,
 				0477D02CC61C969BEACF71B6 /* ImpostorVoteView.swift in Sources */,
+				A87009960715B2CB12452024 /* LocaleManager.swift in Sources */,
 				DE7D39274E9E958238B88631 /* MostLikelyToCoordinator.swift in Sources */,
 				E3AC91B6338B5E6DE90D3F1A /* MostLikelyToData.swift in Sources */,
 				DB07DBAA03485C26152B70C9 /* MostLikelyToGame.swift in Sources */,
@@ -510,6 +529,7 @@
 				1E2236996139376E3A40BF11 /* MostLikelyToVoteView.swift in Sources */,
 				66BE36348884B2E45776E929 /* NeonCard.swift in Sources */,
 				2FD61F0C2E1B294AEA4863ED /* PassScreen.swift in Sources */,
+				D0E92F6685A03C7E72196B9D /* PaywallView.swift in Sources */,
 				EF933E5ACD24DDE6E59804F7 /* PlayLimitManager.swift in Sources */,
 				7F215C5CE52ABEB4051C92E4 /* Player.swift in Sources */,
 				E4CD196A9C5282F940059EAF /* PlayerBadge.swift in Sources */,
