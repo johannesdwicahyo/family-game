@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,6 +22,7 @@
 		2FD61F0C2E1B294AEA4863ED /* PassScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C71D0EEA640B882AD5CE2C0 /* PassScreen.swift */; };
 		395623D5E8EE4D07588E1E96 /* WhoAmISetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453D0189FA2BEE9FCA74CE05 /* WhoAmISetupView.swift */; };
 		3F198E19DA29964928D821A1 /* ImpostorSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933A19223F6587440912A2D8 /* ImpostorSetupView.swift */; };
+		3F82AA6690DAB2F75FD1E74E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9825CE8FC8FD3612224701 /* SettingsView.swift */; };
 		43F803B089FC18B0E211AF73 /* GlowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DDF90CC922854E86F61D19 /* GlowButton.swift */; };
 		471714172F0F5E3A9D057FB6 /* whoami_en.json in Resources */ = {isa = PBXBuildFile; fileRef = 62A31AA0CE83F31B59E48978 /* whoami_en.json */; };
 		4EDC1D8408781F03586A8501 /* WordBombPassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A43BFA3E7A53F6392EDA9D69 /* WordBombPassView.swift */; };
@@ -99,6 +100,7 @@
 		5D00BD9B4CE99E023886D9BB /* RouletteWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouletteWheelView.swift; sourceTree = "<group>"; };
 		62A31AA0CE83F31B59E48978 /* whoami_en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = whoami_en.json; sourceTree = "<group>"; };
 		62FDAB0E12EC463C4C14AA4B /* MostLikelyToResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MostLikelyToResultView.swift; sourceTree = "<group>"; };
+		6A9825CE8FC8FD3612224701 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		703A6856907591899552682B /* GameResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameResult.swift; sourceTree = "<group>"; };
 		707CE280CBD8E5609C585E9D /* WhoAmIGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmIGame.swift; sourceTree = "<group>"; };
 		70CFB486F0376C3C5CAABAB1 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -128,7 +130,7 @@
 		BB32DC836F593148CDB2E6A3 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		C34EFA029CE48FECE72A1A42 /* MostLikelyToSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MostLikelyToSetupView.swift; sourceTree = "<group>"; };
 		C5DE3FAFCFF28BD268BFE1D3 /* MostLikelyToQuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MostLikelyToQuestionView.swift; sourceTree = "<group>"; };
-		C74D50C85F3C50F0B37E6ABD /* Huddle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Huddle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C74D50C85F3C50F0B37E6ABD /* Huddle.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Huddle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D37DAC3B0760C2F92BC84360 /* ImpostorRevealView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorRevealView.swift; sourceTree = "<group>"; };
 		D5B6F74F66950356BF6EC96D /* PlayerBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerBadge.swift; sourceTree = "<group>"; };
 		DD1FE4DB2EFD7E885EEA09D3 /* MostLikelyToData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MostLikelyToData.swift; sourceTree = "<group>"; };
@@ -201,6 +203,7 @@
 				7CA0D7822949FF3930785A24 /* MostLikelyTo */,
 				37CC26ED76478AB6BF5EF2C9 /* PlayerSetup */,
 				E294E5FE878042C99E4BF341 /* Roulette */,
+				AA5CE31CE9F8E63DDA8DDC0C /* Settings */,
 				E76322AF77D606B724612F89 /* WhoAmI */,
 				8746038DC1D91ECD047BA1C9 /* WordBomb */,
 			);
@@ -305,6 +308,14 @@
 				044EC3420A0E166AA3890BC4 /* Resources */,
 			);
 			path = Huddle;
+			sourceTree = "<group>";
+		};
+		AA5CE31CE9F8E63DDA8DDC0C /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				6A9825CE8FC8FD3612224701 /* SettingsView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		AB7CD03FBDCC472B9B424306 /* Hub */ = {
@@ -437,6 +448,7 @@
 			);
 			mainGroup = 90B81F83A7BACBF2C83A5AFC;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -507,6 +519,7 @@
 				B4867DE9737473E6A9E05571 /* RouletteGame.swift in Sources */,
 				A2D333BB1D4DF994E154B67C /* RouletteResultView.swift in Sources */,
 				64155FA2B0B2E8B00500E5CB /* RouletteWheelView.swift in Sources */,
+				3F82AA6690DAB2F75FD1E74E /* SettingsView.swift in Sources */,
 				27E8A92FE449504A9BF31F30 /* TimerRing.swift in Sources */,
 				E2AD0E565D6ECF9C25D3D11D /* WhoAmICoordinator.swift in Sources */,
 				0BB32DB11DDEFDAD719D882E /* WhoAmIData.swift in Sources */,
@@ -590,9 +603,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = V8XK2A8P44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -675,9 +687,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = V8XK2A8P44;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

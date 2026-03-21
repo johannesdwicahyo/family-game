@@ -76,10 +76,7 @@ struct HubView: View {
                 }
             }
             .sheet(isPresented: $showSettings) {
-                Text("Settings")
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(HuddleColors.background)
+                SettingsView()
             }
         }
         .preferredColorScheme(.dark)
