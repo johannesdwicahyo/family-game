@@ -30,6 +30,7 @@
 		518C71303DBD0908936690B8 /* MostLikelyToRevealView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F730C4325D0E7D2D377D5726 /* MostLikelyToRevealView.swift */; };
 		56EAF62AD2E84986B9D66A01 /* WhoAmITurnResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3E939BD0CB71C16DB6FC88 /* WhoAmITurnResultView.swift */; };
 		5D7B57C80ED8BBA8DA4F5EAF /* MostLikelyToQuestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5DE3FAFCFF28BD268BFE1D3 /* MostLikelyToQuestionView.swift */; };
+		5FC492ADC3681407AFBD83BB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2052250F94359135F7B5FFF3 /* Assets.xcassets */; };
 		64155FA2B0B2E8B00500E5CB /* RouletteWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D00BD9B4CE99E023886D9BB /* RouletteWheelView.swift */; };
 		66BE36348884B2E45776E929 /* NeonCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FCEDA16394F1F3A0AB78884 /* NeonCard.swift */; };
 		6CB128BCCDCECCF638B9303B /* ImpostorGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDCE1F6A6F3ED4C9747835E /* ImpostorGame.swift */; };
@@ -86,6 +87,7 @@
 		1B3E939BD0CB71C16DB6FC88 /* WhoAmITurnResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhoAmITurnResultView.swift; sourceTree = "<group>"; };
 		1DA544751B20A064219ACD5E /* MostLikelyToGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MostLikelyToGame.swift; sourceTree = "<group>"; };
 		1F3584AA35AB0D5894ABE121 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2052250F94359135F7B5FFF3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		226C305E950D426D83051812 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		2D19019135109F2745AD2FAB /* ImpostorGuessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImpostorGuessView.swift; sourceTree = "<group>"; };
 		2D3878E7ADFFF40236DFA15F /* LocaleManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleManager.swift; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 		044EC3420A0E166AA3890BC4 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				2052250F94359135F7B5FFF3 /* Assets.xcassets */,
 				BB897337E058940E87E0E48A /* WordData */,
 			);
 			path = Resources;
@@ -479,6 +482,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FC492ADC3681407AFBD83BB /* Assets.xcassets in Resources */,
 				A35FFB61E0584A19788E7E37 /* impostor_en.json in Resources */,
 				D0EC5C1BD56377FCEF1CDDBA /* impostor_id.json in Resources */,
 				FE09C61BF075927104C6A246 /* mostlikelyto_en.json in Resources */,
