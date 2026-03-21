@@ -64,6 +64,10 @@ struct HubView: View {
                     WordBombCoordinator()
                 case "whoami":
                     WhoAmICoordinator()
+                case "mostlikelyto":
+                    MostLikelyToCoordinator()
+                case "roulette":
+                    RouletteCoordinator()
                 default:
                     Text("Coming soon")
                         .foregroundColor(.white)
