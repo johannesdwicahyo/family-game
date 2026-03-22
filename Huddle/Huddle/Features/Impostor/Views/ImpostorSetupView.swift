@@ -6,6 +6,7 @@ struct ImpostorSetupView: View {
 
     @State private var names: [String] = []
     @State private var showScoring = false
+    @State private var showLeaderboard = false
 
     var body: some View {
         ScrollView {
@@ -24,56 +25,32 @@ struct ImpostorSetupView: View {
                 }
                 .padding(.top, 8)
 
-                // Leaderboard (shown after at least 1 round)
+                // Leaderboard link
                 if !game.sortedLeaderboard.isEmpty {
-                    VStack(spacing: 10) {
-                        HStack {
-                            Text("\u{1F3C6} LEADERBOARD")
-                                .font(HuddleFont.caption(11))
-                                .tracking(3)
+                    Button { showLeaderboard = true } label: {
+                        HStack(spacing: 8) {
+                            Text("\u{1F3C6}")
+                                .font(.system(size: 18))
+                            Text("LEADERBOARD")
+                                .font(HuddleFont.caption(12))
+                                .tracking(2)
                                 .foregroundColor(HuddleColors.mostLikelyTo)
                             Spacer()
                             Text("\(game.roundNumber) rounds")
                                 .font(HuddleFont.caption(10))
                                 .foregroundColor(HuddleColors.textMuted)
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(HuddleColors.textMuted)
                         }
-
-                        let maxPts = game.sortedLeaderboard.first?.points ?? 1
-                        ForEach(Array(game.sortedLeaderboard.enumerated()), id: \.element.name) { rank, entry in
-                            HStack(spacing: 10) {
-                                Text(rank < 3 ? ["\u{1F947}", "\u{1F948}", "\u{1F949}"][rank] : "#\(rank + 1)")
-                                    .font(rank < 3 ? .system(size: 20) : HuddleFont.caption())
-                                    .frame(width: 28)
-                                Text(entry.name)
-                                    .font(HuddleFont.body())
-                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
-                                Spacer()
-                                Text("\(entry.points)")
-                                    .font(HuddleFont.display(22))
-                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textSecondary)
-                            }
-
-                            GeometryReader { geo in
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textMuted.opacity(0.3))
-                                    .frame(width: maxPts > 0 ? geo.size.width * CGFloat(entry.points) / CGFloat(maxPts) : 0, height: 4)
-                            }
-                            .frame(height: 4)
-                        }
-
-                        Button {
-                            game.resetLeaderboard()
-                            HapticManager.tap()
-                        } label: {
-                            Text("RESET LEADERBOARD")
-                                .font(HuddleFont.caption(10))
-                                .foregroundColor(HuddleColors.impostor.opacity(0.5))
-                        }
-                        .padding(.top, 4)
+                        .padding(14)
+                        .background(HuddleColors.mostLikelyTo.opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(HuddleColors.mostLikelyTo.opacity(0.2), lineWidth: 1)
+                        )
                     }
-                    .padding(16)
-                    .background(HuddleColors.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
                 // Role configuration
@@ -172,6 +149,67 @@ struct ImpostorSetupView: View {
         .background(HuddleColors.background)
         .onAppear { syncNames() }
         .onChange(of: game.totalPlayers) { syncNames() }
+        .sheet(isPresented: $showLeaderboard) {
+            NavigationStack {
+                ScrollView {
+                    VStack(spacing: 16) {
+                        Text("\u{1F3C6}")
+                            .font(.system(size: 48))
+                        Text("LEADERBOARD")
+                            .font(HuddleFont.display(28))
+                            .foregroundColor(HuddleColors.mostLikelyTo)
+                        Text("\(game.roundNumber) rounds played")
+                            .font(HuddleFont.caption(11))
+                            .foregroundColor(HuddleColors.textMuted)
+
+                        let maxPts = game.sortedLeaderboard.first?.points ?? 1
+                        ForEach(Array(game.sortedLeaderboard.enumerated()), id: \.element.name) { rank, entry in
+                            HStack(spacing: 12) {
+                                Text(rank < 3 ? ["\u{1F947}", "\u{1F948}", "\u{1F949}"][rank] : "#\(rank + 1)")
+                                    .font(rank < 3 ? .system(size: 24) : HuddleFont.body())
+                                    .frame(width: 32)
+                                Text(entry.name)
+                                    .font(HuddleFont.heading(16))
+                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
+                                Spacer()
+                                Text("\(entry.points)")
+                                    .font(HuddleFont.display(26))
+                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textSecondary)
+                            }
+                            .padding(.horizontal, 4)
+
+                            GeometryReader { geo in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textMuted.opacity(0.3))
+                                    .frame(width: maxPts > 0 ? geo.size.width * CGFloat(entry.points) / CGFloat(maxPts) : 0, height: 5)
+                            }
+                            .frame(height: 5)
+                            .padding(.bottom, 4)
+                        }
+
+                        Button {
+                            game.resetLeaderboard()
+                            showLeaderboard = false
+                            HapticManager.tap()
+                        } label: {
+                            Text("RESET LEADERBOARD")
+                                .font(HuddleFont.caption(11))
+                                .foregroundColor(HuddleColors.impostor.opacity(0.6))
+                                .padding(.top, 12)
+                        }
+                    }
+                    .padding(24)
+                }
+                .background(HuddleColors.background)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { showLeaderboard = false }
+                            .foregroundColor(HuddleColors.mostLikelyTo)
+                    }
+                }
+            }
+            .preferredColorScheme(.dark)
+        }
     }
 
     private func syncNames() {
