@@ -22,7 +22,7 @@ struct RouletteMainView: View {
                 // Header
                 HStack {
                     Button(action: onExit) {
-                        Image(systemName: "xmark")
+                        Image(systemName: "chevron.left")
                             .font(.title3.weight(.semibold))
                             .foregroundColor(HuddleColors.textSecondary)
                     }

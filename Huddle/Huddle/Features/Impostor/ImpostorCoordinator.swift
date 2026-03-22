@@ -68,8 +68,21 @@ struct ImpostorCoordinator: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark")
+                Button {
+                    switch game.phase {
+                    case .vote:
+                        game.phase = .discuss
+                    case .discuss where game.turnNumber == 0:
+                        // First discussion — can't go back to reveal
+                        dismiss()
+                    case .discuss:
+                        // Subsequent discussions — stay in game
+                        dismiss()
+                    default:
+                        dismiss()
+                    }
+                } label: {
+                    Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
             }

@@ -6,12 +6,28 @@ struct PlayerSetupView: View {
     @State private var names: [String]
     let onStart: ([Player]) -> Void
 
+    private var storageKey: String { "huddle_names_\(game.id)" }
+    private var countKey: String { "huddle_count_\(game.id)" }
+
     init(game: GameDefinition, onStart: @escaping ([Player]) -> Void) {
         self.game = game
         self.onStart = onStart
-        let defaultCount = game.playerRange.lowerBound
-        _playerCount = State(initialValue: defaultCount)
-        _names = State(initialValue: (1...defaultCount).map { "Player \($0)" })
+
+        // Load saved names/count or use defaults
+        let savedCount = UserDefaults.standard.integer(forKey: "huddle_count_\(game.id)")
+        let savedNames = UserDefaults.standard.stringArray(forKey: "huddle_names_\(game.id)")
+
+        if savedCount > 0, let savedNames, !savedNames.isEmpty {
+            let count = min(max(savedCount, game.playerRange.lowerBound), game.playerRange.upperBound)
+            _playerCount = State(initialValue: count)
+            var n = savedNames
+            while n.count < count { n.append("Player \(n.count + 1)") }
+            _names = State(initialValue: Array(n.prefix(count)))
+        } else {
+            let defaultCount = game.playerRange.lowerBound
+            _playerCount = State(initialValue: defaultCount)
+            _names = State(initialValue: (1...defaultCount).map { "Player \($0)" })
+        }
     }
 
     var body: some View {
@@ -71,6 +87,7 @@ struct PlayerSetupView: View {
                 }
 
                 GlowButton(title: "START GAME", color: game.accentColor) {
+                    saveNames()
                     var usedNames: [String: Int] = [:]
                     let players = (0..<playerCount).map { i in
                         var name = i < names.count && !names[i].trimmingCharacters(in: .whitespaces).isEmpty
@@ -107,5 +124,10 @@ struct PlayerSetupView: View {
             get: { index < names.count ? names[index] : "" },
             set: { if index < names.count { names[index] = $0 } }
         )
+    }
+
+    private func saveNames() {
+        UserDefaults.standard.set(playerCount, forKey: countKey)
+        UserDefaults.standard.set(names, forKey: storageKey)
     }
 }

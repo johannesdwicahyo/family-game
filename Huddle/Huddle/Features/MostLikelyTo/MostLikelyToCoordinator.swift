@@ -59,7 +59,7 @@ struct MostLikelyToCoordinator: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button { dismiss() } label: {
-                    Image(systemName: "xmark")
+                    Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
             }

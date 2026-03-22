@@ -180,10 +180,67 @@ struct ImpostorResultView: View {
                 .background(HuddleColors.cardBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
+                // Leaderboard (across rounds)
+                if game.roundNumber > 1 && !game.sortedLeaderboard.isEmpty {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("\u{1F3C6} LEADERBOARD")
+                                .font(HuddleFont.caption(11))
+                                .tracking(3)
+                                .foregroundColor(HuddleColors.mostLikelyTo)
+                            Spacer()
+                            Text("\(game.roundNumber) rounds")
+                                .font(HuddleFont.caption(10))
+                                .foregroundColor(HuddleColors.textMuted)
+                        }
+
+                        let maxPts = game.sortedLeaderboard.first?.points ?? 1
+                        ForEach(Array(game.sortedLeaderboard.enumerated()), id: \.element.name) { rank, entry in
+                            HStack(spacing: 10) {
+                                Text(rank < 3 ? ["\u{1F947}", "\u{1F948}", "\u{1F949}"][rank] : "#\(rank + 1)")
+                                    .font(rank < 3 ? .system(size: 20) : HuddleFont.caption())
+                                    .frame(width: 28)
+                                Text(entry.name)
+                                    .font(HuddleFont.body())
+                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
+                                Spacer()
+                                Text("\(entry.points)")
+                                    .font(HuddleFont.display(22))
+                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textSecondary)
+                            }
+                            .padding(.vertical, 4)
+
+                            // Score bar
+                            GeometryReader { geo in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textMuted.opacity(0.3))
+                                    .frame(width: maxPts > 0 ? geo.size.width * CGFloat(entry.points) / CGFloat(maxPts) : 0, height: 4)
+                            }
+                            .frame(height: 4)
+                        }
+                    }
+                    .padding(16)
+                    .background(HuddleColors.cardBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+
                 // Buttons
                 VStack(spacing: 12) {
                     GlowButton(title: "PLAY AGAIN", color: HuddleColors.impostor) {
                         onPlayAgain()
+                    }
+
+                    if game.roundNumber > 1 {
+                        Button {
+                            game.resetLeaderboard()
+                            onExit()
+                        } label: {
+                            Text("RESET LEADERBOARD & EXIT")
+                                .font(HuddleFont.caption(11))
+                                .foregroundColor(HuddleColors.impostor.opacity(0.5))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                        }
                     }
 
                     Button {
@@ -203,6 +260,7 @@ struct ImpostorResultView: View {
         .background(HuddleColors.background)
         .onAppear {
             HapticManager.success()
+            game.applyScoresToLeaderboard()
         }
     }
 }

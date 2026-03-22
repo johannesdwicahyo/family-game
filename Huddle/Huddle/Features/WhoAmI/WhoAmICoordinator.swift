@@ -57,7 +57,7 @@ struct WhoAmICoordinator: View {
                     UIApplication.shared.isIdleTimerDisabled = false
                     dismiss()
                 } label: {
-                    Image(systemName: "xmark")
+                    Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
             }

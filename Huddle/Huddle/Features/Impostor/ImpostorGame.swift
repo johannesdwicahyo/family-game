@@ -73,7 +73,9 @@ struct ImpostorScoreConfig {
     var guessText: String = ""
     var winner: String? = nil
     var scores: ImpostorScoreConfig = ImpostorScoreConfig()
-    var discussionOrder: [Int] = [] // randomized player indices for discussion
+    var discussionOrder: [Int] = []
+    var leaderboard: [String: Int] = [:] // name → total points across rounds
+    var roundNumber: Int = 0
 
     var civilianCount: Int = 4
     var impostorCount: Int = 1
@@ -120,6 +122,7 @@ struct ImpostorScoreConfig {
         guessText = ""
         winner = nil
         discussionOrder = []
+        roundNumber += 1
         phase = .pass
     }
 
@@ -222,5 +225,21 @@ struct ImpostorScoreConfig {
 
             return GameResult.PlayerScore(name: p.name, points: pts, breakdown: bd)
         }
+    }
+
+    func applyScoresToLeaderboard() {
+        let roundScores = calculateScores()
+        for score in roundScores {
+            leaderboard[score.name, default: 0] += score.points
+        }
+    }
+
+    var sortedLeaderboard: [(name: String, points: Int)] {
+        leaderboard.sorted { $0.value > $1.value }.map { (name: $0.key, points: $0.value) }
+    }
+
+    func resetLeaderboard() {
+        leaderboard = [:]
+        roundNumber = 0
     }
 }
