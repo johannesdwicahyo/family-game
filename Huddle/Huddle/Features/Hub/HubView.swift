@@ -3,6 +3,11 @@ import SwiftUI
 struct HubView: View {
     @Environment(AppState.self) private var appState
     @State private var showSettings = false
+    @State private var impostorGame = ImpostorGame()
+    @State private var wordBombGame = WordBombGame()
+    @State private var whoAmIGame = WhoAmIGame()
+    @State private var mostLikelyToGame = MostLikelyToGame()
+    @State private var rouletteGame = RouletteGame()
     let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
@@ -59,15 +64,15 @@ struct HubView: View {
             .navigationDestination(for: String.self) { gameId in
                 switch gameId {
                 case "impostor":
-                    ImpostorCoordinator()
+                    ImpostorCoordinator(game: impostorGame)
                 case "wordbomb":
-                    WordBombCoordinator()
+                    WordBombCoordinator(game: wordBombGame)
                 case "whoami":
-                    WhoAmICoordinator()
+                    WhoAmICoordinator(game: whoAmIGame)
                 case "mostlikelyto":
-                    MostLikelyToCoordinator()
+                    MostLikelyToCoordinator(game: mostLikelyToGame)
                 case "roulette":
-                    RouletteCoordinator()
+                    RouletteCoordinator(game: rouletteGame)
                 default:
                     Text("Coming soon")
                         .foregroundColor(.white)

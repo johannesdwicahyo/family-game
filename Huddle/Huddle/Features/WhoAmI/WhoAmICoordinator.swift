@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WhoAmICoordinator: View {
-    @State var game = WhoAmIGame()
+    @Bindable var game: WhoAmIGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
 

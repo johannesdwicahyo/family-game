@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ImpostorCoordinator: View {
-    @State var game = ImpostorGame()
+    @Bindable var game: ImpostorGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
 
@@ -72,13 +72,8 @@ struct ImpostorCoordinator: View {
                     switch game.phase {
                     case .vote:
                         game.phase = .discuss
-                    case .discuss where game.turnNumber == 0:
-                        // First discussion — can't go back to reveal
-                        dismiss()
-                    case .discuss:
-                        // Subsequent discussions — stay in game
-                        dismiss()
                     default:
+                        game.phase = .setup
                         dismiss()
                     }
                 } label: {

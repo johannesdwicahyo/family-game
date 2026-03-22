@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WordBombCoordinator: View {
-    @State var game = WordBombGame()
+    @Bindable var game: WordBombGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
 

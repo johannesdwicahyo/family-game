@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RouletteCoordinator: View {
-    @State var game = RouletteGame()
+    @Bindable var game: RouletteGame
     @Environment(\.dismiss) var dismiss
 
     var body: some View {

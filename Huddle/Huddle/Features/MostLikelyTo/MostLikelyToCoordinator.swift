@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct MostLikelyToCoordinator: View {
-    @State var game = MostLikelyToGame()
+    @Bindable var game: MostLikelyToGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
 
