@@ -28,6 +28,7 @@ struct ImpostorCoordinator: View {
                         game.showWord = false
                         game.phase = .pass
                     } else {
+                        game.generateDiscussionOrder()
                         game.phase = .discuss
                     }
                 }
@@ -65,5 +66,13 @@ struct ImpostorCoordinator: View {
         }
         .animation(.spring(duration: 0.3), value: game.phase)
         .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(HuddleColors.textSecondary)
+                }
+            }
+        }
     }
 }

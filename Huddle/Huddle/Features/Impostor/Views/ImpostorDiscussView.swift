@@ -25,25 +25,40 @@ struct ImpostorDiscussView: View {
                 }
             }
 
-            // Remaining players
-            VStack(spacing: 8) {
-                Text("\(game.activePlayers.count) players remaining")
-                    .font(HuddleFont.body())
-                    .foregroundColor(HuddleColors.textSecondary)
+            // Discussion order
+            VStack(spacing: 10) {
+                Text("DISCUSSION ORDER")
+                    .font(HuddleFont.caption(11))
+                    .tracking(3)
+                    .foregroundColor(HuddleColors.textMuted)
 
-                HStack(spacing: 8) {
-                    ForEach(game.activePlayers, id: \.index) { item in
-                        Text(item.player.name)
-                            .font(HuddleFont.caption(11))
+                ForEach(Array(game.discussionOrder.enumerated()), id: \.offset) { position, playerIdx in
+                    HStack(spacing: 10) {
+                        Text("\(position + 1)")
+                            .font(HuddleFont.heading(14))
+                            .foregroundColor(HuddleColors.impostor)
+                            .frame(width: 24)
+                        Text(game.players[playerIdx].name)
+                            .font(HuddleFont.body())
                             .foregroundColor(HuddleColors.textPrimary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(HuddleColors.cardBackground)
-                            .clipShape(Capsule())
+                        Spacer()
+                        if position == 0 {
+                            Text("STARTS")
+                                .font(HuddleFont.caption(9))
+                                .tracking(2)
+                                .foregroundColor(HuddleColors.impostor)
+                        }
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(position == 0 ? HuddleColors.impostor.opacity(0.1) : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-                .padding(.horizontal, 16)
             }
+            .padding(16)
+            .background(HuddleColors.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 16)
 
             // Eliminated players
             if !game.eliminated.isEmpty {

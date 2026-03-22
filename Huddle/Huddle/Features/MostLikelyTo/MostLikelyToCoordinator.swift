@@ -56,5 +56,13 @@ struct MostLikelyToCoordinator: View {
         }
         .animation(.spring(duration: 0.3), value: game.phase)
         .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(HuddleColors.textSecondary)
+                }
+            }
+        }
     }
 }

@@ -51,5 +51,16 @@ struct WhoAmICoordinator: View {
         }
         .animation(.spring(duration: 0.3), value: game.phase)
         .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    UIApplication.shared.isIdleTimerDisabled = false
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundColor(HuddleColors.textSecondary)
+                }
+            }
+        }
     }
 }

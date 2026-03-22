@@ -73,6 +73,7 @@ struct ImpostorScoreConfig {
     var guessText: String = ""
     var winner: String? = nil
     var scores: ImpostorScoreConfig = ImpostorScoreConfig()
+    var discussionOrder: [Int] = [] // randomized player indices for discussion
 
     var civilianCount: Int = 4
     var impostorCount: Int = 1
@@ -118,6 +119,7 @@ struct ImpostorScoreConfig {
         showWord = false
         guessText = ""
         winner = nil
+        discussionOrder = []
         phase = .pass
     }
 
@@ -143,11 +145,27 @@ struct ImpostorScoreConfig {
         return nil
     }
 
+    func generateDiscussionOrder() {
+        let activeIndices = players.indices.filter { !eliminated.contains($0) }
+        let mrWhiteIndices = activeIndices.filter { players[$0].role == .mrWhite }
+        var otherIndices = activeIndices.filter { players[$0].role != .mrWhite }
+        otherIndices.shuffle()
+
+        // Place Mr. White at position 3+ (index 2+), or at end if fewer than 3 others
+        var order = otherIndices
+        for mwIdx in mrWhiteIndices {
+            let insertPos = min(max(2, Int.random(in: 2..<max(3, order.count))), order.count)
+            order.insert(mwIdx, at: insertPos)
+        }
+        discussionOrder = order
+    }
+
     func afterElimReveal() {
         if let w = checkWinCondition() {
             winner = w
             phase = .result
         } else {
+            generateDiscussionOrder()
             phase = .discuss
         }
     }
@@ -168,6 +186,7 @@ struct ImpostorScoreConfig {
             winner = w
             phase = .result
         } else {
+            generateDiscussionOrder()
             phase = .discuss
         }
     }
