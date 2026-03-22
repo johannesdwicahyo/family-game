@@ -1,9 +1,15 @@
 import SwiftUI
 
 @Observable class AppState {
+    private let defaults = UserDefaults.standard
+    private let languageKey = "huddle_language"
+
     var isProUser: Bool = false
-    var selectedLanguage: String = Locale.current.language.languageCode?.identifier ?? "en" {
-        didSet { localeManager.language = selectedLanguage }
+    var selectedLanguage: String {
+        didSet {
+            localeManager.language = selectedLanguage
+            defaults.set(selectedLanguage, forKey: languageKey)
+        }
     }
     let playLimit = PlayLimitManager()
     let localeManager = LocaleManager()
@@ -16,12 +22,15 @@ import SwiftUI
         playLimit.recordPlay()
     }
 
-    /// Shorthand for localized strings
     func L(_ key: String) -> String {
         localeManager.string(key)
     }
 
     init() {
-        localeManager.language = selectedLanguage
+        let saved = UserDefaults.standard.string(forKey: "huddle_language")
+            ?? Locale.current.language.languageCode?.identifier
+            ?? "en"
+        self.selectedLanguage = saved
+        localeManager.language = saved
     }
 }
