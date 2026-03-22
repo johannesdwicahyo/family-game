@@ -116,5 +116,9 @@ struct WordBombResultView: View {
             .padding(.horizontal, 20)
         }
         .background(HuddleColors.background)
+        .overlay(alignment: .top) {
+            ConfettiView(color: HuddleColors.wordBomb)
+                .allowsHitTesting(false)
+        }
     }
 }

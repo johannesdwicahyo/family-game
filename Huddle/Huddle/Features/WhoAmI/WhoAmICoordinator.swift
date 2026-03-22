@@ -18,11 +18,13 @@ struct WhoAmICoordinator: View {
                         rounds: rounds
                     )
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .pass:
                 WhoAmIPassView(game: game) {
                     game.startTurn()
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .play:
                 WhoAmIPlayView(game: game)
@@ -32,11 +34,13 @@ struct WhoAmICoordinator: View {
                     .onDisappear {
                         UIApplication.shared.isIdleTimerDisabled = false
                     }
+                    .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .turnResult:
                 WhoAmITurnResultView(game: game) {
                     game.advanceToNext()
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .result:
                 WhoAmIResultView(game: game, onPlayAgain: {
@@ -47,6 +51,7 @@ struct WhoAmICoordinator: View {
                 .onAppear {
                     UIApplication.shared.isIdleTimerDisabled = false
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
         }
         .animation(.spring(duration: 0.3), value: game.phase)

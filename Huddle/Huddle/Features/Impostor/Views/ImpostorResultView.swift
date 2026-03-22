@@ -258,6 +258,10 @@ struct ImpostorResultView: View {
             .padding(20)
         }
         .background(HuddleColors.background)
+        .overlay(alignment: .top) {
+            ConfettiView(color: winnerColor)
+                .allowsHitTesting(false)
+        }
         .onAppear {
             HapticManager.success()
             game.applyScoresToLeaderboard()

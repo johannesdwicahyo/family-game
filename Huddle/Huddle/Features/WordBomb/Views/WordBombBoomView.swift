@@ -6,6 +6,7 @@ struct WordBombBoomView: View {
 
     @State private var showRedFlash = true
     @State private var explosionScale: CGFloat = 0.3
+    @State private var shakeOffset: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -25,8 +26,10 @@ struct WordBombBoomView: View {
                 Text("\u{1F4A5}")
                     .font(.system(size: 100))
                     .scaleEffect(explosionScale)
+                    .offset(x: shakeOffset)
 
                 Text("BOOM!")
+                    .offset(x: shakeOffset)
                     .font(HuddleFont.display(42))
                     .foregroundColor(.red)
 
@@ -73,6 +76,12 @@ struct WordBombBoomView: View {
             }
             withAnimation(.easeOut(duration: 0.8)) {
                 showRedFlash = false
+            }
+            withAnimation(.spring(response: 0.05, dampingFraction: 0.2).repeatCount(6)) {
+                shakeOffset = 10
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation { shakeOffset = 0 }
             }
         }
     }

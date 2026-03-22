@@ -179,6 +179,10 @@ struct WhoAmIResultView: View {
             .padding(20)
         }
         .background(HuddleColors.background)
+        .overlay(alignment: .top) {
+            ConfettiView(color: HuddleColors.whoAmI)
+                .allowsHitTesting(false)
+        }
         .onAppear {
             HapticManager.success()
         }

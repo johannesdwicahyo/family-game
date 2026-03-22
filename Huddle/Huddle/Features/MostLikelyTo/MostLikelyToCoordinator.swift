@@ -17,12 +17,14 @@ struct MostLikelyToCoordinator: View {
                         transparency: transparency
                     )
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .question:
                 MostLikelyToQuestionView(game: game) {
                     game.currentVoterIndex = 0
                     game.phase = .votePass
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .votePass:
                 PassScreen(
@@ -31,11 +33,13 @@ struct MostLikelyToCoordinator: View {
                 ) {
                     game.phase = .vote
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .vote:
                 MostLikelyToVoteView(game: game) { playerIndex in
                     game.submitVote(for: playerIndex)
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .reveal:
                 MostLikelyToRevealView(game: game) {
@@ -45,6 +49,7 @@ struct MostLikelyToCoordinator: View {
                         game.nextQuestion()
                     }
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .result:
                 MostLikelyToResultView(game: game, onPlayAgain: {
@@ -52,6 +57,7 @@ struct MostLikelyToCoordinator: View {
                 }, onExit: {
                     dismiss()
                 })
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
         }
         .animation(.spring(duration: 0.3), value: game.phase)

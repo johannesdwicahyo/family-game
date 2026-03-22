@@ -12,6 +12,7 @@ struct ImpostorCoordinator: View {
                 ImpostorSetupView(game: game) { names in
                     game.startGame(names: names, language: appState.selectedLanguage)
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .pass:
                 PassScreen(
@@ -20,6 +21,7 @@ struct ImpostorCoordinator: View {
                 ) {
                     game.phase = .reveal
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .reveal:
                 ImpostorRevealView(game: game) {
@@ -32,29 +34,35 @@ struct ImpostorCoordinator: View {
                         game.phase = .discuss
                     }
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .discuss:
                 ImpostorDiscussView(game: game) {
                     game.phase = .vote
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .vote:
                 ImpostorVoteView(game: game) { index in
                     game.eliminate(index)
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .elimReveal:
                 ImpostorElimRevealView(game: game) {
                     game.afterElimReveal()
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .jokerBanner:
                 ImpostorElimRevealView(game: game) {
                     game.continueAfterJoker()
                 }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .guess:
                 ImpostorGuessView(game: game)
+                    .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
 
             case .result:
                 ImpostorResultView(game: game, onPlayAgain: {
@@ -62,6 +70,7 @@ struct ImpostorCoordinator: View {
                 }, onExit: {
                     dismiss()
                 })
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
         }
         .animation(.spring(duration: 0.3), value: game.phase)

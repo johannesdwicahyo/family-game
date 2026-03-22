@@ -5,6 +5,8 @@ struct ImpostorElimRevealView: View {
     let onContinue: () -> Void
 
     @State private var appeared = false
+    @State private var roleAppeared = false
+    @State private var redFlash = false
 
     private var elimPlayer: ImpostorPlayer? {
         guard let idx = game.lastElimIndex else { return nil }
@@ -25,6 +27,7 @@ struct ImpostorElimRevealView: View {
                     Text(player.role.emoji)
                         .font(.system(size: 64))
                         .scaleEffect(appeared ? 1.0 : 0.3)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.5), value: appeared)
 
                     Text(player.name)
                         .font(HuddleFont.display(32))
@@ -33,6 +36,8 @@ struct ImpostorElimRevealView: View {
                     Text("was \(player.role.label.uppercased())")
                         .font(HuddleFont.heading(20))
                         .foregroundColor(player.role.color)
+                        .opacity(roleAppeared ? 1 : 0)
+                        .offset(y: roleAppeared ? 0 : 10)
 
                     if player.role == .joker {
                         VStack(spacing: 8) {
@@ -79,10 +84,34 @@ struct ImpostorElimRevealView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(HuddleColors.background)
+        .overlay {
+            if redFlash {
+                Color.red.opacity(0.2)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            }
+        }
+        .overlay(alignment: .top) {
+            if winResult != nil {
+                ConfettiView(color: winResult.map { winColor(for: $0) } ?? HuddleColors.impostor)
+                    .allowsHitTesting(false)
+            }
+        }
         .onAppear {
             HapticManager.explosion()
             withAnimation(.spring(duration: 0.5)) {
                 appeared = true
+            }
+            withAnimation(.easeOut(duration: 0.4).delay(0.3)) {
+                roleAppeared = true
+            }
+            // Red flash for impostor reveals
+            if let player = elimPlayer, player.role == .impostor || player.role == .mrWhite {
+                redFlash = true
+                withAnimation(.easeOut(duration: 0.6)) {
+                    redFlash = false
+                }
             }
         }
     }

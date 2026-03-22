@@ -16,6 +16,11 @@ struct WordBombPlayView: View {
             ZStack {
                 HuddleColors.background.ignoresSafeArea()
 
+                // Red tension tint as time progresses
+                Color.red.opacity(progress > 0.7 ? (progress - 0.7) * 0.15 : 0)
+                    .ignoresSafeArea()
+                    .animation(.easeInOut(duration: 0.5), value: progress)
+
                 // Green flash on valid word
                 if showValidFlash {
                     Color.green.opacity(0.15)

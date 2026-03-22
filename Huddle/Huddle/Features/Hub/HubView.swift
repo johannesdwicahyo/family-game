@@ -8,6 +8,8 @@ struct HubView: View {
     @State private var whoAmIGame = WhoAmIGame()
     @State private var mostLikelyToGame = MostLikelyToGame()
     @State private var rouletteGame = RouletteGame()
+    @State private var appeared = false
+    @State private var glowPhase: CGFloat = 0
     let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
@@ -23,6 +25,12 @@ struct HubView: View {
                                     startPoint: .leading, endPoint: .trailing
                                 )
                             )
+                            .shadow(color: HuddleColors.impostor.opacity(glowPhase * 0.3), radius: 20)
+                            .onAppear {
+                                withAnimation(.easeInOut(duration: 2).repeatForever(autoreverses: true)) {
+                                    glowPhase = 1
+                                }
+                            }
                         Text("PARTY GAMES")
                             .font(HuddleFont.caption(11))
                             .tracking(4)
@@ -42,13 +50,21 @@ struct HubView: View {
                     .padding(.top, 8)
 
                     LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(GameDefinition.allGames) { game in
+                        ForEach(Array(GameDefinition.allGames.enumerated()), id: \.element.id) { index, game in
                             NavigationLink(value: game.id) {
                                 GameCard(game: game)
                             }
+                            .opacity(appeared ? 1 : 0)
+                            .scaleEffect(appeared ? 1 : 0.8)
+                            .offset(y: appeared ? 0 : 20)
                         }
                     }
                     .padding(.horizontal, 16)
+                    .onAppear {
+                        withAnimation(.spring(duration: 0.6).delay(0.1)) {
+                            appeared = true
+                        }
+                    }
                 }
                 .padding(.bottom, 40)
             }

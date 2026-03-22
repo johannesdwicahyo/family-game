@@ -150,6 +150,10 @@ struct MostLikelyToResultView: View {
             .padding(20)
         }
         .background(HuddleColors.background)
+        .overlay(alignment: .top) {
+            ConfettiView(color: HuddleColors.mostLikelyTo)
+                .allowsHitTesting(false)
+        }
         .onAppear {
             HapticManager.success()
         }

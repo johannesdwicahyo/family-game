@@ -3,6 +3,7 @@ import SwiftUI
 struct ImpostorRevealView: View {
     @Bindable var game: ImpostorGame
     let onNext: () -> Void
+    @State private var revealFlash = false
 
     private var currentPlayer: ImpostorPlayer {
         game.players[game.revealIndex]
@@ -64,6 +65,8 @@ struct ImpostorRevealView: View {
                         Text(currentPlayer.word ?? "")
                             .font(HuddleFont.display(44))
                             .foregroundColor(HuddleColors.textPrimary)
+                            .blur(radius: game.showWord ? 0 : 10)
+                            .scaleEffect(game.showWord ? 1.0 : 0.5)
                         Text("Don't show this to anyone!")
                             .font(HuddleFont.caption())
                             .foregroundColor(HuddleColors.textMuted)
@@ -93,6 +96,22 @@ struct ImpostorRevealView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(HuddleColors.background)
+        .overlay {
+            if revealFlash {
+                Color.white.opacity(0.15)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                    .allowsHitTesting(false)
+            }
+        }
+        .onChange(of: game.showWord) { _, newValue in
+            if newValue {
+                revealFlash = true
+                withAnimation(.easeOut(duration: 0.4)) {
+                    revealFlash = false
+                }
+            }
+        }
     }
 
     private func roleBadge(role: ImpostorRole) -> some View {
