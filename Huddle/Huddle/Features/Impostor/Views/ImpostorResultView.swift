@@ -65,6 +65,8 @@ struct ImpostorResultView: View {
                                 Text(game.pair?.normal ?? "")
                                     .font(HuddleFont.heading(18))
                                     .foregroundColor(HuddleColors.textPrimary)
+                                    .minimumScaleFactor(0.5)
+                                    .lineLimit(1)
                             }
 
                             Rectangle()
@@ -78,6 +80,8 @@ struct ImpostorResultView: View {
                                 Text(game.pair?.impostor ?? "")
                                     .font(HuddleFont.heading(18))
                                     .foregroundColor(HuddleColors.textPrimary)
+                                    .minimumScaleFactor(0.5)
+                                    .lineLimit(1)
                             }
                         }
 
