@@ -33,11 +33,16 @@ struct ImpostorDiscussView: View {
                     .foregroundColor(HuddleColors.textMuted)
 
                 ForEach(Array(game.discussionOrder.enumerated()), id: \.offset) { position, playerIdx in
-                    HStack(spacing: 10) {
-                        Text("\(position + 1)")
-                            .font(HuddleFont.heading(14))
-                            .foregroundColor(HuddleColors.impostor)
-                            .frame(width: 24)
+                    HStack(spacing: 12) {
+                        // Numbered circle
+                        ZStack {
+                            Circle()
+                                .fill(position == 0 ? HuddleColors.impostor : HuddleColors.impostor.opacity(0.15))
+                                .frame(width: 30, height: 30)
+                            Text("\(position + 1)")
+                                .font(HuddleFont.heading(14))
+                                .foregroundColor(position == 0 ? .white : HuddleColors.impostor)
+                        }
                         Text(game.players[playerIdx].name)
                             .font(HuddleFont.body())
                             .foregroundColor(HuddleColors.textPrimary)
@@ -47,17 +52,37 @@ struct ImpostorDiscussView: View {
                                 .font(HuddleFont.caption(9))
                                 .tracking(2)
                                 .foregroundColor(HuddleColors.impostor)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(HuddleColors.impostor.opacity(0.15))
+                                .clipShape(Capsule())
                         }
                     }
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(position == 0 ? HuddleColors.impostor.opacity(0.1) : Color.clear)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(position == 0 ? HuddleColors.impostor.opacity(0.08) : HuddleColors.cardBackground.opacity(0.5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(position == 0 ? HuddleColors.impostor.opacity(0.2) : Color.clear, lineWidth: 1)
+                    )
                 }
             }
             .padding(16)
-            .background(HuddleColors.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(
+                LinearGradient(
+                    colors: [HuddleColors.impostor.opacity(0.05), HuddleColors.cardBackground],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(HuddleColors.impostor.opacity(0.1), lineWidth: 1)
+            )
             .padding(.horizontal, 16)
 
             // Eliminated players
@@ -102,6 +127,17 @@ struct ImpostorDiscussView: View {
             Spacer().frame(height: 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(HuddleColors.background)
+        .background(
+            ZStack {
+                HuddleColors.background
+                RadialGradient(
+                    colors: [HuddleColors.impostor.opacity(0.03), .clear],
+                    center: .top,
+                    startRadius: 100,
+                    endRadius: 400
+                )
+            }
+            .ignoresSafeArea()
+        )
     }
 }

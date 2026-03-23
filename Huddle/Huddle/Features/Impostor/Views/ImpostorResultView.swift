@@ -40,12 +40,24 @@ struct ImpostorResultView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Winner announcement
-                VStack(spacing: 12) {
-                    Text(winnerEmoji)
-                        .font(.system(size: 64))
+                VStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(winnerColor.opacity(0.12))
+                            .frame(width: 100, height: 100)
+                            .blur(radius: 20)
+                        Text(winnerEmoji)
+                            .font(.system(size: 72))
+                    }
                     Text(winnerTitle)
-                        .font(HuddleFont.display(32))
-                        .foregroundColor(winnerColor)
+                        .font(HuddleFont.display(34))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [winnerColor, winnerColor.opacity(0.7)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
                 }
                 .padding(.top, 20)
 
@@ -143,13 +155,31 @@ struct ImpostorResultView: View {
                                 .font(HuddleFont.display(24))
                                 .foregroundColor(score.points > 0 ? HuddleColors.impostor : HuddleColors.textMuted)
                         }
-                        .padding(12)
-                        .background(rank == 0 && score.points > 0 ? winnerColor.opacity(0.08) : HuddleColors.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(rank == 0 && score.points > 0 ? winnerColor.opacity(0.2) : Color.clear, lineWidth: 1)
+                        .padding(14)
+                        .background(
+                            LinearGradient(
+                                colors: rank == 0 && score.points > 0
+                                    ? [winnerColor.opacity(0.12), winnerColor.opacity(0.04)]
+                                    : [HuddleColors.cardBackground, HuddleColors.cardBackground],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: rank == 0 && score.points > 0
+                                            ? [winnerColor.opacity(0.3), winnerColor.opacity(0.05)]
+                                            : [HuddleColors.cardBorder, HuddleColors.cardBorder],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: rank == 0 && score.points > 0 ? winnerColor.opacity(0.1) : .clear, radius: 8, x: 0, y: 2)
                     }
                 }
 
@@ -261,7 +291,18 @@ struct ImpostorResultView: View {
             }
             .padding(20)
         }
-        .background(HuddleColors.background)
+        .background(
+            ZStack {
+                HuddleColors.background
+                RadialGradient(
+                    colors: [winnerColor.opacity(0.04), .clear],
+                    center: .top,
+                    startRadius: 80,
+                    endRadius: 400
+                )
+            }
+            .ignoresSafeArea()
+        )
         .overlay(alignment: .top) {
             ConfettiView(color: winnerColor)
                 .allowsHitTesting(false)

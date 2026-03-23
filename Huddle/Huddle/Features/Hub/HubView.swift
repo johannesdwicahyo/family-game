@@ -16,9 +16,9 @@ struct HubView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    VStack(spacing: 4) {
+                    VStack(spacing: 6) {
                         Text("HUDDLE")
-                            .font(HuddleFont.display(42))
+                            .font(HuddleFont.display(48))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [HuddleColors.impostor, HuddleColors.mostLikelyTo, HuddleColors.whoAmI, HuddleColors.wordBomb],
@@ -32,9 +32,13 @@ struct HubView: View {
                                 }
                             }
                         Text("PARTY GAMES")
+                            .font(HuddleFont.caption(12))
+                            .tracking(5)
+                            .foregroundColor(HuddleColors.textSecondary)
+                        Text("Gather your friends")
                             .font(HuddleFont.caption(11))
-                            .tracking(4)
                             .foregroundColor(HuddleColors.textMuted)
+                            .padding(.top, 2)
 
                         if !appState.isProUser {
                             Text("\(appState.playLimit.remainingPlays) plays left today")
@@ -47,7 +51,7 @@ struct HubView: View {
                                 .padding(.top, 4)
                         }
                     }
-                    .padding(.top, 8)
+                    .padding(.top, 16)
 
                     LazyVGrid(columns: columns, spacing: 12) {
                         ForEach(Array(GameDefinition.allGames.enumerated()), id: \.element.id) { index, game in
@@ -68,7 +72,18 @@ struct HubView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .background(HuddleColors.background)
+            .background(
+                ZStack {
+                    HuddleColors.background
+                    RadialGradient(
+                        colors: [HuddleColors.impostor.opacity(0.02), HuddleColors.wordBomb.opacity(0.01), .clear],
+                        center: .top,
+                        startRadius: 50,
+                        endRadius: 500
+                    )
+                }
+                .ignoresSafeArea()
+            )
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: { showSettings = true }) {
@@ -108,31 +123,71 @@ struct GameCard: View {
     let game: GameDefinition
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text(game.emoji)
-                .font(.system(size: 32))
+        VStack(spacing: 12) {
+            // Large emoji with glow background
+            ZStack {
+                Circle()
+                    .fill(game.accentColor.opacity(0.15))
+                    .frame(width: 64, height: 64)
+                    .blur(radius: 8)
+                Text(game.emoji)
+                    .font(.system(size: 40))
+            }
+            .frame(height: 64)
+
             Text(game.name)
-                .font(HuddleFont.heading(14))
-                .foregroundColor(game.accentColor)
+                .font(HuddleFont.heading(16))
+                .foregroundColor(.white)
+
             Text(game.description)
-                .font(HuddleFont.caption(9))
-                .foregroundColor(HuddleColors.textMuted)
+                .font(HuddleFont.caption(10))
+                .foregroundColor(HuddleColors.textSecondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
+
+            // Player count badge
+            HStack(spacing: 4) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 9))
+                Text("\(game.playerRange.lowerBound)-\(game.playerRange.upperBound)")
+                    .font(HuddleFont.caption(9))
+            }
+            .foregroundColor(game.accentColor)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(game.accentColor.opacity(0.1))
+            .clipShape(Capsule())
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .padding(.horizontal, 8)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 12)
         .background(
-            LinearGradient(
-                colors: [game.accentColor.opacity(0.12), game.accentColor.opacity(0.02)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
+            ZStack {
+                // Rich gradient background
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                game.accentColor.opacity(0.2),
+                                game.accentColor.opacity(0.05),
+                                HuddleColors.cardBackground
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                // Top highlight edge
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [game.accentColor.opacity(0.4), game.accentColor.opacity(0.05)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+            }
         )
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(game.accentColor.opacity(0.15), lineWidth: 1)
-        )
+        .shadow(color: game.accentColor.opacity(0.15), radius: 16, x: 0, y: 8)
     }
 }

@@ -23,10 +23,16 @@ struct GlowButton: View {
                 .tracking(2)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(color)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .shadow(color: color.opacity(0.4), radius: 12, x: 0, y: 4)
+                .padding(.vertical, 18)
+                .background(
+                    LinearGradient(
+                        colors: [color, color.opacity(0.7)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .shadow(color: color.opacity(0.4), radius: 16, x: 0, y: 8)
         }
         .buttonStyle(GlowButtonStyle())
     }
