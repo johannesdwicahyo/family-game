@@ -63,30 +63,45 @@ import SwiftUI
 
     func spin() {
         guard items.count >= 2 else { return }
+
+        // Pre-determine the winner
+        let count = items.count
+        let sliceAngle = 360.0 / Double(count)
+        let winIdx = Int.random(in: 0..<count)
+
+        // Calculate the angle that places this segment at the TOP pointer
+        // Pointer is at top (270° in standard math). Segment 0 starts at the right (0°).
+        // The wheel rotates clockwise with positive angles.
+        // To land segment winIdx at top: the middle of that segment needs to be at 270°
+        let segmentMidAngle = Double(winIdx) * sliceAngle + sliceAngle / 2
+        // We need to rotate so that segmentMidAngle ends up at 270° (top)
+        // finalAngle mod 360 should equal (270 - segmentMidAngle) mod 360
+        let landingAngle = (270.0 - segmentMidAngle).truncatingRemainder(dividingBy: 360)
+        let normalizedLanding = landingAngle < 0 ? landingAngle + 360 : landingAngle
+
+        let fullRotations = Double(Int.random(in: 5...8)) * 360
+        targetAngle = currentAngle + fullRotations + normalizedLanding - currentAngle.truncatingRemainder(dividingBy: 360)
+        // Add small random offset within the segment so it doesn't always land dead center
+        targetAngle += Double.random(in: -sliceAngle * 0.3 ... sliceAngle * 0.3)
+
+        winnerIndex = winIdx
+        winnerText = items[winIdx]
+
         isSpinning = true
         phase = .spinning
         spinStartDate = Date()
-
-        let fullRotations = Double(Int.random(in: 5...10)) * 360
-        let randomStop = Double.random(in: 0..<360)
-        targetAngle = currentAngle + fullRotations + randomStop
     }
 
     func finishSpin() {
         isSpinning = false
-
-        let normalizedAngle = currentAngle.truncatingRemainder(dividingBy: 360)
-        let adjusted = (360 - normalizedAngle).truncatingRemainder(dividingBy: 360)
-        let sliceAngle = 360.0 / Double(items.count)
-        let index = Int(adjusted / sliceAngle) % items.count
-
-        winnerIndex = index
-        winnerText = items[index]
+        currentAngle = targetAngle
         phase = .result
 
-        history.insert((text: items[index], date: Date()), at: 0)
-        if history.count > 10 {
-            history = Array(history.prefix(10))
+        if let text = winnerText {
+            history.insert((text: text, date: Date()), at: 0)
+            if history.count > 10 {
+                history = Array(history.prefix(10))
+            }
         }
 
         HapticManager.success()

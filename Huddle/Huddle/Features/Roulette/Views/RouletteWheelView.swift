@@ -4,8 +4,7 @@ struct RouletteWheelView: View {
     let game: RouletteGame
 
     @State private var displayAngle: Double = 0
-    @State private var velocity: Double = 0
-    @State private var lastUpdate: Date?
+    @State private var spinCompleteTimer: Timer?
 
     var body: some View {
         VStack(spacing: 16) {
@@ -98,43 +97,27 @@ struct RouletteWheelView: View {
                     .shadow(color: .red.opacity(0.5), radius: 6, x: 0, y: 2)
                     .offset(y: -4)
             }
-
-            if game.isSpinning {
-                TimelineView(.animation) { timeline in
-                    Color.clear
-                        .frame(height: 0)
-                        .onChange(of: timeline.date) { _, newDate in
-                            updateSpin(now: newDate)
-                        }
-                }
-            }
+        }
+        .onAppear {
+            displayAngle = game.currentAngle
         }
         .onChange(of: game.isSpinning) { _, spinning in
             if spinning {
-                let totalRotation = game.targetAngle - game.currentAngle
-                velocity = totalRotation / 3.0 // spread over ~3 seconds
-                lastUpdate = Date()
-                displayAngle = game.currentAngle
+                // Cancel any pending timer
+                spinCompleteTimer?.invalidate()
+
+                // Use SwiftUI animation for the spin — smooth easeOut curve
+                withAnimation(.easeOut(duration: 4.0)) {
+                    displayAngle = game.targetAngle
+                }
+
+                // Schedule finishSpin after animation completes
+                spinCompleteTimer = Timer.scheduledTimer(withTimeInterval: 4.2, repeats: false) { _ in
+                    DispatchQueue.main.async {
+                        game.finishSpin()
+                    }
+                }
             }
-        }
-    }
-
-    private func updateSpin(now: Date) {
-        guard game.isSpinning, let last = lastUpdate else { return }
-        let dt = now.timeIntervalSince(last)
-        guard dt > 0 && dt < 0.5 else {
-            lastUpdate = now
-            return
-        }
-
-        lastUpdate = now
-        velocity *= pow(0.985, dt * 60) // friction per frame
-        displayAngle += velocity * dt
-
-        if displayAngle >= game.targetAngle || velocity < 0.5 {
-            displayAngle = game.targetAngle
-            game.currentAngle = game.targetAngle
-            game.finishSpin()
         }
     }
 }
