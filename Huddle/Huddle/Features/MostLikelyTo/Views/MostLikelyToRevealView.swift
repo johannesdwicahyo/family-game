@@ -52,7 +52,7 @@ struct MostLikelyToRevealView: View {
                             HStack {
                                 HStack(spacing: 6) {
                                     if isWinner {
-                                        Text("\u{1F451}")
+                                        Image(systemName: "crown.fill").foregroundColor(HuddleColors.gold)
                                             .font(.system(size: 16))
                                             .transition(.scale.combined(with: .opacity))
                                     }
@@ -99,16 +99,16 @@ struct MostLikelyToRevealView: View {
                 // Winner announcement
                 NeonCard(accentColor: accent) {
                     VStack(spacing: 4) {
-                        Text(winnerIndices.count > 1 ? "TIE!" : "WINNER")
+                        Text(winnerIndices.count > 1 ? L("TIE!", "SERI!") : L("TITLE GOES TO", "GELARNYA UNTUK"))
                             .font(HuddleFont.caption(10))
                             .tracking(2)
                             .foregroundColor(HuddleColors.textMuted)
                         HStack(spacing: 6) {
-                            Text("\u{1F451}")
+                            Image(systemName: "crown.fill").foregroundColor(HuddleColors.gold)
                                 .font(.system(size: 24))
                             Text(winnerNames)
                                 .font(HuddleFont.display(26))
-                                .foregroundColor(accent)
+                                .foregroundColor(HuddleColors.textPrimary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -117,7 +117,7 @@ struct MostLikelyToRevealView: View {
                 // Vote transparency
                 if game.showVoteTransparency {
                     VStack(spacing: 8) {
-                        Text("WHO VOTED FOR WHOM")
+                        Text(L("WHO VOTED FOR WHOM", "SIAPA MEMILIH SIAPA"))
                             .font(HuddleFont.caption(11))
                             .tracking(3)
                             .foregroundColor(HuddleColors.textMuted)
@@ -130,7 +130,7 @@ struct MostLikelyToRevealView: View {
                                     .foregroundColor(HuddleColors.textMuted)
                                 Spacer()
                                 HStack(spacing: 4) {
-                                    Text("\u{2192}")
+                                    Image(systemName: "arrow.right")
                                         .foregroundColor(HuddleColors.textMuted)
                                     Text(game.players[votedForIndex].name)
                                         .font(HuddleFont.caption())
@@ -147,7 +147,7 @@ struct MostLikelyToRevealView: View {
 
                 // Next button
                 GlowButton(
-                    title: game.isGameOver ? "SEE RESULTS" : "NEXT QUESTION",
+                    title: game.isGameOver ? L("SEE RESULTS", "LIHAT HASIL") : L("NEXT QUESTION", "PERTANYAAN BERIKUTNYA"),
                     color: accent
                 ) {
                     onNext()
@@ -158,7 +158,7 @@ struct MostLikelyToRevealView: View {
         }
         .background(HuddleColors.background)
         .onAppear {
-            HapticManager.success()
+            Feedback.success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 animateBars = true
             }

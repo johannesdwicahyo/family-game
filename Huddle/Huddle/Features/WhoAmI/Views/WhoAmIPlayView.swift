@@ -9,6 +9,7 @@ struct WhoAmIPlayView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.1)) { context in
             let remaining = game.timeRemaining
+            let ready = game.getReadyLeft
             let progress = game.timerProgress
             let isLow = remaining <= 5
 
@@ -35,7 +36,7 @@ struct WhoAmIPlayView: View {
                             )
                             Text("\(Int(remaining))")
                                 .font(HuddleFont.display(22))
-                                .foregroundColor(isLow ? .red : HuddleColors.textPrimary)
+                                .foregroundColor(isLow ? HuddleColors.danger : HuddleColors.textPrimary)
                         }
 
                         Spacer()
@@ -49,7 +50,7 @@ struct WhoAmIPlayView: View {
                                 Text("\(game.correct)")
                                     .font(HuddleFont.display(28))
                                     .foregroundColor(accent)
-                                Text("correct")
+                                Text(L("correct", "benar"))
                                     .font(HuddleFont.caption(11))
                                     .foregroundColor(HuddleColors.textMuted)
                             }
@@ -60,15 +61,27 @@ struct WhoAmIPlayView: View {
 
                     Spacer()
 
-                    // Character name - rotated 180 degrees for forehead reading
-                    Text(game.currentName)
-                        .font(HuddleFont.display(56))
-                        .foregroundColor(HuddleColors.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .minimumScaleFactor(0.4)
-                        .lineLimit(3)
-                        .padding(.horizontal, 20)
-                        .rotationEffect(.degrees(180))
+                    // The card faces the friends (phone held upright on the forehead, screen out).
+                    if ready > 0 {
+                        VStack(spacing: 8) {
+                            Text(L("Phone on your forehead!", "Tempel HP di dahi!"))
+                                .font(HuddleFont.heading(22))
+                                .foregroundColor(HuddleColors.textSecondary)
+                            Text("\(Int(ready.rounded(.up)))")
+                                .font(HuddleFont.display(110))
+                                .foregroundColor(accent)
+                        }
+                    } else {
+                        Text(game.currentName)
+                            .font(HuddleFont.display(60))
+                            .foregroundColor(HuddleColors.textPrimary)
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.4)
+                            .lineLimit(3)
+                            .padding(.horizontal, 20)
+                            .id(game.nameIndex)
+                            .transition(.scale.combined(with: .opacity))
+                    }
 
                     Spacer()
 
@@ -76,14 +89,14 @@ struct WhoAmIPlayView: View {
                     HStack(spacing: 12) {
                         // CORRECT button
                         Button {
-                            guard remaining > 0 else { return }
+                            guard remaining > 0, ready == 0 else { return }
                             game.markCorrect()
-                            showFlash(.green)
+                            showFlash(HuddleColors.success)
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "checkmark")
                                     .font(.system(size: 24, weight: .bold))
-                                Text("CORRECT")
+                                Text(L("CORRECT", "BENAR"))
                                     .font(HuddleFont.heading(20))
                             }
                             .foregroundColor(.white)
@@ -95,20 +108,20 @@ struct WhoAmIPlayView: View {
 
                         // SKIP button
                         Button {
-                            guard remaining > 0 else { return }
+                            guard remaining > 0, ready == 0 else { return }
                             game.markSkip()
-                            showFlash(HuddleColors.mostLikelyTo)
+                            showFlash(HuddleColors.gold)
                         } label: {
                             HStack(spacing: 8) {
                                 Image(systemName: "forward.fill")
                                     .font(.system(size: 20, weight: .bold))
-                                Text("SKIP")
+                                Text(L("SKIP", "LEWATI"))
                                     .font(HuddleFont.heading(20))
                             }
-                            .foregroundColor(.black)
+                            .foregroundColor(HuddleColors.textPrimary)
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: 60)
-                            .background(HuddleColors.mostLikelyTo)
+                            .background(HuddleColors.gold)
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                     }
@@ -116,10 +129,11 @@ struct WhoAmIPlayView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .onChange(of: Int(remaining)) { _, newValue in
-                if newValue <= 0 {
+            .onChange(of: Int(remaining.rounded(.up))) { _, newValue in
+                if (1...5).contains(newValue) { Feedback.play(.tick) }
+                if newValue <= 0 && game.phase == .play {
                     game.endTurn()
-                    HapticManager.error()
+                    Feedback.error()
                 }
             }
         }

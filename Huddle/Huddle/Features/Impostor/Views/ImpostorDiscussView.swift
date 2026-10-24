@@ -10,15 +10,17 @@ struct ImpostorDiscussView: View {
 
             // Turn indicator
             VStack(spacing: 8) {
-                Text("\u{1F4AC}")
-                    .font(.system(size: 56))
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 48))
+                    .foregroundColor(HuddleColors.impostor)
+                    .accessibilityHidden(true)
 
-                Text("DISCUSSION")
+                Text(L("DISCUSSION", "DISKUSI"))
                     .font(HuddleFont.display(32))
                     .foregroundColor(HuddleColors.impostor)
 
                 if game.turnNumber > 0 {
-                    Text("ROUND \(game.turnNumber + 1)")
+                    Text(L("ROUND \(game.turnNumber + 1)", "RONDE \(game.turnNumber + 1)"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -27,7 +29,7 @@ struct ImpostorDiscussView: View {
 
             // Discussion order
             VStack(spacing: 10) {
-                Text("DISCUSSION ORDER")
+                Text(L("TAKE TURNS DESCRIBING YOUR WORD", "GILIRAN MENJELASKAN KATA"))
                     .font(HuddleFont.caption(11))
                     .tracking(3)
                     .foregroundColor(HuddleColors.textMuted)
@@ -48,7 +50,7 @@ struct ImpostorDiscussView: View {
                             .foregroundColor(HuddleColors.textPrimary)
                         Spacer()
                         if position == 0 {
-                            Text("STARTS")
+                            Text(L("STARTS", "MULAI"))
                                 .font(HuddleFont.caption(9))
                                 .tracking(2)
                                 .foregroundColor(HuddleColors.impostor)
@@ -88,7 +90,7 @@ struct ImpostorDiscussView: View {
             // Eliminated players
             if !game.eliminated.isEmpty {
                 VStack(spacing: 8) {
-                    Text("ELIMINATED")
+                    Text(L("VOTED OUT", "TERELIMINASI"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -96,7 +98,7 @@ struct ImpostorDiscussView: View {
                     ForEach(game.eliminated, id: \.self) { idx in
                         let player = game.players[idx]
                         HStack(spacing: 8) {
-                            Text(player.role.emoji)
+                            Image(systemName: player.role.emoji)
                                 .font(.system(size: 16))
                             Text(player.name)
                                 .font(HuddleFont.caption())
@@ -114,12 +116,12 @@ struct ImpostorDiscussView: View {
 
             Spacer()
 
-            Text("Discuss among yourselves.\nWho is the Impostor?")
+            Text(L("Describe your word without saying it.\nWho is the Impostor?", "Jelaskan katamu tanpa menyebutnya.\nSiapa Impostornya?"))
                 .font(HuddleFont.caption())
                 .foregroundColor(HuddleColors.textMuted)
                 .multilineTextAlignment(.center)
 
-            GlowButton(title: "START VOTING", color: HuddleColors.impostor) {
+            GlowButton(title: L("START VOTING", "MULAI VOTING"), color: HuddleColors.impostor) {
                 onStartVoting()
             }
             .padding(.horizontal, 24)

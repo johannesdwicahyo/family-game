@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Huddle - Hub Layout</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d0d1a; color: #f0f0f0; font-family: -apple-system, system-ui, sans-serif; padding: 20px; }
+  h2 { text-align: center; font-size: 20px; color: #888; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #555; font-size: 13px; margin-bottom: 30px; }
+
+  .layouts { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 1100px; margin: 0 auto; }
+  .layout-option {
+    flex: 1; min-width: 320px; max-width: 380px; cursor: pointer;
+    border: 2px solid #2a2a3a; border-radius: 16px; overflow: hidden;
+    transition: all 0.2s; background: #12121f;
+  }
+  .layout-option:hover { border-color: #4D96FF; transform: translateY(-2px); }
+  .layout-option.selected { border-color: #4D96FF; box-shadow: 0 0 20px rgba(77,150,255,0.3); }
+  .layout-label { padding: 12px 16px; text-align: center; }
+  .layout-label h3 { font-size: 16px; color: #fff; margin-bottom: 4px; }
+  .layout-label p { font-size: 11px; color: #888; }
+
+  /* Phone frame */
+  .phone {
+    width: 280px; height: 520px; margin: 16px auto;
+    background: #0a0a14; border-radius: 32px; border: 3px solid #2a2a3a;
+    padding: 12px; overflow: hidden; position: relative;
+  }
+  .phone-inner { width: 100%; height: 100%; border-radius: 24px; overflow-y: auto; background: #0d0d1a; }
+  .phone-inner::-webkit-scrollbar { display: none; }
+
+  /* Shared styles */
+  .ph-header { padding: 16px 16px 8px; text-align: center; }
+  .ph-logo { font-weight: 900; font-size: 28px; letter-spacing: 2px; background: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCB77, #4D96FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .ph-sub { font-size: 9px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+  .ph-badge { display: inline-block; background: rgba(255,215,0,0.15); color: #FFD93D; font-size: 8px; padding: 2px 8px; border-radius: 10px; border: 1px solid rgba(255,215,0,0.2); margin-top: 6px; }
+
+  /* Layout A: Vertical scroll cards */
+  .v-card {
+    margin: 8px 12px; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 12px;
+    border: 1px solid #1e1e30; position: relative; overflow: hidden;
+  }
+  .v-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.08; border-radius: 14px; }
+  .v-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .v-info h4 { font-size: 13px; font-weight: 700; color: #fff; }
+  .v-info p { font-size: 9px; color: #888; margin-top: 2px; line-height: 1.3; }
+  .v-players { font-size: 8px; color: #555; margin-top: 3px; }
+  .v-arrow { color: #333; font-size: 14px; margin-left: auto; flex-shrink: 0; }
+
+  /* Layout B: Grid cards */
+  .g-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 12px; }
+  .g-card {
+    border-radius: 14px; padding: 14px 10px; text-align: center;
+    border: 1px solid #1e1e30; position: relative; overflow: hidden;
+  }
+  .g-emoji { font-size: 28px; margin-bottom: 6px; }
+  .g-name { font-size: 11px; font-weight: 700; color: #fff; }
+  .g-desc { font-size: 8px; color: #666; margin-top: 3px; line-height: 1.3; }
+
+  /* Layout C: Featured + list */
+  .f-featured {
+    margin: 8px 12px; border-radius: 16px; padding: 20px; text-align: center;
+    border: 1px solid #1e1e30; position: relative; overflow: hidden;
+  }
+  .f-featured::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.1; border-radius: 16px; }
+  .f-emoji { font-size: 36px; margin-bottom: 8px; }
+  .f-name { font-size: 18px; font-weight: 800; color: #fff; }
+  .f-desc { font-size: 10px; color: #888; margin-top: 4px; }
+  .f-btn { display: inline-block; margin-top: 10px; padding: 6px 20px; border-radius: 20px; font-size: 10px; font-weight: 700; color: #fff; }
+  .f-list { padding: 4px 12px; }
+  .f-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid #1a1a28;
+  }
+  .f-item-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .f-item-name { font-size: 11px; font-weight: 600; color: #fff; }
+  .f-item-desc { font-size: 8px; color: #666; }
+
+  .sel-indicator {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #4D96FF; color: white; padding: 8px 20px; border-radius: 20px;
+    font-size: 13px; font-weight: 600; display: none; z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<h2>Hub Layout — How should games be presented?</h2>
+<p class="subtitle">Click to select your preferred layout. This is the main screen users see when opening the app.</p>
+
+<div class="layouts">
+
+  <!-- Layout A: Vertical List -->
+  <div class="layout-option" data-choice="a" onclick="select(this)">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="ph-header">
+          <div class="ph-logo">HUDDLE</div>
+          <div class="ph-sub">Party Games</div>
+          <div class="ph-badge">5 GAMES AVAILABLE</div>
+        </div>
+
+        <div class="v-card" style="background: linear-gradient(135deg, rgba(255,107,107,0.1), rgba(255,107,107,0.02));">
+          <div class="v-icon" style="background: rgba(255,107,107,0.2);">🔪</div>
+          <div class="v-info">
+            <h4 style="color: #FF6B6B;">Impostor</h4>
+            <p>Find the player with the different word</p>
+            <div class="v-players">3-8 players</div>
+          </div>
+          <div class="v-arrow">›</div>
+        </div>
+
+        <div class="v-card" style="background: linear-gradient(135deg, rgba(77,150,255,0.1), rgba(77,150,255,0.02));">
+          <div class="v-icon" style="background: rgba(77,150,255,0.2);">💣</div>
+          <div class="v-info">
+            <h4 style="color: #4D96FF;">Word Bomb</h4>
+            <p>Type a word before the bomb explodes</p>
+            <div class="v-players">2-8 players</div>
+          </div>
+          <div class="v-arrow">›</div>
+        </div>
+
+        <div class="v-card" style="background: linear-gradient(135deg, rgba(107,203,119,0.1), rgba(107,203,119,0.02));">
+          <div class="v-icon" style="background: rgba(107,203,119,0.2);">🤔</div>
+          <div class="v-info">
+            <h4 style="color: #6BCB77;">Who Am I?</h4>
+            <p>Phone on forehead, guess the character</p>
+            <div class="v-players">2-8 players</div>
+          </div>
+          <div class="v-arrow">›</div>
+        </div>
+
+        <div class="v-card" style="background: linear-gradient(135deg, rgba(255,217,61,0.1), rgba(255,217,61,0.02));">
+          <div class="v-icon" style="background: rgba(255,217,61,0.2);">👑</div>
+          <div class="v-info">
+            <h4 style="color: #FFD93D;">Most Likely To</h4>
+            <p>Vote who fits the question best</p>
+            <div class="v-players">3-8 players</div>
+          </div>
+          <div class="v-arrow">›</div>
+        </div>
+
+        <div class="v-card" style="background: linear-gradient(135deg, rgba(155,89,182,0.1), rgba(155,89,182,0.02));">
+          <div class="v-icon" style="background: rgba(155,89,182,0.2);">🎡</div>
+          <div class="v-info">
+            <h4 style="color: #9B59B6;">Roulette</h4>
+            <p>Custom spinning wheel for any game</p>
+            <div class="v-players">1+ players</div>
+          </div>
+          <div class="v-arrow">›</div>
+        </div>
+      </div>
+    </div>
+    <div class="layout-label">
+      <h3>A: Vertical List</h3>
+      <p>Clean list cards with game color, icon, description. Easy to scan and scroll. Most apps use this.</p>
+    </div>
+  </div>
+
+  <!-- Layout B: Grid -->
+  <div class="layout-option" data-choice="b" onclick="select(this)">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="ph-header">
+          <div class="ph-logo">HUDDLE</div>
+          <div class="ph-sub">Party Games</div>
+          <div class="ph-badge">5 GAMES AVAILABLE</div>
+        </div>
+
+        <div class="g-grid">
+          <div class="g-card" style="background: linear-gradient(160deg, rgba(255,107,107,0.15), rgba(255,107,107,0.02)); border-color: rgba(255,107,107,0.15);">
+            <div class="g-emoji">🔪</div>
+            <div class="g-name" style="color: #FF6B6B;">Impostor</div>
+            <div class="g-desc">Find the different word</div>
+          </div>
+          <div class="g-card" style="background: linear-gradient(160deg, rgba(77,150,255,0.15), rgba(77,150,255,0.02)); border-color: rgba(77,150,255,0.15);">
+            <div class="g-emoji">💣</div>
+            <div class="g-name" style="color: #4D96FF;">Word Bomb</div>
+            <div class="g-desc">Beat the timer</div>
+          </div>
+          <div class="g-card" style="background: linear-gradient(160deg, rgba(107,203,119,0.15), rgba(107,203,119,0.02)); border-color: rgba(107,203,119,0.15);">
+            <div class="g-emoji">🤔</div>
+            <div class="g-name" style="color: #6BCB77;">Who Am I?</div>
+            <div class="g-desc">Phone on forehead</div>
+          </div>
+          <div class="g-card" style="background: linear-gradient(160deg, rgba(255,217,61,0.15), rgba(255,217,61,0.02)); border-color: rgba(255,217,61,0.15);">
+            <div class="g-emoji">👑</div>
+            <div class="g-name" style="color: #FFD93D;">Most Likely To</div>
+            <div class="g-desc">Vote for who fits</div>
+          </div>
+          <div class="g-card" style="background: linear-gradient(160deg, rgba(155,89,182,0.15), rgba(155,89,182,0.02)); border-color: rgba(155,89,182,0.15); grid-column: span 2;">
+            <div class="g-emoji">🎡</div>
+            <div class="g-name" style="color: #9B59B6;">Roulette</div>
+            <div class="g-desc">Custom spinning wheel for any game</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layout-label">
+      <h3>B: Grid Cards</h3>
+      <p>2-column grid with emoji icons. Compact, shows all games at once. Featured game can span full width.</p>
+    </div>
+  </div>
+
+  <!-- Layout C: Featured + Compact List -->
+  <div class="layout-option" data-choice="c" onclick="select(this)">
+    <div class="phone">
+      <div class="phone-inner">
+        <div class="ph-header">
+          <div class="ph-logo">HUDDLE</div>
+          <div class="ph-sub">Party Games</div>
+        </div>
+
+        <div class="f-featured" style="background: linear-gradient(135deg, rgba(255,107,107,0.12), rgba(255,107,107,0.03));">
+          <div style="position:absolute;top:8px;right:10px;font-size:7px;color:#FF6B6B;background:rgba(255,107,107,0.15);padding:2px 8px;border-radius:8px;">POPULAR</div>
+          <div class="f-emoji">🔪</div>
+          <div class="f-name" style="color:#FF6B6B;">Impostor</div>
+          <div class="f-desc">Find the player with the different word. Bluff, deduce, and eliminate!</div>
+          <div class="f-btn" style="background:#FF6B6B;">PLAY NOW</div>
+        </div>
+
+        <div style="padding: 8px 14px 4px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #888;">MORE GAMES</span>
+          <span style="font-size: 9px; color: #444;">4 games</span>
+        </div>
+
+        <div class="f-list">
+          <div class="f-item">
+            <div class="f-item-icon" style="background: rgba(77,150,255,0.2);">💣</div>
+            <div>
+              <div class="f-item-name" style="color:#4D96FF;">Word Bomb</div>
+              <div class="f-item-desc">Type a word before the bomb explodes</div>
+            </div>
+          </div>
+          <div class="f-item">
+            <div class="f-item-icon" style="background: rgba(107,203,119,0.2);">🤔</div>
+            <div>
+              <div class="f-item-name" style="color:#6BCB77;">Who Am I?</div>
+              <div class="f-item-desc">Phone on forehead, guess the character</div>
+            </div>
+          </div>
+          <div class="f-item">
+            <div class="f-item-icon" style="background: rgba(255,217,61,0.2);">👑</div>
+            <div>
+              <div class="f-item-name" style="color:#FFD93D;">Most Likely To</div>
+              <div class="f-item-desc">Vote who fits the question best</div>
+            </div>
+          </div>
+          <div class="f-item" style="border-bottom:none;">
+            <div class="f-item-icon" style="background: rgba(155,89,182,0.2);">🎡</div>
+            <div>
+              <div class="f-item-name" style="color:#9B59B6;">Roulette</div>
+              <div class="f-item-desc">Custom spinning wheel for any game</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layout-label">
+      <h3>C: Featured + List</h3>
+      <p>Hero card for the top/popular game, compact list for the rest. Highlights one game while showing all. Can rotate the featured game.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="sel-indicator" id="indicator"></div>
+
+<script>
+  let selected = null;
+  function select(el) {
+    document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selected = el.dataset.choice;
+    const ind = document.getElementById('indicator');
+    ind.style.display = 'block';
+    ind.textContent = 'Selected: ' + el.querySelector('h3').textContent;
+
+    // Record event
+    const eventsUrl = '/.events';
+    fetch(eventsUrl, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({type:'click', choice: selected, text: el.querySelector('h3').textContent})
+    }).catch(() => {});
+  }
+</script>
+</body>
+</html>

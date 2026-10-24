@@ -11,26 +11,21 @@ struct WordBombResultView: View {
                 Spacer().frame(height: 20)
 
                 // Trophy
-                Text("\u{1F3C6}")
-                    .font(.system(size: 64))
+                TrophyArt(size: 100)
 
-                Text("WINNER")
+                Text(L("WINNER", "PEMENANG"))
                     .font(HuddleFont.caption(14))
                     .tracking(6)
                     .foregroundColor(HuddleColors.wordBomb)
 
                 if let winner = game.winner {
-                    Text(winner.name)
-                        .font(HuddleFont.display(42))
-                        .foregroundColor(.green)
+                    WinnerTitle(text: winner.name)
                 }
 
-                Text("\u{1F389}\u{1F389}\u{1F389}")
-                    .font(.system(size: 32))
 
                 // Elimination order
                 VStack(spacing: 8) {
-                    Text("ELIMINATION ORDER")
+                    Text(L("ORDER OUT", "URUTAN GUGUR"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -49,7 +44,7 @@ struct WordBombResultView: View {
 
                             Spacer()
 
-                            Text("\u{2620}\u{FE0F}")
+                            Image(systemName: "xmark.circle").foregroundColor(HuddleColors.textMuted)
                         }
                         .padding(12)
                         .background(HuddleColors.cardBackground)
@@ -60,7 +55,7 @@ struct WordBombResultView: View {
                 // Stats
                 NeonCard(accentColor: HuddleColors.wordBomb) {
                     VStack(spacing: 8) {
-                        Text("STATS")
+                        Text(L("STATS", "STATISTIK"))
                             .font(HuddleFont.caption(11))
                             .tracking(3)
                             .foregroundColor(HuddleColors.textMuted)
@@ -70,7 +65,7 @@ struct WordBombResultView: View {
                                 Text("\(game.totalWordsPlayed)")
                                     .font(HuddleFont.display(28))
                                     .foregroundColor(HuddleColors.wordBomb)
-                                Text("TOTAL WORDS")
+                                Text(L("TOTAL WORDS", "TOTAL KATA"))
                                     .font(HuddleFont.caption(9))
                                     .foregroundColor(HuddleColors.textMuted)
                             }
@@ -78,10 +73,10 @@ struct WordBombResultView: View {
                             VStack(spacing: 4) {
                                 Text(game.longestWord.isEmpty ? "-" : game.longestWord.uppercased())
                                     .font(HuddleFont.display(game.longestWord.count > 8 ? 18 : 24))
-                                    .foregroundColor(.yellow)
+                                    .foregroundColor(HuddleColors.warning)
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.5)
-                                Text("LONGEST")
+                                Text(L("LONGEST", "TERPANJANG"))
                                     .font(HuddleFont.caption(9))
                                     .foregroundColor(HuddleColors.textMuted)
                             }
@@ -91,10 +86,10 @@ struct WordBombResultView: View {
 
                 // Buttons
                 VStack(spacing: 10) {
-                    GlowButton(title: "PLAY AGAIN", color: HuddleColors.wordBomb, action: onPlayAgain)
+                    GlowButton(title: L("PLAY AGAIN", "MAIN LAGI"), color: HuddleColors.wordBomb, action: onPlayAgain)
 
                     Button(action: onExit) {
-                        Text("EXIT")
+                        Text(L("EXIT", "KELUAR"))
                             .font(HuddleFont.heading(16))
                             .tracking(2)
                             .foregroundColor(HuddleColors.textMuted)

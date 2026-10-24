@@ -11,13 +11,13 @@ struct MostLikelyToVoteView: View {
             VStack(spacing: 20) {
                 // Current voter
                 VStack(spacing: 4) {
-                    Text("YOUR TURN")
+                    Text(L("YOUR VOTE", "PILIHANMU"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
                     Text(game.players[game.currentVoterIndex].name)
                         .font(HuddleFont.display(28))
-                        .foregroundColor(accent)
+                        .foregroundColor(HuddleColors.textPrimary)
                 }
                 .padding(.top, 8)
 
@@ -32,7 +32,7 @@ struct MostLikelyToVoteView: View {
 
                 // Player buttons
                 VStack(spacing: 8) {
-                    Text("VOTE FOR")
+                    Text(L("TAP A NAME", "TAP SATU NAMA"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -40,7 +40,7 @@ struct MostLikelyToVoteView: View {
 
                     ForEach(Array(game.players.enumerated()), id: \.element.id) { index, player in
                         Button {
-                            HapticManager.tap()
+                            Feedback.tap()
                             onVote(index)
                         } label: {
                             HStack {

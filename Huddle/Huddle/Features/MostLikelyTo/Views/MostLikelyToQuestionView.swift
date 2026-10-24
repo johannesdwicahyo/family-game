@@ -32,7 +32,7 @@ struct MostLikelyToQuestionView: View {
                     .lineSpacing(4)
                     .padding(.horizontal, 24)
 
-                Text("Read the question aloud, then start voting!")
+                Text(L("Read the question out loud, then start voting!", "Bacakan pertanyaannya, lalu mulai voting!"))
                     .font(HuddleFont.caption())
                     .foregroundColor(HuddleColors.textMuted)
                     .multilineTextAlignment(.center)
@@ -41,7 +41,7 @@ struct MostLikelyToQuestionView: View {
 
             Spacer()
 
-            GlowButton(title: "START VOTING", color: accent) {
+            GlowButton(title: L("START VOTING", "MULAI VOTING"), color: accent) {
                 onStartVoting()
             }
             .padding(.horizontal, 24)

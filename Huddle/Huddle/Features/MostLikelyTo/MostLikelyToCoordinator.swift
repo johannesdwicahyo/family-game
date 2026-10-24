@@ -4,6 +4,7 @@ struct MostLikelyToCoordinator: View {
     @Bindable var game: MostLikelyToGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var ads: Ads
 
     var body: some View {
         Group {
@@ -53,9 +54,9 @@ struct MostLikelyToCoordinator: View {
 
             case .result:
                 MostLikelyToResultView(game: game, onPlayAgain: {
-                    game.resetToSetup()
+                    ads.afterGame { game.resetToSetup() }
                 }, onExit: {
-                    dismiss()
+                    ads.afterGame { game.resetToSetup(); dismiss() }
                 })
                 .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
@@ -64,10 +65,13 @@ struct MostLikelyToCoordinator: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
+                Button {
+                    if game.phase == .setup { dismiss() } else { game.phase = .setup }
+                } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
+                .accessibilityLabel(L("Back", "Kembali"))
             }
         }
     }

@@ -14,14 +14,16 @@ struct ImpostorGuessView: View {
             Spacer()
 
             VStack(spacing: 12) {
-                Text("\u{2753}")
+                Image(systemName: "questionmark.circle.fill")
                     .font(.system(size: 56))
+                    .foregroundColor(HuddleColors.wordBomb)
+                    .accessibilityHidden(true)
 
-                Text("MR. WHITE ELIMINATED!")
+                Text(L("MR. WHITE IS OUT!", "MR. WHITE TERELIMINASI!"))
                     .font(HuddleFont.display(24))
                     .foregroundColor(HuddleColors.wordBomb)
 
-                Text("\(mrWhiteName) gets one chance to guess the civilian word")
+                Text(L("\(mrWhiteName) gets one chance to guess the civilians' word", "\(mrWhiteName) punya satu kesempatan menebak kata warga"))
                     .font(HuddleFont.body())
                     .foregroundColor(HuddleColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -29,12 +31,12 @@ struct ImpostorGuessView: View {
             }
 
             VStack(spacing: 12) {
-                Text("GUESS THE WORD")
+                Text(L("GUESS THE WORD", "TEBAK KATANYA"))
                     .font(HuddleFont.caption(11))
                     .tracking(3)
                     .foregroundColor(HuddleColors.textMuted)
 
-                TextField("Type your guess...", text: $game.guessText)
+                TextField(L("Type your guess…", "Ketik tebakanmu…"), text: $game.guessText)
                     .font(HuddleFont.heading(20))
                     .multilineTextAlignment(.center)
                     .padding(16)
@@ -51,12 +53,11 @@ struct ImpostorGuessView: View {
 
             Spacer()
 
-            GlowButton(title: "GUESS NOW", color: HuddleColors.wordBomb) {
-                if game.guessText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-                    == game.pair?.normal.lowercased() {
-                    HapticManager.success()
+            GlowButton(title: L("GUESS NOW", "TEBAK"), color: HuddleColors.wordBomb) {
+                if game.guessIsRight {
+                    Feedback.success()
                 } else {
-                    HapticManager.error()
+                    Feedback.error()
                 }
                 game.submitGuess()
             }

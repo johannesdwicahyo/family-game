@@ -8,14 +8,13 @@ struct WhoAmIPassView: View {
         PassScreen(
             playerName: game.currentPlayerName,
             accentColor: HuddleColors.whoAmI,
-            subtitle: "Hand the phone to",
             extraContent: {
                 VStack(spacing: 8) {
                     HStack(spacing: 16) {
-                        Label("\(game.selectedCategory)", systemImage: "tag.fill")
+                        Label(game.selectedCategory == "Mixed" ? L("Everything", "Semua") : game.selectedCategory, systemImage: "tag.fill")
                             .font(HuddleFont.caption(11))
                             .foregroundColor(HuddleColors.textMuted)
-                        Label("\(Int(game.timerDuration))s", systemImage: "timer")
+                        Label(L("\(Int(game.timerDuration)) sec", "\(Int(game.timerDuration)) dtk"), systemImage: "timer")
                             .font(HuddleFont.caption(11))
                             .foregroundColor(HuddleColors.textMuted)
                     }
@@ -24,7 +23,7 @@ struct WhoAmIPassView: View {
                     .background(HuddleColors.cardBackground)
                     .clipShape(Capsule())
 
-                    Text("Round \(game.currentRound) / \(game.roundsPerPlayer)")
+                    Text(L("Turn \(game.currentRound) of \(game.roundsPerPlayer)", "Giliran \(game.currentRound) dari \(game.roundsPerPlayer)"))
                         .font(HuddleFont.caption(10))
                         .foregroundColor(HuddleColors.textMuted)
 
@@ -40,7 +39,7 @@ struct WhoAmIPassView: View {
                         }
                     }
 
-                    Text("Place phone on forehead after pressing READY")
+                    Text(L("After READY you get 3 seconds to put the phone on your forehead, screen facing your friends.", "Setelah SIAP, ada 3 detik untuk menempelkan HP di dahi, layar menghadap teman-teman."))
                         .font(HuddleFont.caption(11))
                         .foregroundColor(HuddleColors.textMuted)
                         .multilineTextAlignment(.center)

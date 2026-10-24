@@ -8,24 +8,16 @@ struct NeonCard<Content: View>: View {
         content
             .padding(18)
             .background(
-                LinearGradient(
-                    colors: [accentColor.opacity(0.08), HuddleColors.cardBackground],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                ZStack {
+                    HuddleColors.cardBackground
+                    accentColor.fillTone.opacity(0.07)
+                }
             )
             .clipShape(RoundedRectangle(cornerRadius: 18))
             .overlay(
                 RoundedRectangle(cornerRadius: 18)
-                    .stroke(
-                        LinearGradient(
-                            colors: [accentColor.opacity(0.3), accentColor.opacity(0.05)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
+                    .stroke(HuddleColors.cardBorder, lineWidth: 1)
             )
-            .shadow(color: accentColor.opacity(0.08), radius: 12, x: 0, y: 4)
+            .shadow(color: HuddleColors.shadow, radius: 12, x: 0, y: 4)
     }
 }

@@ -4,6 +4,7 @@ struct WhoAmICoordinator: View {
     @Bindable var game: WhoAmIGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var ads: Ads
 
     var body: some View {
         Group {
@@ -44,9 +45,9 @@ struct WhoAmICoordinator: View {
 
             case .result:
                 WhoAmIResultView(game: game, onPlayAgain: {
-                    game.phase = .setup
+                    ads.afterGame { game.phase = .setup }
                 }, onExit: {
-                    dismiss()
+                    ads.afterGame { game.phase = .setup; dismiss() }
                 })
                 .onAppear {
                     UIApplication.shared.isIdleTimerDisabled = false
@@ -60,11 +61,12 @@ struct WhoAmICoordinator: View {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
                     UIApplication.shared.isIdleTimerDisabled = false
-                    dismiss()
+                    if game.phase == .setup { dismiss() } else { game.phase = .setup }
                 } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
+                .accessibilityLabel(L("Back", "Kembali"))
             }
         }
     }

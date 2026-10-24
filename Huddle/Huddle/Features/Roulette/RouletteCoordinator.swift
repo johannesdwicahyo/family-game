@@ -26,8 +26,9 @@ struct RouletteMainView: View {
                             .font(.title3.weight(.semibold))
                             .foregroundColor(HuddleColors.textSecondary)
                     }
+                    .accessibilityLabel(L("Back", "Kembali"))
                     Spacer()
-                    Text(game.title.uppercased())
+                    Text((game.title.isEmpty ? GameDefinition.find("roulette").name : game.title).uppercased())
                         .font(HuddleFont.heading(18))
                         .foregroundColor(HuddleColors.roulette)
                     Spacer()

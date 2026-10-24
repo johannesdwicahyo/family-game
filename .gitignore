@@ -1,0 +1,10 @@
+.DS_Store
+Huddle/.build/
+xcuserdata/
+*.xcuserstate
+__pycache__/
+Huddle/.build-device/
+art/raw/
+art/review-*/
+art/v1-dark/
+art/v2-cute/

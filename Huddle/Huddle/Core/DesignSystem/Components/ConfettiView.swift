@@ -4,6 +4,7 @@ struct ConfettiView: View {
     let color: Color
     @State private var particles: [ConfettiParticle] = []
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     struct ConfettiParticle: Identifiable {
         let id = UUID()
@@ -19,7 +20,7 @@ struct ConfettiView: View {
         GeometryReader { geo in
             ZStack {
                 ForEach(particles) { p in
-                    RoundedRectangle(cornerRadius: 2)
+                    RoundedRectangle(cornerRadius: 1)
                         .fill(p.color)
                         .frame(width: p.size, height: p.size * 1.5)
                         .rotationEffect(.degrees(isAnimating ? p.rotation + 360 : p.rotation))
@@ -37,20 +38,14 @@ struct ConfettiView: View {
         }
         .allowsHitTesting(false)
         .onAppear {
+            guard !reduceMotion else { return }
             generateParticles()
             isAnimating = true
         }
     }
 
     private func generateParticles() {
-        let colors: [Color] = [
-            color,
-            color.opacity(0.7),
-            HuddleColors.mostLikelyTo,
-            HuddleColors.whoAmI,
-            HuddleColors.wordBomb,
-            .white
-        ]
+        let colors: [Color] = [color.fillTone, HuddleColors.gold, HuddleColors.impostor, HuddleColors.wordBomb, HuddleColors.wordChain, HuddleColors.textPrimary]
         particles = (0..<30).map { i in
             ConfettiParticle(
                 x: CGFloat.random(in: 0.05...0.95),

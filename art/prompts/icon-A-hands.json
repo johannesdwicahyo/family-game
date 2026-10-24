@@ -1,0 +1,10 @@
+{
+ "prompt": "Top-down view of five diverse adult hands (varied skin tones, simple flat shapes, plain sleeves in cobalt, ink navy, off-white and gold) meeting and stacked in the centre like a team huddle, fingertips overlapping, on a solid tomato-red background. Do not include the bomb. An iOS app icon for a party-games app for adults: a FULL-BLEED square whose solid background fills the entire canvas edge to edge, NO white margin, NO border, NO rounded corners. Bold and simple so it reads at 60 pixels. No text, no letters, no numbers. Style: modern editorial flat illustration exactly in the style of the reference image(s): bold simple geometric shapes, confident limited palette (tomato red, cobalt blue, sunflower gold, deep ink navy, warm off-white), flat highlight and one flat shadow tone, crisp edges, no outlines, subtle grain, NO faces, NO eyes, nothing cute.",
+ "image_urls": [
+  "https://v3b.fal.media/files/b/0aafa34a/qRaZfD0sT0yAGAF8LJjFq_uvnpG5BK.png"
+ ],
+ "aspect_ratio": "1:1",
+ "num_images": 1,
+ "output_format": "png",
+ "resolution": "1K"
+}

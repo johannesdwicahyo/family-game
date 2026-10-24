@@ -6,8 +6,8 @@ struct TimerRing: View {
     var size: CGFloat = 80
 
     private var currentColor: Color {
-        if progress < 0.3 { return .red }
-        if progress < 0.5 { return .yellow }
+        if progress < 0.3 { return HuddleColors.danger }
+        if progress < 0.5 { return HuddleColors.warning }
         return color
     }
 

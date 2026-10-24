@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class WhoAmIGame {
+@MainActor @Observable final class WhoAmIGame {
     enum Phase: Equatable {
         case setup, pass, play, turnResult, result
     }
@@ -44,10 +44,19 @@ import SwiftUI
         return currentNames[nameIndex]
     }
 
+    /// Seconds of "get ready" before the clock starts, to get the phone up to the forehead.
+    static let getReady: Double = 3
+
     var timeRemaining: Double {
         guard let start = timerStartDate else { return timerDuration }
         let elapsed = Date().timeIntervalSince(start)
-        return max(0, timerDuration - elapsed)
+        return min(timerDuration, max(0, timerDuration - elapsed))
+    }
+
+    /// Seconds left in the get-ready count (0 once the turn is running).
+    var getReadyLeft: Double {
+        guard let start = timerStartDate else { return 0 }
+        return max(0, start.timeIntervalSinceNow)
     }
 
     var timerProgress: Double {
@@ -78,41 +87,37 @@ import SwiftUI
     }
 
     func startTurn() {
-        let mixedKey = language == "id" ? "Campur" : "Mixed"
-        let categoryKey = selectedCategory == "Mixed" ? mixedKey : selectedCategory
-        currentNames = WhoAmIData.names(for: categoryKey, language: language)
+        currentNames = WhoAmIData.names(for: selectedCategory, language: language)
         if currentNames.isEmpty {
-            currentNames = WhoAmIData.names(for: mixedKey, language: language)
+            currentNames = WhoAmIData.names(for: "Mixed", language: language)
         }
         nameIndex = 0
         correct = 0
         skipped = 0
         correctNames = []
         skippedNames = []
-        timerStartDate = Date()
+        timerStartDate = Date().addingTimeInterval(Self.getReady)
         phase = .play
     }
 
     func markCorrect() {
         correct += 1
         correctNames.append(currentName)
-        HapticManager.success()
+        Feedback.success()
         advanceName()
     }
 
     func markSkip() {
         skipped += 1
         skippedNames.append(currentName)
-        HapticManager.tap()
+        Feedback.play(.wrong)
         advanceName()
     }
 
     private func advanceName() {
         nameIndex += 1
         if nameIndex >= currentNames.count {
-            let mixedKey = language == "id" ? "Campur" : "Mixed"
-            let categoryKey = selectedCategory == "Mixed" ? mixedKey : selectedCategory
-            let moreNames = WhoAmIData.names(for: categoryKey, language: language)
+            let moreNames = WhoAmIData.names(for: selectedCategory, language: language)
             currentNames.append(contentsOf: moreNames)
         }
     }
@@ -143,6 +148,7 @@ import SwiftUI
             currentPlayerIndex = 0
             phase = .pass
         } else {
+            Feedback.win()
             phase = .result
         }
     }

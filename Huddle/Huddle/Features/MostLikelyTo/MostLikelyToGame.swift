@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class MostLikelyToGame {
+@MainActor @Observable final class MostLikelyToGame {
     enum Phase: Equatable {
         case setup, question, votePass, vote, reveal, result
     }
@@ -30,8 +30,8 @@ import SwiftUI
         self.totalRounds = rounds
         self.showVoteTransparency = transparency
 
-        let allQuestions = MostLikelyToData.loadQuestions(language: language).shuffled()
-        self.questions = Array(allQuestions.prefix(rounds))
+        let all = MostLikelyToData.loadQuestions(language: language)
+        self.questions = Recent.pick(rounds, from: all, key: "mostlikelyto_\(language)", id: { $0 })
 
         self.currentQuestionIndex = 0
         self.currentVoterIndex = 0
@@ -49,10 +49,7 @@ import SwiftUI
             phase = .votePass
         } else {
             // All votes in, go to reveal
-            let result = tallyVotes()
-            // Update title counts for winner(s)
-            let maxVotes = result.voteCounts.values.max() ?? 0
-            let winnerIndices = result.voteCounts.filter { $0.value == maxVotes }.map(\.key)
+            let winnerIndices = Self.winners(votes: votes)
             let winnerNames = winnerIndices.map { players[$0].name }
 
             for idx in winnerIndices {
@@ -63,8 +60,16 @@ import SwiftUI
             let winnerDisplay = winnerNames.joined(separator: " & ")
             roundHistory.append((question: currentQuestion ?? "", winnerName: winnerDisplay))
 
+            Feedback.play(.reveal)
             phase = .reveal
         }
+    }
+
+    /// Everyone tied for the most votes (all of them share the title). `votes[voter] = chosen`.
+    static func winners(votes: [Int: Int]) -> [Int] {
+        let counts = Dictionary(votes.values.map { ($0, 1) }, uniquingKeysWith: +)
+        guard let top = counts.values.max() else { return [] }
+        return counts.filter { $0.value == top }.map(\.key).sorted()
     }
 
     func tallyVotes() -> (winnerIndex: Int, voteCounts: [Int: Int]) {
@@ -88,6 +93,7 @@ import SwiftUI
     }
 
     func showResults() {
+        Feedback.win()
         phase = .result
     }
 

@@ -1,0 +1,10 @@
+{
+ "prompt": "Using the same modern editorial flat illustration style and palette as this reference image (bold geometric shapes, flat colour, crisp edges, no outlines, subtle grain), but do not include the bomb. An iOS app icon: a FULL-BLEED square whose solid tomato-red background fills the entire canvas edge to edge, NO white margin, NO border, NO rounded corners. Centred, a tight cluster of three overlapping rounded speech bubbles leaning into each other like friends in a huddle: one warm off-white, one sunflower gold, one cobalt blue, each with a small tail, simple flat shading. Bold, simple, readable at very small size. No characters, no faces, no text, no letters.",
+ "image_urls": [
+  "https://v3b.fal.media/files/b/0aafa34a/qRaZfD0sT0yAGAF8LJjFq_uvnpG5BK.png"
+ ],
+ "aspect_ratio": "1:1",
+ "num_images": 1,
+ "output_format": "png",
+ "resolution": "1K"
+}

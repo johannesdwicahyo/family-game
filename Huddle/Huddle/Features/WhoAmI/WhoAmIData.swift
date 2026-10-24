@@ -20,9 +20,8 @@ enum WhoAmIData {
 
     static func names(for category: String, language: String) -> [String] {
         let cats = loadCategories(language: language)
-        if category == "Mixed" || category == "Campur" {
-            return cats.values.flatMap { $0 }.shuffled()
-        }
-        return (cats[category] ?? []).shuffled()
+        let pool = category == "Mixed" ? cats.values.flatMap { $0 } : (cats[category] ?? [])
+        // Least recently seen first, so cards don't come back the same evening.
+        return Recent.pick(60, from: pool, key: "whoami_\(language)", id: { $0 })
     }
 }

@@ -15,24 +15,20 @@ struct GlowButton: View {
 
     var body: some View {
         Button(action: {
-            HapticManager.tap()
+            Feedback.tap()
             action()
         }) {
             Text(title)
-                .font(HuddleFont.heading(20))
-                .tracking(2)
-                .foregroundColor(.white)
+                .font(HuddleFont.display(20))
+                .tracking(1)
+                .foregroundColor(color.onFill)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 18)
-                .background(
-                    LinearGradient(
-                        colors: [color, color.opacity(0.7)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .shadow(color: color.opacity(0.4), radius: 16, x: 0, y: 8)
+                .background(color.fillTone)
+                // A darker base edge under the button: a chunky, pressable look on cream.
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .background(RoundedRectangle(cornerRadius: 16).fill(.black.opacity(0.22)).offset(y: 4))
+                .shadow(color: HuddleColors.shadow, radius: 16, x: 0, y: 4)
         }
         .buttonStyle(GlowButtonStyle())
     }

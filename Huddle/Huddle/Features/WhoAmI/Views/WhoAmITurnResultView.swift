@@ -11,9 +11,9 @@ struct WhoAmITurnResultView: View {
             VStack(spacing: 20) {
                 // Header
                 VStack(spacing: 8) {
-                    Text("\u{23F0}")
+                    Image(systemName: "alarm.fill").foregroundColor(HuddleColors.whoAmI)
                         .font(.system(size: 48))
-                    Text("TIME'S UP!")
+                    Text(L("TIME'S UP!", "WAKTU HABIS!"))
                         .font(HuddleFont.display(28))
                         .foregroundColor(HuddleColors.impostor)
                     Text(game.currentPlayerName)
@@ -28,7 +28,7 @@ struct WhoAmITurnResultView: View {
                         Text("\(game.correct)")
                             .font(HuddleFont.display(48))
                             .foregroundColor(accent)
-                        Text("CORRECT")
+                        Text(L("CORRECT", "BENAR"))
                             .font(HuddleFont.caption(11))
                             .tracking(2)
                             .foregroundColor(accent)
@@ -36,11 +36,11 @@ struct WhoAmITurnResultView: View {
                     VStack(spacing: 4) {
                         Text("\(game.skipped)")
                             .font(HuddleFont.display(48))
-                            .foregroundColor(HuddleColors.mostLikelyTo)
-                        Text("SKIPPED")
+                            .foregroundColor(HuddleColors.textPrimary)
+                        Text(L("SKIPPED", "DILEWATI"))
                             .font(HuddleFont.caption(11))
                             .tracking(2)
-                            .foregroundColor(HuddleColors.mostLikelyTo)
+                            .foregroundColor(HuddleColors.textPrimary)
                     }
                 }
 
@@ -63,7 +63,7 @@ struct WhoAmITurnResultView: View {
                         ForEach(game.skippedNames, id: \.self) { name in
                             HStack {
                                 Image(systemName: "forward.circle.fill")
-                                    .foregroundColor(HuddleColors.mostLikelyTo)
+                                    .foregroundColor(HuddleColors.textPrimary)
                                     .font(.system(size: 14))
                                 Text(name)
                                     .font(HuddleFont.body(14))
@@ -81,7 +81,7 @@ struct WhoAmITurnResultView: View {
 
                 // Next button
                 GlowButton(
-                    title: game.isGameOver ? "SEE RESULTS" : "NEXT PLAYER",
+                    title: game.isGameOver ? L("SEE RESULTS", "LIHAT HASIL") : L("NEXT PLAYER", "PEMAIN BERIKUTNYA"),
                     color: accent
                 ) {
                     onNext()

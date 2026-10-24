@@ -1,0 +1,12 @@
+{
+ "prompt": "The cobalt bomb with lit fuse, the red masquerade mask on a stick and the gold crown from the reference images, composed together as one tight, bold, overlapping cluster in the centre (crown slightly behind, bomb front, mask angled across), large and simple, on a solid sunflower-gold background. An iOS app icon for a party-games app for adults: a FULL-BLEED square whose solid background fills the entire canvas edge to edge, NO white margin, NO border, NO rounded corners. Bold and simple so it reads at 60 pixels. No text, no letters, no numbers. Style: modern editorial flat illustration exactly in the style of the reference image(s): bold simple geometric shapes, confident limited palette (tomato red, cobalt blue, sunflower gold, deep ink navy, warm off-white), flat highlight and one flat shadow tone, crisp edges, no outlines, subtle grain, NO faces, NO eyes, nothing cute.",
+ "image_urls": [
+  "https://v3b.fal.media/files/b/0aafa34a/qRaZfD0sT0yAGAF8LJjFq_uvnpG5BK.png",
+  "https://v3b.fal.media/files/b/0aafa34e/w3tQ0Tgy9xCIpKVYiz3NY_8BzjruV9.png",
+  "https://v3b.fal.media/files/b/0aafa34e/WW15CZMOV3FOnzW1SwGyX_KW1Bq5Mw.png"
+ ],
+ "aspect_ratio": "1:1",
+ "num_images": 1,
+ "output_format": "png",
+ "resolution": "1K"
+}

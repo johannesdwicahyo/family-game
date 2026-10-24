@@ -17,19 +17,17 @@ struct MostLikelyToResultView: View {
         leaderboard.first?.titles ?? 0
     }
 
-    private let medals = ["🥇", "🥈", "🥉"]
 
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 12) {
-                    Text("\u{1F3C6}")
-                        .font(.system(size: 64))
-                    Text("FINAL RESULTS")
+                    TrophyArt(size: 100)
+                    Text(L("FINAL RESULTS", "HASIL AKHIR"))
                         .font(HuddleFont.display(32))
-                        .foregroundColor(accent)
-                    Text("\(game.totalRounds) rounds completed")
+                        .foregroundColor(HuddleColors.textPrimary)
+                    Text(L("\(game.totalRounds) questions", "\(game.totalRounds) pertanyaan"))
                         .font(HuddleFont.caption(11))
                         .tracking(2)
                         .foregroundColor(HuddleColors.textMuted)
@@ -38,7 +36,7 @@ struct MostLikelyToResultView: View {
 
                 // Leaderboard
                 VStack(spacing: 8) {
-                    Text("LEADERBOARD")
+                    Text(L("MOST TITLES", "GELAR TERBANYAK"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -50,16 +48,7 @@ struct MostLikelyToResultView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 HStack(spacing: 8) {
-                                    if rank < 3 {
-                                        Text(medals[rank])
-                                            .font(.system(size: 18))
-                                            .frame(width: 28)
-                                    } else {
-                                        Text("\(rank + 1)")
-                                            .font(HuddleFont.caption())
-                                            .foregroundColor(HuddleColors.textMuted)
-                                            .frame(width: 28)
-                                    }
+                                    Medal(rank: rank)
 
                                     Text(entry.player.name)
                                         .font(HuddleFont.heading(16))
@@ -72,7 +61,7 @@ struct MostLikelyToResultView: View {
                                     Text("\(entry.titles)")
                                         .font(HuddleFont.display(22))
                                         .foregroundColor(isTop ? accent : HuddleColors.textMuted)
-                                    Text("\u{1F451}")
+                                    Image(systemName: "crown.fill").foregroundColor(HuddleColors.gold)
                                         .font(.system(size: 14))
                                 }
                             }
@@ -103,7 +92,7 @@ struct MostLikelyToResultView: View {
 
                 // Round history
                 VStack(spacing: 8) {
-                    Text("ALL ROUNDS")
+                    Text(L("ALL QUESTIONS", "SEMUA PERTANYAAN"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -115,11 +104,11 @@ struct MostLikelyToResultView: View {
                                 .foregroundColor(HuddleColors.textSecondary)
                                 .lineLimit(2)
                             HStack(spacing: 4) {
-                                Text("\u{1F451}")
+                                Image(systemName: "crown.fill").foregroundColor(HuddleColors.gold)
                                     .font(.system(size: 12))
                                 Text(entry.winnerName)
                                     .font(HuddleFont.heading(16))
-                                    .foregroundColor(accent)
+                                    .foregroundColor(HuddleColors.textPrimary)
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,14 +120,14 @@ struct MostLikelyToResultView: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    GlowButton(title: "PLAY AGAIN", color: accent) {
+                    GlowButton(title: L("PLAY AGAIN", "MAIN LAGI"), color: accent) {
                         onPlayAgain()
                     }
 
                     Button {
                         onExit()
                     } label: {
-                        Text("EXIT")
+                        Text(L("EXIT", "KELUAR"))
                             .font(HuddleFont.heading(16))
                             .foregroundColor(HuddleColors.textSecondary)
                             .frame(maxWidth: .infinity)
@@ -155,7 +144,7 @@ struct MostLikelyToResultView: View {
                 .allowsHitTesting(false)
         }
         .onAppear {
-            HapticManager.success()
+            Feedback.success()
         }
     }
 }

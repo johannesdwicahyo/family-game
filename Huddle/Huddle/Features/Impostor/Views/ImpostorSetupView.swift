@@ -11,32 +11,20 @@ struct ImpostorSetupView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Header
-                VStack(spacing: 4) {
-                    Text("\u{1F52A}")
-                        .font(.system(size: 48))
-                    Text("IMPOSTOR")
-                        .font(HuddleFont.display(28))
-                        .foregroundColor(HuddleColors.impostor)
-                    Text("SET UP YOUR GAME")
-                        .font(HuddleFont.caption(11))
-                        .tracking(4)
-                        .foregroundColor(HuddleColors.textMuted)
-                }
-                .padding(.top, 8)
+                SetupHeader(game: GameDefinition.find("impostor"))
 
                 // Leaderboard link
                 if !game.sortedLeaderboard.isEmpty {
                     Button { showLeaderboard = true } label: {
                         HStack(spacing: 8) {
-                            Text("\u{1F3C6}")
-                                .font(.system(size: 18))
-                            Text("LEADERBOARD")
+                            Image(systemName: "trophy.fill")
+                                .foregroundStyle(HuddleColors.gold)
+                            Text(L("LEADERBOARD", "PAPAN SKOR"))
                                 .font(HuddleFont.caption(12))
                                 .tracking(2)
-                                .foregroundColor(HuddleColors.mostLikelyTo)
+                                .foregroundColor(HuddleColors.textPrimary)
                             Spacer()
-                            Text("\(game.roundNumber) rounds")
+                            Text(L("\(game.roundNumber) rounds", "\(game.roundNumber) ronde"))
                                 .font(HuddleFont.caption(10))
                                 .foregroundColor(HuddleColors.textMuted)
                             Image(systemName: "chevron.right")
@@ -55,7 +43,7 @@ struct ImpostorSetupView: View {
 
                 // Role configuration
                 VStack(spacing: 8) {
-                    Text("ROLES")
+                    Text(L("ROLES", "PERAN"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -69,7 +57,7 @@ struct ImpostorSetupView: View {
 
                 // Total players
                 HStack {
-                    Text("Total Players")
+                    Text(L("Total players", "Total pemain"))
                         .font(HuddleFont.body())
                         .foregroundColor(HuddleColors.textSecondary)
                     Spacer()
@@ -83,7 +71,7 @@ struct ImpostorSetupView: View {
 
                 // Player names
                 VStack(spacing: 8) {
-                    Text("PLAYER NAMES")
+                    Text(L("PLAYER NAMES", "NAMA PEMAIN"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -95,7 +83,7 @@ struct ImpostorSetupView: View {
                                 .font(HuddleFont.caption())
                                 .foregroundColor(HuddleColors.textMuted)
                                 .frame(width: 20)
-                            TextField("Player \(i + 1)", text: nameBinding(for: i))
+                            TextField(PlayerNamesEditor.defaultName(i), text: nameBinding(for: i))
                                 .font(HuddleFont.body())
                                 .padding(12)
                                 .background(HuddleColors.cardBackground)
@@ -108,16 +96,16 @@ struct ImpostorSetupView: View {
                 // Scoring toggle
                 DisclosureGroup(isExpanded: $showScoring) {
                     VStack(spacing: 8) {
-                        scoreRow(label: "Civilian Win", value: $game.scores.civilianWin)
-                        scoreRow(label: "Impostor Win", value: $game.scores.impostorWin)
-                        scoreRow(label: "Impostor Survivor Bonus", value: $game.scores.impostorSurvivor)
-                        scoreRow(label: "Joker Eliminated", value: $game.scores.jokerElim)
-                        scoreRow(label: "Mr. White Guess", value: $game.scores.mrWhiteGuess)
-                        scoreRow(label: "Mr. White Survive", value: $game.scores.mrWhiteSurvive)
+                        scoreRow(label: L("Civilians win", "Warga menang"), value: $game.scores.civilianWin)
+                        scoreRow(label: L("Impostor wins", "Impostor menang"), value: $game.scores.impostorWin)
+                        scoreRow(label: L("Impostor bonus per civilian left", "Bonus impostor per warga tersisa"), value: $game.scores.impostorSurvivor)
+                        scoreRow(label: L("Joker voted out first", "Joker dieliminasi pertama"), value: $game.scores.jokerElim)
+                        scoreRow(label: L("Mr. White guesses the word", "Mr. White menebak kata"), value: $game.scores.mrWhiteGuess)
+                        scoreRow(label: L("Mr. White survives", "Mr. White bertahan"), value: $game.scores.mrWhiteSurvive)
                     }
                     .padding(.top, 8)
                 } label: {
-                    Text("SCORING")
+                    Text(L("SCORING", "POIN"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -126,19 +114,19 @@ struct ImpostorSetupView: View {
 
                 // Validation
                 if game.totalPlayers < 3 {
-                    Text("Need at least 3 players")
+                    Text(L("Need at least 3 players", "Minimal 3 pemain"))
                         .font(HuddleFont.caption())
                         .foregroundColor(HuddleColors.impostor)
                 }
 
                 // Start button
-                GlowButton(title: "START GAME", color: HuddleColors.impostor) {
+                GlowButton(title: L("START GAME", "MULAI"), color: HuddleColors.impostor) {
                     syncNames()
                     let finalNames = (0..<game.totalPlayers).map { i in
                         let n = i < names.count ? names[i].trimmingCharacters(in: .whitespaces) : ""
-                        return n.isEmpty ? "Player \(i + 1)" : n
+                        return n
                     }
-                    onStart(finalNames)
+                    onStart(PlayerNamesEditor.finalize(finalNames))
                 }
                 .disabled(game.totalPlayers < 3)
                 .opacity(game.totalPlayers < 3 ? 0.5 : 1)
@@ -147,40 +135,40 @@ struct ImpostorSetupView: View {
             .padding(20)
         }
         .background(HuddleColors.background)
-        .onAppear { syncNames() }
+        .onAppear {
+            if names.isEmpty { names = PlayerNamesEditor.load(range: 3...12) }
+            syncNames()
+        }
         .onChange(of: game.totalPlayers) { syncNames() }
         .sheet(isPresented: $showLeaderboard) {
             NavigationStack {
                 ScrollView {
                     VStack(spacing: 16) {
-                        Text("\u{1F3C6}")
-                            .font(.system(size: 48))
-                        Text("LEADERBOARD")
+                        TrophyArt(size: 80)
+                        Text(L("LEADERBOARD", "PAPAN SKOR"))
                             .font(HuddleFont.display(28))
-                            .foregroundColor(HuddleColors.mostLikelyTo)
-                        Text("\(game.roundNumber) rounds played")
+                            .foregroundColor(HuddleColors.textPrimary)
+                        Text(L("\(game.roundNumber) rounds played", "\(game.roundNumber) ronde dimainkan"))
                             .font(HuddleFont.caption(11))
                             .foregroundColor(HuddleColors.textMuted)
 
                         let maxPts = game.sortedLeaderboard.first?.points ?? 1
                         ForEach(Array(game.sortedLeaderboard.enumerated()), id: \.element.name) { rank, entry in
                             HStack(spacing: 12) {
-                                Text(rank < 3 ? ["\u{1F947}", "\u{1F948}", "\u{1F949}"][rank] : "#\(rank + 1)")
-                                    .font(rank < 3 ? .system(size: 24) : HuddleFont.body())
-                                    .frame(width: 32)
+                                Medal(rank: rank)
                                 Text(entry.name)
                                     .font(HuddleFont.heading(16))
-                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
+                                    .foregroundColor(rank == 0 ? HuddleColors.textPrimary : HuddleColors.textPrimary)
                                 Spacer()
                                 Text("\(entry.points)")
                                     .font(HuddleFont.display(26))
-                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textSecondary)
+                                    .foregroundColor(rank == 0 ? HuddleColors.textPrimary : HuddleColors.textSecondary)
                             }
                             .padding(.horizontal, 4)
 
                             GeometryReader { geo in
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textMuted.opacity(0.3))
+                                    .fill(rank == 0 ? HuddleColors.gold : HuddleColors.textMuted.opacity(0.3))
                                     .frame(width: maxPts > 0 ? geo.size.width * CGFloat(entry.points) / CGFloat(maxPts) : 0, height: 5)
                             }
                             .frame(height: 5)
@@ -190,9 +178,9 @@ struct ImpostorSetupView: View {
                         Button {
                             game.resetLeaderboard()
                             showLeaderboard = false
-                            HapticManager.tap()
+                            Feedback.tap()
                         } label: {
-                            Text("RESET LEADERBOARD")
+                            Text(L("RESET LEADERBOARD", "RESET PAPAN SKOR"))
                                 .font(HuddleFont.caption(11))
                                 .foregroundColor(HuddleColors.impostor.opacity(0.6))
                                 .padding(.top, 12)
@@ -203,12 +191,12 @@ struct ImpostorSetupView: View {
                 .background(HuddleColors.background)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("Done") { showLeaderboard = false }
-                            .foregroundColor(HuddleColors.mostLikelyTo)
+                        Button(L("Done", "Selesai")) { showLeaderboard = false }
+                            .foregroundColor(HuddleColors.textPrimary)
                     }
                 }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(.light)
         }
     }
 
@@ -231,8 +219,10 @@ struct ImpostorSetupView: View {
     private func roleRow(role: ImpostorRole, count: Binding<Int>, min: Int, max: Int) -> some View {
         NeonCard(accentColor: role.color) {
             HStack(spacing: 12) {
-                Text(role.emoji)
-                    .font(.system(size: 24))
+                Image(systemName: role.emoji)
+                    .font(.system(size: 22))
+                    .foregroundColor(role.color)
+                    .frame(width: 28)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(role.label)
@@ -249,7 +239,7 @@ struct ImpostorSetupView: View {
                     Button {
                         if count.wrappedValue > min {
                             count.wrappedValue -= 1
-                            HapticManager.tap()
+                            Feedback.tap()
                         }
                     } label: {
                         Image(systemName: "minus.circle.fill")
@@ -266,7 +256,7 @@ struct ImpostorSetupView: View {
                     Button {
                         if count.wrappedValue < max {
                             count.wrappedValue += 1
-                            HapticManager.tap()
+                            Feedback.tap()
                         }
                     } label: {
                         Image(systemName: "plus.circle.fill")

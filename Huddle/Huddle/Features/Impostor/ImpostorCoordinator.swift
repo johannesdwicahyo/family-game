@@ -4,6 +4,7 @@ struct ImpostorCoordinator: View {
     @Bindable var game: ImpostorGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var ads: Ads
 
     var body: some View {
         Group {
@@ -66,9 +67,9 @@ struct ImpostorCoordinator: View {
 
             case .result:
                 ImpostorResultView(game: game, onPlayAgain: {
-                    game.phase = .setup
+                    ads.afterGame { game.phase = .setup }
                 }, onExit: {
-                    dismiss()
+                    ads.afterGame { game.phase = .setup; dismiss() }
                 })
                 .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
@@ -89,6 +90,7 @@ struct ImpostorCoordinator: View {
                     Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
+                .accessibilityLabel(L("Back", "Kembali"))
             }
         }
     }

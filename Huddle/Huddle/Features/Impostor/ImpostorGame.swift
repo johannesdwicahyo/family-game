@@ -5,7 +5,7 @@ enum ImpostorRole: String, CaseIterable, Sendable {
 
     var label: String {
         switch self {
-        case .civilian: "Civilian"
+        case .civilian: L("Civilian", "Warga")
         case .impostor: "Impostor"
         case .joker: "Joker"
         case .mrWhite: "Mr. White"
@@ -14,10 +14,10 @@ enum ImpostorRole: String, CaseIterable, Sendable {
 
     var emoji: String {
         switch self {
-        case .civilian: "\u{1F464}"
-        case .impostor: "\u{1F52A}"
-        case .joker: "\u{1F0CF}"
-        case .mrWhite: "\u{2753}"
+        case .civilian: "person.fill"
+        case .impostor: "theatermasks.fill"
+        case .joker: "face.smiling.inverse"
+        case .mrWhite: "questionmark.circle.fill"
         }
     }
 
@@ -32,10 +32,10 @@ enum ImpostorRole: String, CaseIterable, Sendable {
 
     var description: String {
         switch self {
-        case .civilian: "Gets the normal word"
-        case .impostor: "Gets a similar but different word"
-        case .joker: "Gets the normal word, wins if eliminated"
-        case .mrWhite: "Gets no word, can guess to win"
+        case .civilian: L("Gets the shared word", "Dapat kata yang sama")
+        case .impostor: L("Gets a similar but different word", "Dapat kata yang mirip tapi beda")
+        case .joker: L("Gets the shared word, wins if voted out first", "Dapat kata yang sama, menang kalau dieliminasi duluan")
+        case .mrWhite: L("Gets no word, can guess it to win", "Tidak dapat kata, bisa menebak untuk menang")
         }
     }
 }
@@ -57,7 +57,7 @@ struct ImpostorScoreConfig {
     var mrWhiteSurvive: Int = 3
 }
 
-@Observable class ImpostorGame {
+@MainActor @Observable final class ImpostorGame {
     enum Phase: Equatable {
         case setup, pass, reveal, discuss, vote, elimReveal, jokerBanner, guess, result
     }
@@ -94,8 +94,8 @@ struct ImpostorScoreConfig {
 
     func startGame(names: [String], language: String) {
         let pairs = ImpostorData.loadPairs(language: language)
-        guard !pairs.isEmpty else { return }
-        pair = pairs.randomElement()!
+        guard let picked = Recent.pickOne(from: pairs, key: "impostor_\(language)", id: { $0.normal + "|" + $0.impostor }) else { return }
+        pair = picked
 
         var roles: [ImpostorRole] = []
         roles += Array(repeating: .civilian, count: civilianCount)
@@ -174,14 +174,19 @@ struct ImpostorScoreConfig {
     }
 
     func submitGuess() {
-        let correct = guessText.trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased() == pair?.normal.lowercased()
+        let correct = guessIsRight
         if correct {
             winner = "mrwhite"
             phase = .result
         } else {
             phase = .elimReveal
         }
+    }
+
+    /// Mr. White's guess, ignoring case, accents and spaces.
+    var guessIsRight: Bool {
+        guard let word = pair?.normal else { return false }
+        return !guessText.normalizedAnswer.isEmpty && guessText.normalizedAnswer == word.normalizedAnswer
     }
 
     func continueAfterJoker() {
@@ -201,26 +206,31 @@ struct ImpostorScoreConfig {
 
             if p.role == .civilian && winner == "civilians" {
                 pts += scores.civilianWin
-                bd.append(("Civilians win", scores.civilianWin))
+                bd.append((L("Civilians win", "Warga menang"), scores.civilianWin))
             }
             if p.role == .impostor && winner == "impostor" {
                 pts += scores.impostorWin
-                bd.append(("Impostor wins", scores.impostorWin))
+                bd.append((L("Impostor wins", "Impostor menang"), scores.impostorWin))
                 let survivingCivs = players.enumerated()
                     .filter { !eliminated.contains($0.offset) && $0.element.role == .civilian }
                     .count
                 if survivingCivs > 0 {
                     pts += survivingCivs * scores.impostorSurvivor
-                    bd.append(("\(survivingCivs) civilians alive", survivingCivs * scores.impostorSurvivor))
+                    bd.append((L(survivingCivs == 1 ? "1 civilian left" : "\(survivingCivs) civilians left", "\(survivingCivs) warga tersisa"), survivingCivs * scores.impostorSurvivor))
                 }
             }
             if p.role == .joker, let jIdx = jokerElimIndex, players[jIdx].id == p.id {
                 pts += scores.jokerElim
-                bd.append(("Eliminated first!", scores.jokerElim))
+                bd.append((L("Voted out first!", "Dieliminasi pertama!"), scores.jokerElim))
             }
             if p.role == .mrWhite && winner == "mrwhite" {
                 pts += scores.mrWhiteGuess
-                bd.append(("Guessed word!", scores.mrWhiteGuess))
+                bd.append((L("Guessed the word!", "Kata tertebak!"), scores.mrWhiteGuess))
+            }
+            if p.role == .mrWhite && winner != "mrwhite",
+               let i = players.firstIndex(where: { $0.id == p.id }), !eliminated.contains(i) {
+                pts += scores.mrWhiteSurvive
+                bd.append((L("Survived to the end", "Bertahan sampai akhir"), scores.mrWhiteSurvive))
             }
 
             return GameResult.PlayerScore(name: p.name, points: pts, breakdown: bd)

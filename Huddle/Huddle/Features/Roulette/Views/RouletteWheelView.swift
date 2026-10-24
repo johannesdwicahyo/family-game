@@ -43,7 +43,7 @@ struct RouletteWheelView: View {
                             x: center.x + radius * cos(startAngle),
                             y: center.y + radius * sin(startAngle)
                         ))
-                        context.stroke(strokePath, with: .color(.black.opacity(0.3)), lineWidth: 1)
+                        context.stroke(strokePath, with: .color(.white.opacity(0.9)), lineWidth: 1)
 
                         // Draw text
                         let midAngle = startAngle + sliceAngle / 2
@@ -63,7 +63,7 @@ struct RouletteWheelView: View {
                             let resolved = ctx.resolve(
                                 Text(item)
                                     .font(.system(size: fontSize, weight: .bold, design: .rounded))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(HuddleColors.textPrimary)
                             )
                             let textSize = resolved.measure(in: CGSize(width: maxWidth, height: 30))
                             ctx.draw(resolved, in: CGRect(
@@ -84,7 +84,7 @@ struct RouletteWheelView: View {
                         width: centerRadius * 2,
                         height: centerRadius * 2
                     ))
-                    context.fill(centerPath, with: .color(Color(hex: "#1a1a2e")))
+                    context.fill(centerPath, with: .color(.white))
                     context.stroke(centerPath, with: .color(HuddleColors.roulette), lineWidth: 3)
                 }
                 .aspectRatio(1, contentMode: .fit)
@@ -94,7 +94,7 @@ struct RouletteWheelView: View {
                 PointerTriangle()
                     .fill(Color.red)
                     .frame(width: 24, height: 30)
-                    .shadow(color: .red.opacity(0.5), radius: 6, x: 0, y: 2)
+                    .shadow(color: HuddleColors.shadow, radius: 6, x: 0, y: 4)
                     .offset(y: -4)
             }
         }

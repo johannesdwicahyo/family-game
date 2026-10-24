@@ -1,0 +1,10 @@
+{
+ "prompt": "Using the exact same modern editorial flat illustration style as this reference image: same bold simple geometric shapes, same confident limited palette (tomato red, cobalt blue, sunflower gold, deep ink navy, warm off-white), same flat highlight and one flat shadow tone, crisp edges, no outlines, subtle grain. NO faces, NO eyes, nothing cute. A sleek iconic object for a party game app aimed at adults, 3/4 view, isolated and centred on a plain solid white background, filling about 70% of the square canvas, no text, no letters, no numbers. Draw a completely new subject (do not include the bomb): a bold geometric royal crown in sunflower gold with three sharp points, simple flat jewel shapes in tomato red and cobalt blue, and a deep ink-navy shadow side.",
+ "image_urls": [
+  "https://v3b.fal.media/files/b/0aafa34a/qRaZfD0sT0yAGAF8LJjFq_uvnpG5BK.png"
+ ],
+ "aspect_ratio": "1:1",
+ "num_images": 1,
+ "output_format": "png",
+ "resolution": "1K"
+}

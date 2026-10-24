@@ -23,9 +23,9 @@ struct RouletteResultView: View {
                         .font(HuddleFont.display(34))
                         .foregroundColor(winnerColor)
                         .multilineTextAlignment(.center)
-                        .shadow(color: winnerColor.opacity(0.5), radius: 12)
+                        .shadow(color: HuddleColors.shadow, radius: 12, x: 0, y: 4)
 
-                    Text("WINNER")
+                    Text(L("THE WHEEL SAYS", "HASILNYA"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -35,7 +35,7 @@ struct RouletteResultView: View {
 
             // Action buttons
             HStack(spacing: 12) {
-                GlowButton(title: "SPIN AGAIN", color: HuddleColors.roulette) {
+                GlowButton(title: L("SPIN AGAIN", "PUTAR LAGI"), color: HuddleColors.roulette) {
                     game.phase = .spinning
                     game.winnerIndex = nil
                     game.winnerText = nil
@@ -43,7 +43,7 @@ struct RouletteResultView: View {
                 }
 
                 Button(action: { game.reset() }) {
-                    Text("EDIT")
+                    Text(L("EDIT", "UBAH"))
                         .font(HuddleFont.heading(14))
                         .tracking(1)
                         .foregroundColor(HuddleColors.roulette)
@@ -62,7 +62,7 @@ struct RouletteResultView: View {
             // History
             if !game.history.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("HISTORY")
+                    Text(L("HISTORY", "RIWAYAT"))
                         .font(HuddleFont.caption(10))
                         .tracking(2)
                         .foregroundColor(HuddleColors.textMuted)
@@ -96,13 +96,14 @@ struct RouletteResultView: View {
 struct ConfettiBurst: View {
     @State private var particles: [(id: Int, emoji: String, x: CGFloat, y: CGFloat, opacity: Double)] = []
 
-    private let emojis = ["🎉", "🎊", "✨", "⭐", "🌟", "💫"]
+    private let emojis = ["sparkle", "star.fill", "sparkles", "star.fill"]
 
     var body: some View {
         ZStack {
             ForEach(particles, id: \.id) { p in
-                Text(p.emoji)
-                    .font(.system(size: 20))
+                Image(systemName: p.emoji)
+                    .font(.system(size: 18))
+                    .foregroundColor(RouletteGame.segmentColors[p.id % RouletteGame.segmentColors.count])
                     .offset(x: p.x, y: p.y)
                     .opacity(p.opacity)
             }

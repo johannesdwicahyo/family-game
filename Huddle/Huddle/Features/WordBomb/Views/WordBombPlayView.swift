@@ -5,6 +5,7 @@ struct WordBombPlayView: View {
     @FocusState private var isInputFocused: Bool
     @State private var showValidFlash = false
     @State private var showErrorShake = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let accent = HuddleColors.wordBomb
 
@@ -17,20 +18,20 @@ struct WordBombPlayView: View {
                 HuddleColors.background.ignoresSafeArea()
 
                 // Red tension tint as time progresses
-                Color.red.opacity(progress > 0.7 ? (progress - 0.7) * 0.15 : 0)
+                HuddleColors.danger.opacity(progress > 0.7 ? (progress - 0.7) * 0.15 : 0)
                     .ignoresSafeArea()
                     .animation(.easeInOut(duration: 0.5), value: progress)
 
                 // Green flash on valid word
                 if showValidFlash {
-                    Color.green.opacity(0.15)
+                    HuddleColors.success.opacity(0.15)
                         .ignoresSafeArea()
                         .transition(.opacity)
                 }
 
                 // Red flash on error
                 if showErrorShake {
-                    Color.red.opacity(0.1)
+                    HuddleColors.danger.opacity(0.1)
                         .ignoresSafeArea()
                         .transition(.opacity)
                 }
@@ -46,8 +47,9 @@ struct WordBombPlayView: View {
 
                                 HStack(spacing: 3) {
                                     ForEach(0..<game.livesPerPlayer, id: \.self) { i in
-                                        Text(i < (game.lives[player.id] ?? 0) ? "\u{2764}\u{FE0F}" : "\u{1F5A4}")
-                                            .font(.system(size: 16))
+                                        Image(systemName: i < (game.lives[player.id] ?? 0) ? "heart.fill" : "heart")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(HuddleColors.impostor)
                                     }
                                 }
                             }
@@ -89,12 +91,15 @@ struct WordBombPlayView: View {
     @ViewBuilder
     private func bombView(progress: Double) -> some View {
         let intensity = min(progress * 1.5, 1.0)
-        let shakeAmount = intensity * 14
+        let shakeAmount = reduceMotion ? 0 : intensity * 14
         let pulseSpeed = max(0.15, 0.8 - intensity * 0.65)
 
-        Text("\u{1F4A3}")
-            .font(.system(size: 72))
-            .shadow(color: .red.opacity(0.1 + intensity * 0.5), radius: 10 + intensity * 25)
+        Image("Card-wordbomb")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 110, height: 110)
+            .accessibilityHidden(true)
+            .shadow(color: HuddleColors.shadow, radius: 10 + intensity * 25, x: 0, y: 4)
             .rotationEffect(.degrees(
                 sin(Date().timeIntervalSinceReferenceDate * (.pi * 2 / pulseSpeed)) * shakeAmount
             ))
@@ -122,7 +127,7 @@ struct WordBombPlayView: View {
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(accent.opacity(0.3 + progress * 0.4), lineWidth: 2)
             )
-            .shadow(color: accent.opacity(0.15 + progress * 0.25), radius: 20 + progress * 20)
+            .shadow(color: HuddleColors.shadow, radius: 20 + progress * 20, x: 0, y: 4)
     }
 
     // MARK: - Input
@@ -130,8 +135,15 @@ struct WordBombPlayView: View {
     @ViewBuilder
     private var inputSection: some View {
         VStack(spacing: 8) {
+            if let error = game.errorMessage {
+                Text(error)
+                    .font(HuddleFont.caption())
+                    .foregroundColor(HuddleColors.danger)
+                    .multilineTextAlignment(.center)
+                    .transition(.opacity)
+            }
             HStack(spacing: 10) {
-                TextField("Type a word...", text: $game.inputText)
+                TextField(L("Type a word…", "Ketik kata…"), text: $game.inputText)
                     .font(HuddleFont.heading(20))
                     .tracking(2)
                     .textInputAutocapitalization(.characters)
@@ -142,8 +154,8 @@ struct WordBombPlayView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
                             .stroke(
-                                showErrorShake ? Color.red.opacity(0.6) :
-                                showValidFlash ? Color.green.opacity(0.6) :
+                                showErrorShake ? HuddleColors.danger.opacity(0.6) :
+                                showValidFlash ? HuddleColors.success.opacity(0.6) :
                                 accent.opacity(0.3),
                                 lineWidth: 2
                             )
@@ -163,13 +175,16 @@ struct WordBombPlayView: View {
                         .foregroundColor(game.inputText.trimmingCharacters(in: .whitespaces).isEmpty ? HuddleColors.textMuted : accent)
                 }
                 .disabled(game.inputText.trimmingCharacters(in: .whitespaces).isEmpty)
+                .accessibilityLabel(L("Submit", "Kirim"))
             }
 
-            if let error = game.errorMessage {
-                Text(error)
-                    .font(HuddleFont.caption())
-                    .foregroundColor(.red)
-                    .transition(.opacity)
+            if let d = game.disputed {
+                Button(L("Table says \(d) counts", "Semua setuju \(d) sah")) {
+                    game.inputText = d
+                    handleSubmit(force: true)
+                }
+                .font(HuddleFont.body(15))
+                .foregroundColor(HuddleColors.textPrimary)
             }
         }
     }
@@ -194,8 +209,9 @@ struct WordBombPlayView: View {
                         if !isDead {
                             HStack(spacing: 1) {
                                 ForEach(0..<game.livesPerPlayer, id: \.self) { i in
-                                    Text(i < playerLives ? "\u{2764}\u{FE0F}" : "\u{1F5A4}")
+                                    Image(systemName: i < playerLives ? "heart.fill" : "heart")
                                         .font(.system(size: 8))
+                                        .foregroundColor(HuddleColors.impostor)
                                 }
                             }
                         }
@@ -219,7 +235,7 @@ struct WordBombPlayView: View {
     @ViewBuilder
     private var usedWordsSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("USED WORDS (\(game.usedWords.count))")
+            Text(L("USED WORDS (\(game.usedWords.count))", "KATA TERPAKAI (\(game.usedWords.count))"))
                 .font(HuddleFont.caption(9))
                 .tracking(2)
                 .foregroundColor(HuddleColors.textMuted)
@@ -246,9 +262,9 @@ struct WordBombPlayView: View {
 
     // MARK: - Actions
 
-    private func handleSubmit() {
+    private func handleSubmit(force: Bool = false) {
         let previousWordCount = game.totalWordsPlayed
-        game.submitWord()
+        game.submitWord(force: force)
         if game.totalWordsPlayed > previousWordCount {
             // Valid word
             showValidFlash = true

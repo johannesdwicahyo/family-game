@@ -11,7 +11,7 @@ struct RouletteEditView: View {
             Button(action: { showPresets.toggle() }) {
                 HStack(spacing: 6) {
                     Image(systemName: "list.bullet")
-                    Text("PRESETS")
+                    Text(L("PRESETS", "PRESET"))
                         .font(HuddleFont.caption(11))
                         .tracking(1)
                 }
@@ -51,7 +51,7 @@ struct RouletteEditView: View {
 
             // Add item row
             HStack(spacing: 8) {
-                TextField("Add item...", text: $newItemText)
+                TextField(L("Add an option…", "Tambah pilihan…"), text: $newItemText)
                     .font(HuddleFont.body(14))
                     .foregroundColor(HuddleColors.textPrimary)
                     .padding(.horizontal, 12)
@@ -67,7 +67,7 @@ struct RouletteEditView: View {
                     }
 
                 Button(action: addItem) {
-                    Text("ADD")
+                    Text(L("ADD", "TAMBAH"))
                         .font(HuddleFont.caption(11))
                         .tracking(1)
                         .foregroundColor(.white)
@@ -113,14 +113,14 @@ struct RouletteEditView: View {
 
             // Item count + Spin button
             HStack {
-                Text("\(game.items.count) items")
+                Text(L("\(game.items.count) options", "\(game.items.count) pilihan"))
                     .font(HuddleFont.caption(11))
                     .foregroundColor(HuddleColors.textMuted)
                 Spacer()
             }
             .padding(.horizontal, 16)
 
-            GlowButton(title: "SPIN!", color: HuddleColors.roulette) {
+            GlowButton(title: L("SPIN!", "PUTAR!"), color: HuddleColors.roulette) {
                 game.spin()
             }
             .disabled(game.items.count < 2)

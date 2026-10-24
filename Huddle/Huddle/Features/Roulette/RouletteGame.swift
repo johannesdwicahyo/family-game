@@ -1,12 +1,12 @@
 import SwiftUI
 
-@Observable class RouletteGame {
+@MainActor @Observable final class RouletteGame {
     enum Phase: Equatable {
         case edit, spinning, result
     }
 
     var phase: Phase = .edit
-    var title: String = "Roulette"
+    var title: String = ""
     var items: [String] = []
     var isSpinning: Bool = false
     var currentAngle: Double = 0
@@ -16,18 +16,28 @@ import SwiftUI
     var winnerText: String?
     var history: [(text: String, date: Date)] = []
 
-    static let presets: [(name: String, items: [String])] = [
-        ("Truth or Dare", ["Truth", "Dare", "Truth", "Dare", "Double Dare", "Free Pass"]),
-        ("Punishments", ["10 Push-ups", "Dance 30s", "Impersonate someone", "Sing a song", "Eat something spicy", "Call someone", "Post IG story", "Hold laugh 1 min"]),
-        ("Numbers 1-10", (1...10).map { String($0) }),
-        ("Food Choices", ["Nasi Goreng", "Bakso", "Sate", "Pizza", "Sushi", "Mie Ayam", "Martabak", "Gado-gado"]),
-    ]
+    /// Ready-made wheels, in the app's language. "Our players" uses the names typed in any game.
+    static var presets: [(name: String, items: [String])] {
+        let players = (UserDefaults.standard.stringArray(forKey: PlayerNamesEditor.key) ?? [])
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        var list: [(name: String, items: [String])] = []
+        if players.count >= 2 { list.append((L("Our players", "Para pemain"), players)) }
+        list += [
+            (L("Who goes first?", "Siapa duluan?"), L("Youngest,Oldest,Tallest,Birthday soonest,Last to arrive,Closest to the phone", "Paling muda,Paling tua,Paling tinggi,Ulang tahun terdekat,Datang paling akhir,Paling dekat HP").components(separatedBy: ",")),
+            (L("Fun dares", "Tantangan seru"), L("Sing a chorus,Dance for 10 seconds,Animal impression,Tell a joke,Compliment everyone,Talk like a robot,Strike a superhero pose,Do your best evil laugh", "Nyanyi reff lagu,Joget 10 detik,Tiru suara hewan,Ceritakan lelucon,Puji semua pemain,Bicara seperti robot,Pose superhero,Tawa jahat terbaik").components(separatedBy: ",")),
+            (L("What's for dinner?", "Makan apa?"), L("Fried rice,Pizza,Noodles,Burgers,Sushi,Satay,Soup,Tacos", "Nasi goreng,Bakso,Sate,Mie ayam,Martabak,Gado-gado,Soto,Pecel lele").components(separatedBy: ",")),
+            (L("Numbers 1–10", "Angka 1–10"), (1...10).map { String($0) }),
+            (L("Yes or no", "Ya atau tidak"), L("Yes,No,Yes,No,Maybe,Ask again", "Ya,Tidak,Ya,Tidak,Mungkin,Putar lagi").components(separatedBy: ",")),
+        ]
+        return list
+    }
 
     static let segmentColors: [Color] = [
-        Color(hex: "#FF6B6B"), Color(hex: "#6BCB77"), Color(hex: "#FFD93D"),
-        Color(hex: "#4D96FF"), Color(hex: "#FF8C00"), Color(hex: "#00D4FF"),
-        Color(hex: "#FF69B4"), Color(hex: "#7B68EE"), Color(hex: "#00FA9A"),
-        Color(hex: "#FFD700"), Color(hex: "#FF6347"), Color(hex: "#40E0D0"),
+        // Light, sunny segments that carry dark text.
+        Color(hex: "#FF9E8F"), Color(hex: "#8FD4FF"), Color(hex: "#FFD866"),
+        Color(hex: "#9EDBA8"), Color(hex: "#FFB98A"), Color(hex: "#D3A6F0"),
+        Color(hex: "#86E0E6"), Color(hex: "#FFA3C8"), Color(hex: "#C9E79A"),
+        Color(hex: "#FFE38F"), Color(hex: "#A7C4FF"), Color(hex: "#C4B5FD"),
     ]
 
     private let defaultsKeyItems = "roulette_items"
@@ -35,8 +45,7 @@ import SwiftUI
 
     init() {
         loadFromDefaults()
-        if items.isEmpty {
-            let preset = Self.presets[0]
+        if items.isEmpty, let preset = Self.presets.first(where: { $0.items.count > 2 }) {
             title = preset.name
             items = preset.items
         }
@@ -104,7 +113,7 @@ import SwiftUI
             }
         }
 
-        HapticManager.success()
+        Feedback.success()
     }
 
     func reset() {

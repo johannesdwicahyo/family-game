@@ -14,7 +14,7 @@ struct WordBombBoomView: View {
 
             // Red flash overlay
             if showRedFlash {
-                Color.red.opacity(0.2)
+                HuddleColors.danger.opacity(0.2)
                     .ignoresSafeArea()
                     .transition(.opacity)
             }
@@ -23,15 +23,17 @@ struct WordBombBoomView: View {
                 Spacer()
 
                 // Explosion emoji
-                Text("\u{1F4A5}")
-                    .font(.system(size: 100))
+                Image(systemName: "burst.fill")
+                    .font(.system(size: 96))
+                    .foregroundStyle(HuddleColors.impostor)
+                    .accessibilityHidden(true)
                     .scaleEffect(explosionScale)
                     .offset(x: shakeOffset)
 
                 Text("BOOM!")
                     .offset(x: shakeOffset)
                     .font(HuddleFont.display(42))
-                    .foregroundColor(.red)
+                    .foregroundColor(HuddleColors.danger)
 
                 if let player = game.currentPlayer {
                     Text(player.name)
@@ -43,19 +45,19 @@ struct WordBombBoomView: View {
                     // Lives display
                     HStack(spacing: 4) {
                         ForEach(0..<game.livesPerPlayer, id: \.self) { i in
-                            Text(i < playerLives ? "\u{2764}\u{FE0F}" : "\u{1F5A4}")
+                            Image(systemName: i < playerLives ? "heart.fill" : "heart").foregroundColor(HuddleColors.impostor)
                                 .font(.system(size: 28))
                         }
                     }
                     .padding(.vertical, 8)
 
                     if playerLives <= 0 {
-                        Text("ELIMINATED!")
+                        Text(L("OUT!", "GUGUR!"))
                             .font(HuddleFont.display(28))
-                            .foregroundColor(.red)
+                            .foregroundColor(HuddleColors.danger)
                             .padding(.vertical, 4)
                     } else {
-                        Text("Lost a life!")
+                        Text(L("Lost a life!", "Nyawa berkurang!"))
                             .font(HuddleFont.heading(18))
                             .foregroundColor(HuddleColors.textSecondary)
                     }
@@ -63,14 +65,14 @@ struct WordBombBoomView: View {
 
                 Spacer()
 
-                GlowButton(title: "CONTINUE", color: HuddleColors.wordBomb, action: onContinue)
+                GlowButton(title: L("CONTINUE", "LANJUT"), color: HuddleColors.wordBomb, action: onContinue)
                     .padding(.horizontal, 24)
 
                 Spacer().frame(height: 40)
             }
         }
         .onAppear {
-            HapticManager.explosion()
+            Feedback.explosion()
             withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
                 explosionScale = 1.0
             }

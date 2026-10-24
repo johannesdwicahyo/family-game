@@ -34,10 +34,10 @@ struct ImpostorRevealView: View {
                     if currentPlayer.role == .mrWhite {
                         // Mr. White MUST know their role (no word, special mechanic)
                         roleBadge(role: .mrWhite)
-                        Text("You have NO word.")
+                        Text(L("You have NO word.", "Kamu tidak dapat kata."))
                             .font(HuddleFont.body())
                             .foregroundColor(HuddleColors.textSecondary)
-                        Text("Listen carefully and blend in.\nIf eliminated, you can guess the word to win!")
+                        Text(L("Listen carefully and blend in.\nIf you're voted out, guess the word to win!", "Dengarkan baik-baik dan berbaurlah.\nKalau dieliminasi, tebak katanya untuk menang!"))
                             .font(HuddleFont.caption())
                             .foregroundColor(HuddleColors.textMuted)
                             .multilineTextAlignment(.center)
@@ -45,20 +45,20 @@ struct ImpostorRevealView: View {
                     } else if currentPlayer.role == .joker {
                         // Joker MUST know their role (goal: get eliminated)
                         roleBadge(role: .joker)
-                        Text("Your word is:")
+                        Text(L("YOUR WORD", "KATAMU"))
                             .font(HuddleFont.caption(11))
                             .tracking(3)
                             .foregroundColor(HuddleColors.textMuted)
                         Text(currentPlayer.word ?? "")
                             .font(HuddleFont.display(40))
                             .foregroundColor(HuddleColors.textPrimary)
-                        Text("You WIN if you get eliminated first!")
+                        Text(L("You WIN if you're voted out first!", "Kamu MENANG kalau dieliminasi pertama!"))
                             .font(HuddleFont.caption())
                             .foregroundColor(HuddleColors.textMuted)
                     } else {
                         // Civilian AND Impostor look IDENTICAL
                         // Both just see "YOUR WORD" with same styling
-                        Text("YOUR WORD")
+                        Text(L("YOUR WORD", "KATAMU"))
                             .font(HuddleFont.caption(11))
                             .tracking(3)
                             .foregroundColor(HuddleColors.textMuted)
@@ -70,7 +70,7 @@ struct ImpostorRevealView: View {
                             .padding(.horizontal, 16)
                             .blur(radius: game.showWord ? 0 : 10)
                             .scaleEffect(game.showWord ? 1.0 : 0.5)
-                        Text("Don't show this to anyone!")
+                        Text(L("Don't show this to anyone!", "Jangan tunjukkan ke siapa pun!"))
                             .font(HuddleFont.caption())
                             .foregroundColor(HuddleColors.textMuted)
                     }
@@ -79,18 +79,18 @@ struct ImpostorRevealView: View {
 
                 Spacer()
 
-                GlowButton(title: "NEXT PLAYER", color: HuddleColors.impostor) {
+                GlowButton(title: L("NEXT PLAYER", "PEMAIN BERIKUTNYA"), color: HuddleColors.impostor) {
                     onNext()
                 }
                 .padding(.horizontal, 24)
             } else {
                 Spacer()
 
-                GlowButton(title: "SHOW MY WORD", color: HuddleColors.impostor) {
+                GlowButton(title: L("SHOW MY WORD", "LIHAT KATAKU"), color: HuddleColors.impostor) {
                     withAnimation(.spring(duration: 0.3)) {
                         game.showWord = true
                     }
-                    HapticManager.tap()
+                    Feedback.play(.reveal)
                 }
                 .padding(.horizontal, 24)
             }
@@ -119,8 +119,9 @@ struct ImpostorRevealView: View {
 
     private func roleBadge(role: ImpostorRole) -> some View {
         HStack(spacing: 8) {
-            Text(role.emoji)
-                .font(.system(size: 20))
+            Image(systemName: role.emoji)
+                .font(.system(size: 18))
+                .foregroundColor(role.color)
             Text(role.label.uppercased())
                 .font(HuddleFont.heading(14))
                 .foregroundColor(role.color)

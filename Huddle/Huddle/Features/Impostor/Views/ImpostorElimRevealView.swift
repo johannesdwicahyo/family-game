@@ -24,8 +24,9 @@ struct ImpostorElimRevealView: View {
             if let player = elimPlayer {
                 // Eliminated player reveal
                 VStack(spacing: 16) {
-                    Text(player.role.emoji)
+                    Image(systemName: player.role.emoji)
                         .font(.system(size: 64))
+                        .foregroundColor(player.role.color)
                         .scaleEffect(appeared ? 1.0 : 0.3)
                         .animation(.spring(response: 0.4, dampingFraction: 0.5), value: appeared)
 
@@ -33,7 +34,7 @@ struct ImpostorElimRevealView: View {
                         .font(HuddleFont.display(32))
                         .foregroundColor(HuddleColors.textPrimary)
 
-                    Text("was \(player.role.label.uppercased())")
+                    Text(L("was \(player.role.label.uppercased())", "adalah \(player.role.label.uppercased())"))
                         .font(HuddleFont.heading(20))
                         .foregroundColor(player.role.color)
                         .opacity(roleAppeared ? 1 : 0)
@@ -41,10 +42,10 @@ struct ImpostorElimRevealView: View {
 
                     if player.role == .joker {
                         VStack(spacing: 8) {
-                            Text("\u{1F389} JOKER WINS! \u{1F389}")
+                            Text(L("JOKER WINS!", "JOKER MENANG!"))
                                 .font(HuddleFont.heading(18))
-                                .foregroundColor(HuddleColors.mostLikelyTo)
-                            Text("The Joker wanted to be eliminated!")
+                                .foregroundColor(HuddleColors.textPrimary)
+                            Text(L("The Joker wanted to be voted out!", "Joker memang ingin dieliminasi!"))
                                 .font(HuddleFont.caption())
                                 .foregroundColor(HuddleColors.textMuted)
                         }
@@ -73,7 +74,7 @@ struct ImpostorElimRevealView: View {
             Spacer()
 
             GlowButton(
-                title: winResult != nil ? "SEE RESULTS" : "CONTINUE",
+                title: winResult != nil ? L("SEE RESULTS", "LIHAT HASIL") : L("CONTINUE", "LANJUT"),
                 color: HuddleColors.impostor
             ) {
                 onContinue()
@@ -86,7 +87,7 @@ struct ImpostorElimRevealView: View {
         .background(HuddleColors.background)
         .overlay {
             if redFlash {
-                Color.red.opacity(0.2)
+                HuddleColors.danger.opacity(0.2)
                     .ignoresSafeArea()
                     .transition(.opacity)
                     .allowsHitTesting(false)
@@ -99,7 +100,7 @@ struct ImpostorElimRevealView: View {
             }
         }
         .onAppear {
-            HapticManager.explosion()
+            Feedback.explosion()
             withAnimation(.spring(duration: 0.5)) {
                 appeared = true
             }
@@ -118,9 +119,9 @@ struct ImpostorElimRevealView: View {
 
     private func winMessage(for winner: String) -> String {
         switch winner {
-        case "civilians": "Civilians Win!"
-        case "impostor": "Impostor Wins!"
-        case "mrwhite": "Mr. White Wins!"
+        case "civilians": L("Civilians win!", "Warga menang!")
+        case "impostor": L("Impostor wins!", "Impostor menang!")
+        case "mrwhite": L("Mr. White wins!", "Mr. White menang!")
         default: ""
         }
     }

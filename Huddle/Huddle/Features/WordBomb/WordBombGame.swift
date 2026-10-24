@@ -11,10 +11,16 @@ enum WordBombDifficulty: String, CaseIterable {
         }
     }
 
-    var label: String { rawValue.capitalized }
+    var label: String {
+        switch self {
+        case .easy: L("Easy", "Mudah")
+        case .medium: L("Medium", "Sedang")
+        case .hard: L("Hard", "Sulit")
+        }
+    }
 }
 
-@Observable class WordBombGame {
+@MainActor @Observable final class WordBombGame {
     enum Phase: Equatable {
         case setup, pass, play, boom, result
     }
@@ -34,9 +40,12 @@ enum WordBombDifficulty: String, CaseIterable {
     var errorMessage: String? = nil
     var totalWordsPlayed: Int = 0
     var longestWord: String = ""
+    /// Set when the dictionary rejected a word, so the table can accept it anyway.
+    var disputed: String? = nil
+    var language = "en"
 
-    private var syllables: WordBombSyllables = WordBombSyllables(easy: [], medium: [], hard: [])
-    private var usedSyllables: [String] = []
+    private var syllables = WordBombSyllables(easy: [:], medium: [:], hard: [:])
+    private var usedSyllables: Set<String> = []
 
     var alivePlayers: [Player] {
         players.filter { (lives[$0.id] ?? 0) > 0 }
@@ -54,6 +63,7 @@ enum WordBombDifficulty: String, CaseIterable {
 
     func startGame(players: [Player], language: String) {
         syllables = WordBombData.loadSyllables(language: language)
+        self.language = language
         self.players = players
         lives = [:]
         for p in players {
@@ -72,33 +82,29 @@ enum WordBombDifficulty: String, CaseIterable {
     }
 
     func pickSyllable() {
-        let pool: [String]
+        let pool: [String: Int]
         switch difficulty {
         case .easy: pool = syllables.easy
-        case .medium: pool = Array(syllables.easy.prefix(10)) + syllables.medium
+        case .medium: pool = syllables.medium
         case .hard: pool = syllables.hard
         }
-
-        var available = pool.filter { !usedSyllables.contains($0) }
-        if available.isEmpty {
-            usedSyllables = []
-            available = pool
-        }
-
-        guard let picked = available.randomElement() else { return }
-        usedSyllables.append(picked)
+        if usedSyllables.isSuperset(of: pool.keys) { usedSyllables = [] }
+        guard let picked = WordBombData.pick(from: pool, avoiding: usedSyllables) else { return }
+        usedSyllables.insert(picked)
         currentSyllable = picked
     }
 
     func startTurn() {
         inputText = ""
         errorMessage = nil
+        disputed = nil
+        Feedback.play(.start)
         timerDuration = Double.random(in: difficulty.timerRange)
         timerStartDate = Date()
         phase = .play
     }
 
-    func submitWord() {
+    func submitWord(force: Bool = false) {
         let word = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !word.isEmpty else { return }
 
@@ -106,27 +112,37 @@ enum WordBombDifficulty: String, CaseIterable {
         let sylLower = currentSyllable.lowercased()
 
         if word.count < 3 {
-            errorMessage = "Word must be at least 3 characters!"
+            errorMessage = L("At least 3 letters!", "Minimal 3 huruf!")
             inputText = ""
-            HapticManager.error()
+            Feedback.error()
             return
         }
 
         if !wordLower.contains(sylLower) {
-            errorMessage = "Word must contain \"\(currentSyllable)\"!"
+            errorMessage = L("The word must contain \(currentSyllable)!", "Katanya harus mengandung \(currentSyllable)!")
             inputText = ""
-            HapticManager.error()
+            Feedback.error()
             return
         }
 
         if usedWords.contains(wordLower) {
-            errorMessage = "Word already used!"
+            errorMessage = L("That word was already used!", "Kata itu sudah dipakai!")
             inputText = ""
-            HapticManager.error()
+            Feedback.error()
+            return
+        }
+
+        if !force, WordCheck.isWord(wordLower, language: language) == false {
+            disputed = word.uppercased()
+            errorMessage = L("\(word.uppercased()) isn't in the dictionary. Try another, or let the table decide.",
+                             "\(word.uppercased()) tidak ada di kamus. Coba kata lain, atau biar semua yang putuskan.")
+            inputText = ""
+            Feedback.error()
             return
         }
 
         // Valid word
+        disputed = nil
         errorMessage = nil
         usedWords.insert(wordLower)
         totalWordsPlayed += 1
@@ -134,12 +150,12 @@ enum WordBombDifficulty: String, CaseIterable {
             longestWord = word
         }
 
-        HapticManager.success()
+        Feedback.success()
         advanceToNextPlayer()
     }
 
     func bombExploded() {
-        guard let player = currentPlayer else { return }
+        guard phase == .play, let player = currentPlayer else { return }
         let currentLives = (lives[player.id] ?? 0) - 1
         lives[player.id] = max(currentLives, 0)
 
@@ -147,13 +163,14 @@ enum WordBombDifficulty: String, CaseIterable {
             eliminated.append(player.name)
         }
 
-        HapticManager.explosion()
+        Feedback.explosion()
         phase = .boom
     }
 
     func continueAfterBoom() {
         let alive = alivePlayers
         if alive.count <= 1 {
+            Feedback.win()
             phase = .result
             return
         }
@@ -175,13 +192,6 @@ enum WordBombDifficulty: String, CaseIterable {
     }
 
     private func advanceToNextAlive() {
-        let n = players.count
-        var idx = (currentPlayerIndex + 1) % n
-        var safety = 0
-        while (lives[players[idx].id] ?? 0) <= 0 && safety < n {
-            idx = (idx + 1) % n
-            safety += 1
-        }
-        currentPlayerIndex = idx
+        currentPlayerIndex = Turns.next(after: currentPlayerIndex, count: players.count) { (lives[players[$0].id] ?? 0) > 0 }
     }
 }

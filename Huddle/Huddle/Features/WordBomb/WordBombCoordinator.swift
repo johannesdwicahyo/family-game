@@ -4,6 +4,7 @@ struct WordBombCoordinator: View {
     @Bindable var game: WordBombGame
     @Environment(AppState.self) var appState
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject private var ads: Ads
 
     var body: some View {
         Group {
@@ -19,17 +20,12 @@ struct WordBombCoordinator: View {
                 if let player = game.currentPlayer {
                     PassScreen(
                         playerName: player.name,
-                        accentColor: HuddleColors.wordBomb,
-                        subtitle: "Hand the phone to"
+                        accentColor: HuddleColors.wordBomb
                     ) {
-                        VStack(spacing: 8) {
-                            Text("Find a word containing")
-                                .font(HuddleFont.caption())
-                                .foregroundColor(HuddleColors.textMuted)
-                            Text(game.currentSyllable)
-                                .font(HuddleFont.display(42))
-                                .foregroundColor(HuddleColors.wordBomb)
-                        }
+                        // The letters stay hidden until the fuse is lit, so nobody gets a head start.
+                        Text(L("The letters appear when you're ready", "Hurufnya muncul setelah kamu siap"))
+                            .font(HuddleFont.caption(13))
+                            .foregroundColor(HuddleColors.textMuted)
                     } onReady: {
                         game.startTurn()
                     }
@@ -48,9 +44,9 @@ struct WordBombCoordinator: View {
 
             case .result:
                 WordBombResultView(game: game, onPlayAgain: {
-                    game.phase = .setup
+                    ads.afterGame { game.phase = .setup }
                 }, onExit: {
-                    dismiss()
+                    ads.afterGame { game.phase = .setup; dismiss() }
                 })
                 .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             }
@@ -59,10 +55,13 @@ struct WordBombCoordinator: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
+                Button {
+                    if game.phase == .setup { dismiss() } else { game.phase = .setup }
+                } label: {
                     Image(systemName: "chevron.left")
                         .foregroundColor(HuddleColors.textSecondary)
                 }
+                .accessibilityLabel(L("Back", "Kembali"))
             }
         }
     }

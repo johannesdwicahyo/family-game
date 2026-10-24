@@ -11,12 +11,14 @@ struct ImpostorVoteView: View {
             Spacer()
 
             VStack(spacing: 8) {
-                Text("\u{1F5F3}\u{FE0F}")
-                    .font(.system(size: 48))
-                Text("VOTING #\(game.turnNumber + 1)")
+                Image(systemName: "hand.raised.fill")
+                    .font(.system(size: 44))
+                    .foregroundColor(HuddleColors.impostor)
+                    .accessibilityHidden(true)
+                Text(L("VOTE #\(game.turnNumber + 1)", "VOTING #\(game.turnNumber + 1)"))
                     .font(HuddleFont.display(28))
                     .foregroundColor(HuddleColors.impostor)
-                Text("Who should be eliminated?")
+                Text(L("Vote together, then tap who got the most votes", "Voting bareng, lalu tap yang paling banyak dipilih"))
                     .font(HuddleFont.caption())
                     .foregroundColor(HuddleColors.textMuted)
             }
@@ -26,7 +28,7 @@ struct ImpostorVoteView: View {
                 ForEach(game.activePlayers, id: \.index) { item in
                     Button {
                         selectedIndex = item.index
-                        HapticManager.tap()
+                        Feedback.tap()
                     } label: {
                         HStack(spacing: 14) {
                             // Accent dot
@@ -47,7 +49,7 @@ struct ImpostorVoteView: View {
                         .padding(.vertical, 18)
                         .background(
                             selectedIndex == item.index
-                            ? LinearGradient(colors: [HuddleColors.impostor, HuddleColors.impostor.opacity(0.7)], startPoint: .leading, endPoint: .trailing)
+                            ? LinearGradient(colors: [HuddleColors.impostor, HuddleColors.impostor], startPoint: .leading, endPoint: .trailing)
                             : LinearGradient(colors: [HuddleColors.cardBackground, HuddleColors.cardBackground], startPoint: .leading, endPoint: .trailing)
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -60,7 +62,7 @@ struct ImpostorVoteView: View {
                                     lineWidth: 1
                                 )
                         )
-                        .shadow(color: selectedIndex == item.index ? HuddleColors.impostor.opacity(0.2) : .clear, radius: 8, x: 0, y: 4)
+                        .shadow(color: HuddleColors.shadow, radius: 8, x: 0, y: 4)
                     }
                 }
             }
@@ -69,7 +71,7 @@ struct ImpostorVoteView: View {
             Spacer()
 
             if let idx = selectedIndex {
-                GlowButton(title: "ELIMINATE \(game.players[idx].name.uppercased())", color: HuddleColors.impostor) {
+                GlowButton(title: L("VOTE OUT \(game.players[idx].name.uppercased())", "ELIMINASI \(game.players[idx].name.uppercased())"), color: HuddleColors.impostor) {
                     onEliminate(idx)
                 }
                 .padding(.horizontal, 24)

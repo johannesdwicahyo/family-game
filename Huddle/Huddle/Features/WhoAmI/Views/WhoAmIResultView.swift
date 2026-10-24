@@ -8,7 +8,6 @@ struct WhoAmIResultView: View {
     @State private var expandedPlayer: String? = nil
 
     private let accent = HuddleColors.whoAmI
-    private let medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"]
 
     private var leaderboard: [(player: Player, score: Int)] {
         game.sortedScores()
@@ -23,12 +22,11 @@ struct WhoAmIResultView: View {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 8) {
-                    Text("\u{1F3C6}")
-                        .font(.system(size: 64))
-                    Text("FINAL RESULTS")
+                    TrophyArt(size: 100)
+                    Text(L("FINAL RESULTS", "HASIL AKHIR"))
                         .font(HuddleFont.display(32))
-                        .foregroundColor(HuddleColors.mostLikelyTo)
-                    Text("\(game.roundsPerPlayer) round\(game.roundsPerPlayer > 1 ? "s" : "") completed")
+                        .foregroundColor(HuddleColors.textPrimary)
+                    Text(L("\(game.roundsPerPlayer) turn\(game.roundsPerPlayer > 1 ? "s" : "") each", "\(game.roundsPerPlayer) giliran per pemain"))
                         .font(HuddleFont.caption(11))
                         .tracking(2)
                         .foregroundColor(HuddleColors.textMuted)
@@ -49,21 +47,19 @@ struct WhoAmIResultView: View {
                             } label: {
                                 HStack(spacing: 12) {
                                     // Medal / rank
-                                    Text(rank < 3 ? medals[rank] : "#\(rank + 1)")
-                                        .font(rank < 3 ? .system(size: 22) : HuddleFont.heading(16))
-                                        .frame(width: 32)
+                                    Medal(rank: rank)
 
                                     // Name
                                     Text(entry.player.name)
                                         .font(HuddleFont.heading(16))
-                                        .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
+                                        .foregroundColor(rank == 0 ? HuddleColors.textPrimary : HuddleColors.textPrimary)
 
                                     Spacer()
 
                                     // Score
                                     Text("\(entry.score)")
                                         .font(HuddleFont.display(28))
-                                        .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
+                                        .foregroundColor(rank == 0 ? HuddleColors.textPrimary : HuddleColors.textPrimary)
 
                                     // Expand indicator
                                     Image(systemName: "chevron.down")
@@ -84,7 +80,7 @@ struct WhoAmIResultView: View {
                             GeometryReader { geo in
                                 let barWidth = maxScore > 0 ? max(4, CGFloat(entry.score) / CGFloat(maxScore) * geo.size.width) : 4
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(rank == 0 ? HuddleColors.mostLikelyTo : rank == 1 ? Color.gray : rank == 2 ? Color.orange : HuddleColors.cardBorder)
+                                    .fill(rank == 0 ? HuddleColors.gold : rank == 1 ? Color.gray : rank == 2 ? Color.orange : HuddleColors.cardBorder)
                                     .frame(width: barWidth, height: 4)
                             }
                             .frame(height: 4)
@@ -97,18 +93,18 @@ struct WhoAmIResultView: View {
                                 VStack(spacing: 8) {
                                     ForEach(Array(results.enumerated()), id: \.offset) { ri, result in
                                         VStack(alignment: .leading, spacing: 6) {
-                                            Text("ROUND \(ri + 1)")
+                                            Text(L("TURN \(ri + 1)", "GILIRAN \(ri + 1)"))
                                                 .font(HuddleFont.caption(10))
                                                 .tracking(2)
                                                 .foregroundColor(HuddleColors.textMuted)
 
                                             HStack(spacing: 12) {
-                                                Label("\(result.correct) correct", systemImage: "checkmark.circle.fill")
+                                                Label(L("\(result.correct) correct", "\(result.correct) benar"), systemImage: "checkmark.circle.fill")
                                                     .font(HuddleFont.caption(11))
                                                     .foregroundColor(accent)
-                                                Label("\(result.skipped) skipped", systemImage: "forward.circle.fill")
+                                                Label(L("\(result.skipped) skipped", "\(result.skipped) dilewati"), systemImage: "forward.circle.fill")
                                                     .font(HuddleFont.caption(11))
-                                                    .foregroundColor(HuddleColors.mostLikelyTo)
+                                                    .foregroundColor(HuddleColors.textPrimary)
                                             }
 
                                             // Word list
@@ -126,7 +122,7 @@ struct WhoAmIResultView: View {
                                                 HStack(spacing: 6) {
                                                     Image(systemName: "forward")
                                                         .font(.system(size: 10))
-                                                        .foregroundColor(HuddleColors.mostLikelyTo)
+                                                        .foregroundColor(HuddleColors.textPrimary)
                                                     Text(name)
                                                         .font(HuddleFont.caption(11))
                                                         .foregroundColor(HuddleColors.textSecondary)
@@ -152,7 +148,7 @@ struct WhoAmIResultView: View {
                         }
                     }
 
-                    Text("Tap a player for round details")
+                    Text(L("Tap a player to see their cards", "Tap pemain untuk melihat kartunya"))
                         .font(HuddleFont.caption(10))
                         .foregroundColor(HuddleColors.textMuted)
                         .padding(.top, 4)
@@ -160,14 +156,14 @@ struct WhoAmIResultView: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    GlowButton(title: "PLAY AGAIN", color: accent) {
+                    GlowButton(title: L("PLAY AGAIN", "MAIN LAGI"), color: accent) {
                         onPlayAgain()
                     }
 
                     Button {
                         onExit()
                     } label: {
-                        Text("EXIT")
+                        Text(L("EXIT", "KELUAR"))
                             .font(HuddleFont.heading(16))
                             .foregroundColor(HuddleColors.textSecondary)
                             .frame(maxWidth: .infinity)
@@ -184,7 +180,7 @@ struct WhoAmIResultView: View {
                 .allowsHitTesting(false)
         }
         .onAppear {
-            HapticManager.success()
+            Feedback.success()
         }
     }
 }

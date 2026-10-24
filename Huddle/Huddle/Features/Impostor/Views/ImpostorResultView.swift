@@ -11,19 +11,19 @@ struct ImpostorResultView: View {
 
     private var winnerEmoji: String {
         switch game.winner {
-        case "civilians": "\u{1F389}"
-        case "impostor": "\u{1F52A}"
-        case "mrwhite": "\u{2753}"
-        default: "\u{1F3C6}"
+        case "civilians": "person.3.fill"
+        case "impostor": "theatermasks.fill"
+        case "mrwhite": "questionmark.circle.fill"
+        default: "trophy.fill"
         }
     }
 
     private var winnerTitle: String {
         switch game.winner {
-        case "civilians": "CIVILIANS WIN!"
-        case "impostor": "IMPOSTOR WINS!"
-        case "mrwhite": "MR. WHITE WINS!"
-        default: "GAME OVER"
+        case "civilians": L("CIVILIANS WIN!", "WARGA MENANG!")
+        case "impostor": L("IMPOSTOR WINS!", "IMPOSTOR MENANG!")
+        case "mrwhite": L("MR. WHITE WINS!", "MR. WHITE MENANG!")
+        default: L("GAME OVER", "PERMAINAN SELESAI")
         }
     }
 
@@ -41,37 +41,31 @@ struct ImpostorResultView: View {
             VStack(spacing: 24) {
                 // Winner announcement
                 VStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(winnerColor.opacity(0.12))
-                            .frame(width: 100, height: 100)
-                            .blur(radius: 20)
-                        Text(winnerEmoji)
-                            .font(.system(size: 72))
+                    Group {
+                        if game.winner == "impostor" {
+                            Image("Card-impostor").resizable().scaledToFit().frame(width: 120, height: 120)
+                        } else {
+                            TrophyArt(size: 110)
+                        }
                     }
+                    .accessibilityHidden(true)
                     Text(winnerTitle)
                         .font(HuddleFont.display(34))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [winnerColor, winnerColor.opacity(0.7)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .foregroundColor(winnerColor)
                 }
                 .padding(.top, 20)
 
                 // Word pair reveal
                 NeonCard(accentColor: HuddleColors.impostor) {
                     VStack(spacing: 12) {
-                        Text("THE WORDS")
+                        Text(L("THE WORDS", "PASANGAN KATA"))
                             .font(HuddleFont.caption(11))
                             .tracking(3)
                             .foregroundColor(HuddleColors.textMuted)
 
                         HStack(spacing: 20) {
                             VStack(spacing: 4) {
-                                Text("CIVILIAN")
+                                Text(L("CIVILIANS", "WARGA"))
                                     .font(HuddleFont.caption(9))
                                     .foregroundColor(HuddleColors.whoAmI)
                                 Text(game.pair?.normal ?? "")
@@ -112,7 +106,7 @@ struct ImpostorResultView: View {
 
                 // Scores
                 VStack(spacing: 8) {
-                    Text("SCORES")
+                    Text(L("SCORES", "SKOR"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
@@ -133,7 +127,7 @@ struct ImpostorResultView: View {
                                         .font(HuddleFont.heading(16))
                                         .foregroundColor(HuddleColors.textPrimary)
                                     if let role = playerRole {
-                                        Text(role.emoji)
+                                        Image(systemName: role.emoji)
                                             .font(.system(size: 12))
                                         Text(role.label)
                                             .font(HuddleFont.caption(10))
@@ -179,20 +173,20 @@ struct ImpostorResultView: View {
                                     lineWidth: 1
                                 )
                         )
-                        .shadow(color: rank == 0 && score.points > 0 ? winnerColor.opacity(0.1) : .clear, radius: 8, x: 0, y: 2)
+                        .shadow(color: HuddleColors.shadow, radius: 8, x: 0, y: 4)
                     }
                 }
 
                 // All players & roles
                 VStack(spacing: 8) {
-                    Text("ALL PLAYERS")
+                    Text(L("ALL PLAYERS", "SEMUA PEMAIN"))
                         .font(HuddleFont.caption(11))
                         .tracking(3)
                         .foregroundColor(HuddleColors.textMuted)
 
                     ForEach(Array(game.players.enumerated()), id: \.element.id) { idx, player in
                         HStack(spacing: 8) {
-                            Text(player.role.emoji)
+                            Image(systemName: player.role.emoji)
                                 .font(.system(size: 16))
                             Text(player.name)
                                 .font(HuddleFont.body())
@@ -218,12 +212,12 @@ struct ImpostorResultView: View {
                 if game.roundNumber > 1 && !game.sortedLeaderboard.isEmpty {
                     VStack(spacing: 8) {
                         HStack {
-                            Text("\u{1F3C6} LEADERBOARD")
+                            Text(L("LEADERBOARD", "PAPAN SKOR"))
                                 .font(HuddleFont.caption(11))
                                 .tracking(3)
-                                .foregroundColor(HuddleColors.mostLikelyTo)
+                                .foregroundColor(HuddleColors.textPrimary)
                             Spacer()
-                            Text("\(game.roundNumber) rounds")
+                            Text(L("\(game.roundNumber) rounds", "\(game.roundNumber) ronde"))
                                 .font(HuddleFont.caption(10))
                                 .foregroundColor(HuddleColors.textMuted)
                         }
@@ -231,23 +225,21 @@ struct ImpostorResultView: View {
                         let maxPts = game.sortedLeaderboard.first?.points ?? 1
                         ForEach(Array(game.sortedLeaderboard.enumerated()), id: \.element.name) { rank, entry in
                             HStack(spacing: 10) {
-                                Text(rank < 3 ? ["\u{1F947}", "\u{1F948}", "\u{1F949}"][rank] : "#\(rank + 1)")
-                                    .font(rank < 3 ? .system(size: 20) : HuddleFont.caption())
-                                    .frame(width: 28)
+                                Medal(rank: rank)
                                 Text(entry.name)
                                     .font(HuddleFont.body())
-                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textPrimary)
+                                    .foregroundColor(rank == 0 ? HuddleColors.textPrimary : HuddleColors.textPrimary)
                                 Spacer()
                                 Text("\(entry.points)")
                                     .font(HuddleFont.display(22))
-                                    .foregroundColor(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textSecondary)
+                                    .foregroundColor(rank == 0 ? HuddleColors.textPrimary : HuddleColors.textSecondary)
                             }
                             .padding(.vertical, 4)
 
                             // Score bar
                             GeometryReader { geo in
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(rank == 0 ? HuddleColors.mostLikelyTo : HuddleColors.textMuted.opacity(0.3))
+                                    .fill(rank == 0 ? HuddleColors.gold : HuddleColors.textMuted.opacity(0.3))
                                     .frame(width: maxPts > 0 ? geo.size.width * CGFloat(entry.points) / CGFloat(maxPts) : 0, height: 4)
                             }
                             .frame(height: 4)
@@ -260,7 +252,7 @@ struct ImpostorResultView: View {
 
                 // Buttons
                 VStack(spacing: 12) {
-                    GlowButton(title: "PLAY AGAIN", color: HuddleColors.impostor) {
+                    GlowButton(title: L("PLAY AGAIN", "MAIN LAGI"), color: HuddleColors.impostor) {
                         onPlayAgain()
                     }
 
@@ -269,7 +261,7 @@ struct ImpostorResultView: View {
                             game.resetLeaderboard()
                             onExit()
                         } label: {
-                            Text("RESET LEADERBOARD & EXIT")
+                            Text(L("RESET LEADERBOARD & EXIT", "RESET PAPAN SKOR & KELUAR"))
                                 .font(HuddleFont.caption(11))
                                 .foregroundColor(HuddleColors.impostor.opacity(0.5))
                                 .frame(maxWidth: .infinity)
@@ -280,7 +272,7 @@ struct ImpostorResultView: View {
                     Button {
                         onExit()
                     } label: {
-                        Text("EXIT")
+                        Text(L("EXIT", "KELUAR"))
                             .font(HuddleFont.heading(16))
                             .foregroundColor(HuddleColors.textSecondary)
                             .frame(maxWidth: .infinity)
@@ -308,7 +300,7 @@ struct ImpostorResultView: View {
                 .allowsHitTesting(false)
         }
         .onAppear {
-            HapticManager.success()
+            Feedback.success()
             game.applyScoresToLeaderboard()
         }
     }
