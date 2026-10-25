@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 2,
+  "appName": "Huddle",
+  "themeId": "huddle",
+  "connectedCanvas": false,
+  "locales": [
+    "en",
+    "id"
+  ],
+  "locale": "en",
+  "device": "ipad",
+  "orientation": "portrait",
+  "appIcon": "/app-icon.png",
+  "slidesByDevice": {
+    "iphone": [
+      {
+        "id": "ip_h1",
+        "layout": "hero",
+        "accent": "#C8302A",
+        "label": {
+          "en": "No extra devices needed",
+          "id": "Nggak perlu HP lain"
+        },
+        "headline": {
+          "en": "9 party games.\n*One phone.*",
+          "id": "9 game seru.\n*Satu HP.*"
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/hub.png",
+        "decor": []
+      },
+      {
+        "id": "ip_h2",
+        "layout": "two-devices",
+        "accent": "#C8302A",
+        "inverted": true,
+        "label": {
+          "en": "Bluff your friends",
+          "id": "Adu jago ngibul"
+        },
+        "headline": {
+          "en": "Spot the\n*impostor.*",
+          "id": "Siapa si\n*impostor*-nya?"
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/impostor.png",
+        "screenshotSecondary": "/screenshots/apple/iphone/{locale}/spy.png",
+        "decor": [
+          {
+            "src": "/art/card-impostor.png",
+            "x": 70,
+            "y": 1.5,
+            "w": 26,
+            "rotate": 12
+          }
+        ]
+      },
+      {
+        "id": "ip_h3",
+        "layout": "device-bottom",
+        "accent": "#1F6FD1",
+        "label": {
+          "en": "Questions, words & riddles",
+          "id": "Soal, kata & tebakan"
+        },
+        "headline": {
+          "en": "*1,800+* cards.\nFresh all night.",
+          "id": "*1.800+* kartu.\nAnti bosan."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/mostlikelyto.png",
+        "decor": [
+          {
+            "src": "/art/card-mostlikelyto.png",
+            "x": -6,
+            "y": 44,
+            "w": 24,
+            "rotate": -14
+          },
+          {
+            "src": "/art/card-whoami.png",
+            "x": 82,
+            "y": 60,
+            "w": 22,
+            "rotate": 10
+          }
+        ]
+      },
+      {
+        "id": "ip_h4",
+        "layout": "device-top",
+        "accent": "#F5B700",
+        "label": {
+          "en": "Hangouts · parties · family nights",
+          "id": "Nongkrong · arisan · kumpul keluarga"
+        },
+        "headline": {
+          "en": "Pass the phone.\n*Everyone* plays.",
+          "id": "Oper HP-nya.\n*Semua*\nikut main."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/twolies.png",
+        "decor": [
+          {
+            "src": "/art/card-twolies.png",
+            "x": 2,
+            "y": 84,
+            "w": 17,
+            "rotate": -10
+          },
+          {
+            "src": "/art/card-wordbomb.png",
+            "x": 82,
+            "y": 83,
+            "w": 16,
+            "rotate": 12
+          }
+        ]
+      },
+      {
+        "id": "ip_h5",
+        "layout": "hero",
+        "accent": "#187A42",
+        "label": {
+          "en": "Remove ads anytime",
+          "id": "Iklan bisa dihapus"
+        },
+        "headline": {
+          "en": "Free to play.\n*No ads*\nmid-round.",
+          "id": "Gratis main.\n*Bebas iklan*\nsaat ronde."
+        },
+        "screenshot": "/screenshots/apple/iphone/{locale}/result.png",
+        "decor": [
+          {
+            "src": "/art/card-roulette.png",
+            "x": -6,
+            "y": 52,
+            "w": 22,
+            "rotate": -12
+          }
+        ]
+      }
+    ],
+    "android": [
+      {
+        "id": "s_mvn8sa5v_5",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Sell one\nidea per slide."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvn8sa5v_6",
+        "layout": "device-bottom",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Your headline\nlives here."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvn8sa5v_7",
+        "layout": "two-devices",
+        "label": {
+          "en": "FEATURE 02"
+        },
+        "headline": {
+          "en": "Show two\nscreens at once."
+        },
+        "screenshot": "",
+        "screenshotSecondary": ""
+      },
+      {
+        "id": "s_mvn8sa5v_8",
+        "layout": "device-top",
+        "label": {
+          "en": "FEATURE 03"
+        },
+        "headline": {
+          "en": "Flip the contrast\nfor visual rhythm."
+        },
+        "screenshot": "",
+        "inverted": true
+      },
+      {
+        "id": "s_mvn8sa5v_9",
+        "layout": "no-device",
+        "label": {
+          "en": "MORE"
+        },
+        "headline": {
+          "en": "And so\nmuch more."
+        },
+        "screenshot": ""
+      }
+    ],
+    "ipad": [
+      {
+        "id": "ip_h1",
+        "layout": "hero",
+        "accent": "#C8302A",
+        "label": {
+          "en": "No extra devices needed",
+          "id": "Nggak perlu HP lain"
+        },
+        "headline": {
+          "en": "9 party games.\n*One phone.*",
+          "id": "9 game seru.\n*Satu HP.*"
+        },
+        "screenshot": "/screenshots/apple/ipad/{locale}/hub.png",
+        "decor": []
+      },
+      {
+        "id": "ip_h2",
+        "layout": "two-devices",
+        "accent": "#C8302A",
+        "inverted": true,
+        "label": {
+          "en": "Bluff your friends",
+          "id": "Adu jago ngibul"
+        },
+        "headline": {
+          "en": "Spot the\n*impostor.*",
+          "id": "Siapa si\n*impostor*-nya?"
+        },
+        "screenshot": "/screenshots/apple/ipad/{locale}/impostor.png",
+        "screenshotSecondary": "/screenshots/apple/ipad/{locale}/spy.png",
+        "decor": [
+          {
+            "src": "/art/card-impostor.png",
+            "x": 70,
+            "y": 1.5,
+            "w": 26,
+            "rotate": 12
+          }
+        ]
+      },
+      {
+        "id": "ip_h3",
+        "layout": "device-bottom",
+        "accent": "#1F6FD1",
+        "label": {
+          "en": "Questions, words & riddles",
+          "id": "Soal, kata & tebakan"
+        },
+        "headline": {
+          "en": "*1,800+* cards.\nFresh all night.",
+          "id": "*1.800+* kartu.\nAnti bosan."
+        },
+        "screenshot": "/screenshots/apple/ipad/{locale}/mostlikelyto.png",
+        "decor": [
+          {
+            "src": "/art/card-mostlikelyto.png",
+            "x": -6,
+            "y": 44,
+            "w": 24,
+            "rotate": -14
+          },
+          {
+            "src": "/art/card-whoami.png",
+            "x": 82,
+            "y": 60,
+            "w": 22,
+            "rotate": 10
+          }
+        ]
+      },
+      {
+        "id": "ip_h4",
+        "layout": "device-top",
+        "accent": "#F5B700",
+        "label": {
+          "en": "Hangouts · parties · family nights",
+          "id": "Nongkrong · arisan · kumpul keluarga"
+        },
+        "headline": {
+          "en": "Pass the phone.\n*Everyone* plays.",
+          "id": "Oper HP-nya.\n*Semua*\nikut main."
+        },
+        "screenshot": "/screenshots/apple/ipad/{locale}/twolies.png",
+        "decor": [
+          {
+            "src": "/art/card-twolies.png",
+            "x": 2,
+            "y": 84,
+            "w": 17,
+            "rotate": -10
+          },
+          {
+            "src": "/art/card-wordbomb.png",
+            "x": 82,
+            "y": 83,
+            "w": 16,
+            "rotate": 12
+          }
+        ],
+        "transforms": {
+          "device": {
+            "x": 482,
+            "y": 110,
+            "width": 1100,
+            "height": 1429,
+            "rotation": 0,
+            "zIndex": 3
+          }
+        }
+      },
+      {
+        "id": "ip_h5",
+        "layout": "hero",
+        "accent": "#187A42",
+        "label": {
+          "en": "Remove ads anytime",
+          "id": "Iklan bisa dihapus"
+        },
+        "headline": {
+          "en": "Free to play.\n*No ads*\nmid-round.",
+          "id": "Gratis main.\n*Bebas iklan*\nsaat ronde."
+        },
+        "screenshot": "/screenshots/apple/ipad/{locale}/result.png",
+        "decor": [
+          {
+            "src": "/art/card-roulette.png",
+            "x": -6,
+            "y": 52,
+            "w": 22,
+            "rotate": -12
+          }
+        ]
+      }
+    ],
+    "android-7": [
+      {
+        "id": "s_mvn8sa5v_d",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Pocket-sized\npower."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvn8sa5v_e",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Wide canvas,\nbigger ideas."
+        },
+        "screenshot": ""
+      }
+    ],
+    "android-10": [
+      {
+        "id": "s_mvn8sa5v_f",
+        "layout": "hero",
+        "label": {
+          "en": "MEET YOUR APP"
+        },
+        "headline": {
+          "en": "Made for\nthe big screen."
+        },
+        "screenshot": ""
+      },
+      {
+        "id": "s_mvn8sa5v_g",
+        "layout": "split-landscape",
+        "label": {
+          "en": "FEATURE 01"
+        },
+        "headline": {
+          "en": "Wide canvas,\nbigger ideas."
+        },
+        "screenshot": ""
+      }
+    ],
+    "feature-graphic": [
+      {
+        "id": "s_mvn8sa5v_h",
+        "layout": "feature-graphic",
+        "label": {},
+        "headline": {
+          "en": "Your tagline goes here."
+        },
+        "screenshot": ""
+      }
+    ]
+  }
+}
