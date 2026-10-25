@@ -9,9 +9,9 @@ import UIKit
 /// Google's test ads, so testing never touches the real ones (tapping your own real ads can get
 /// an AdMob account suspended). Pattern from Sudoku Harian.
 enum AdIDs {
-    /// TODO(owner): put Huddle's real AdMob units here (and the real app id as
-    /// GADApplicationIdentifier in project.yml). While nil, every copy uses Google's test ads.
-    static let live: (banner: String, interstitial: String)? = nil
+    /// Huddle's AdMob units. Only App Store copies use them; Debug and TestFlight show test ads.
+    static let live: (banner: String, interstitial: String)? = (banner: "ca-app-pub-2613594201937413/7518011790",
+                                                                 interstitial: "ca-app-pub-2613594201937413/6204930128")
     static let test = (banner: "ca-app-pub-3940256099942544/2934735716",
                        interstitial: "ca-app-pub-3940256099942544/4411468910")
 

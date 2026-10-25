@@ -52,7 +52,7 @@ targets:
         UIAppFonts: [BricolageGrotesque-ExtraBold.ttf]
         NSUserTrackingUsageDescription: So ads better match your interests. Whatever you choose, the games stay the same.
         # Google's sample app id. Swap for the real AdMob app id before release (see Ads.swift).
-        GADApplicationIdentifier: ca-app-pub-3940256099942544~1458002511
+        GADApplicationIdentifier: ca-app-pub-2613594201937413~7772540546
         SKAdNetworkItems:
           - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork
           - SKAdNetworkIdentifier: 22mmun2rn5.skadnetwork
