@@ -118,12 +118,12 @@
         "layout": "hero",
         "accent": "#187A42",
         "label": {
-          "en": "Remove ads anytime",
-          "id": "Iklan bisa dihapus"
+          "en": "No ads mid-round",
+          "id": "Tanpa iklan saat ronde"
         },
         "headline": {
-          "en": "Free to play.\n*No ads*\nmid-round.",
-          "id": "Gratis main.\n*Bebas iklan*\nsaat ronde."
+          "en": "Play\n*uninterrupted*.",
+          "id": "Main\n*tanpa jeda*."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/result.png",
         "decor": [
@@ -312,12 +312,12 @@
         "layout": "hero",
         "accent": "#187A42",
         "label": {
-          "en": "Remove ads anytime",
-          "id": "Iklan bisa dihapus"
+          "en": "No ads mid-round",
+          "id": "Tanpa iklan saat ronde"
         },
         "headline": {
-          "en": "Free to play.\n*No ads*\nmid-round.",
-          "id": "Gratis main.\n*Bebas iklan*\nsaat ronde."
+          "en": "Play\n*uninterrupted*.",
+          "id": "Main\n*tanpa jeda*."
         },
         "screenshot": "/screenshots/apple/ipad/{locale}/result.png",
         "decor": [
